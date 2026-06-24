@@ -38,3 +38,6 @@ func test_exhaustion_then_gasp_bonus_damage():
 	var ev := CombatSim.simulate(s, [p0, p1])
 	var exhausts := ev.filter(func(e): return e.type == &"exhaust")
 	assert_true(exhausts.size() >= 1, "player exhausted on 2nd move")
+	# Enemy hits at t4 while player is gasping (gasp_until=6); bonus must apply.
+	var expected_hp := 50 - (5 + CombatSim.GASP_DAMAGE_BONUS)  # = 42
+	assert_eq(s.hp[0], expected_hp, "gasp bonus applied: player hp should be %d" % expected_hp)

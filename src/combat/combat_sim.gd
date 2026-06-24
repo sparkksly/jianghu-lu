@@ -81,6 +81,7 @@ static func _try_start(state: CombatState, a: _Actor, idx: int, t: int, events) 
 		events.append(CombatEvent.new(t, &"exhaust", idx, idx, state.gasp_len, pm.move.id))
 		return
 	state.stamina[idx] -= pm.move.stamina_cost
+	events.append(CombatEvent.new(t, &"stamina", idx, idx, -pm.move.stamina_cost, pm.move.id))
 	a.cur = pm
 	a.elapsed = 0
 	a.qi += 1

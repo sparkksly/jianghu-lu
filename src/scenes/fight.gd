@@ -27,9 +27,8 @@ func _start_round() -> void:
 	_result.visible = false
 	_watch_phase.visible = false
 	_plan_phase.visible = true
-	var ai_plan := _ai.plan(_deck, _state.sta_max[1], _state.n_ticks)
-	_pending_ai_plan = ai_plan
-	_plan_phase.setup(_deck, _rules, _state.sta_max[0], _state.n_ticks, _ai.intent(ai_plan, 1))
+	_pending_ai_plan = _rules.apply(_ai.plan(_deck, _state.sta_max[1], _state.n_ticks))
+	_plan_phase.setup(_deck, _rules, _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
 
 var _pending_ai_plan: Plan
 
