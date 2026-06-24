@@ -8,6 +8,7 @@ const REWARD_BLOCK := 1
 const PENALTY_WHIFF := 2
 const PENALTY_WHIFF_HEAVY := 4
 const PENALTY_STAGGER := 2
+const THROW_BREAK_BONUS := 4
 
 class _Actor:
 	var queue: Array[PlacedMove]
@@ -111,16 +112,40 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	var defender := 1 - attacker
 	var def_phase: StringName = d["phase"]
 	var def_move: Move = d["move"]
-	# Interrupt: hitting a defender mid-startup
+	var def_active_defense := def_phase == &"active" and def_move != null \
+		and (def_move.kind == Move.Kind.BLOCK or def_move.kind == Move.Kind.DODGE)
+
+	# DODGE beats everything that targets it: attack/throw whiffs.
+	if def_active_defense and def_move.kind == Move.Kind.DODGE:
+		_whiff(state, attacker, atk, t, events)
+		return
+
+	if atk.kind == Move.Kind.THROW:
+		if def_active_defense and def_move.kind == Move.Kind.BLOCK:
+			var dmg := atk.damage + THROW_BREAK_BONUS
+			state.hp[defender] = max(0, state.hp[defender] - dmg)
+			events.append(CombatEvent.new(t, &"throw_break", attacker, defender, dmg, atk.id))
+		else:
+			# blind throw: weak
+			_whiff(state, attacker, atk, t, events)
+		return
+
+	# atk.kind == ATTACK
+	if def_active_defense and def_move.kind == Move.Kind.BLOCK:
+		events.append(CombatEvent.new(t, &"block", attacker, defender, 0, atk.id))
+		return
 	if def_phase == &"startup" and atk.can_interrupt and def_move != null and not def_move.super_armor:
-		actors[defender].cur = null  # cancel
+		actors[defender].cur = null
 		actors[defender].elapsed = 0
 		state.hp[defender] = max(0, state.hp[defender] - atk.damage)
 		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, atk.damage, atk.id))
 		return
-	# default: damage applies, defender move (if any) continues
 	state.hp[defender] = max(0, state.hp[defender] - atk.damage)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, atk.damage, atk.id))
+
+static func _whiff(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
+	# Damage handling only; stamina penalty added in Task 8.
+	events.append(CombatEvent.new(t, &"whiff", attacker, 1 - attacker, 0, atk.id))
 
 static func _advance(a: _Actor) -> void:
 	if a.cur != null:
