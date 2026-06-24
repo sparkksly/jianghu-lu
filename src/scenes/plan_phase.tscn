@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3 uid="uid://plan_phase"]
+
+[ext_resource type="Script" path="res://src/scenes/plan_phase.gd" id="1_pphase"]
+
+[node name="PlanPhase" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_pphase")
+
+[node name="DeckRow" type="HBoxContainer" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 800.0
+offset_bottom = 60.0
+
+[node name="Timeline" type="HBoxContainer" parent="."]
+offset_left = 20.0
+offset_top = 80.0
+offset_right = 800.0
+offset_bottom = 120.0
+
+[node name="StaminaLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 140.0
+offset_right = 500.0
+offset_bottom = 165.0
+text = "体力 0 / 10 (可超额至 15)"
+
+[node name="ComboPreview" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 175.0
+offset_right = 700.0
+offset_bottom = 200.0
+text = "连招预览: "
+
+[node name="EnemyIntent" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 210.0
+offset_right = 700.0
+offset_bottom = 235.0
+text = "对手意图: "
+
+[node name="CommitButton" type="Button" parent="."]
+offset_left = 20.0
+offset_top = 250.0
+offset_right = 120.0
+offset_bottom = 280.0
+text = "出招"
