@@ -22,7 +22,11 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 	for i in 2:
 		actors[i].queue = (plans[i] as Plan).sorted()
 
-	var max_tick := state.n_ticks + 30  # let trailing moves finish
+	var tail := 0
+	for i in 2:
+		for pm in (plans[i] as Plan).sorted():
+			tail = max(tail, (pm as PlacedMove).end_tick())
+	var max_tick: int = max(state.n_ticks, tail) + 2
 	var t := 0
 	while t < max_tick:
 		# 1. start moves due this tick
@@ -36,14 +40,15 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 		var order := [0, 1]
 		if _hit_priority(snap[1]) > _hit_priority(snap[0]):
 			order = [1, 0]
+		# resolve BOTH committed hits — double-KO is legitimate
 		for i in order:
 			_maybe_hit(state, snap, i, t, events)
-			if state.hp[0] <= 0 or state.hp[1] <= 0:
-				break
-		# 4. deaths
+		# 4. deaths — check both actors; actor 0 first for determinism
 		if state.hp[0] <= 0 or state.hp[1] <= 0:
-			var dead := 0 if state.hp[0] <= 0 else 1
-			events.append(CombatEvent.new(t, &"death", dead, dead, 0, &""))
+			if state.hp[0] <= 0:
+				events.append(CombatEvent.new(t, &"death", 0, 0, 0, &""))
+			if state.hp[1] <= 0:
+				events.append(CombatEvent.new(t, &"death", 1, 1, 0, &""))
 			break
 		# 5. advance
 		for i in 2:
@@ -78,7 +83,7 @@ static func _try_start(state: CombatState, a: _Actor, idx: int, t: int, events) 
 	a.elapsed = 0
 	a.qi += 1
 
-# snapshot = {move, phase, hitting:bool, gasping:bool}
+# snapshot = {move, phase, hitting:bool}
 static func _snapshot(a: _Actor) -> Dictionary:
 	if a.cur == null:
 		return {"move": null, "phase": &"idle", "hitting": false}
