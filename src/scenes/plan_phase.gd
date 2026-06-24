@@ -59,6 +59,10 @@ func _clone_plan() -> Plan:
 	return p
 
 func _refresh() -> void:
+	# reset all timeline button tints
+	for b in _timeline.get_children():
+		(b as Button).modulate = Color(1, 1, 1, 1)
+
 	_stamina.text = "体力 %d / %d (可超额至 %d)" % [_plan.total_cost(), _sta_max, int(floor(1.5 * _sta_max))]
 	var fused := _rules.apply(_plan)
 	_combo.text = "连招预览: " + ", ".join(fused.moves.map(func(pm): return pm.move.move_name))
