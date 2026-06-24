@@ -4,6 +4,7 @@ extends RefCounted
 class Recipe:
 	var slots: Array
 	var result: Move
+	var reg_idx: int = 0
 	func _init(p_slots: Array, p_result: Move) -> void:
 		slots = p_slots
 		result = p_result
@@ -11,7 +12,9 @@ class Recipe:
 var _recipes: Array[Recipe] = []
 
 func add_recipe(slots: Array, result: Move) -> void:
-	_recipes.append(Recipe.new(slots, result))
+	var r := Recipe.new(slots, result)
+	r.reg_idx = _recipes.size()
+	_recipes.append(r)
 
 func _slot_matches(slot: Dictionary, move: Move) -> bool:
 	if slot.has("any"):
@@ -40,7 +43,10 @@ func _matches_run(seq: Array, start_idx: int, recipe: Recipe) -> bool:
 func apply(plan: Plan) -> Plan:
 	var seq := plan.sorted()
 	var by_len := _recipes.duplicate()
-	by_len.sort_custom(func(a, b): return a.slots.size() > b.slots.size())
+	by_len.sort_custom(func(a, b):
+		if a.slots.size() != b.slots.size():
+			return a.slots.size() > b.slots.size()
+		return a.reg_idx < b.reg_idx)
 	var out := Plan.new()
 	var i := 0
 	while i < seq.size():

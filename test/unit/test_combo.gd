@@ -60,3 +60,18 @@ func test_longest_match_first():
 	p.add(PlacedMove.new(_kick(), 0)); p.add(PlacedMove.new(_kick(), 3)); p.add(PlacedMove.new(_kick(), 6))
 	var fused := rules.apply(p)
 	assert_eq(fused.moves[0].move.id, &"chain_kick", "3-match beats 2-match")
+
+func test_equal_length_registration_order_wins():
+	# Two 2-slot recipes both match two back-to-back kicks (ATTACK + tag 腿法).
+	# Recipe A (registered first): matches by tag → result &"A_first"
+	# Recipe B (registered second): matches by kind → result &"B_second"
+	# apply() must yield A_first proving registration order is the tie-break.
+	var rules := ComboRules.new()
+	rules.add_recipe([{"tag":&"腿法"},{"tag":&"腿法"}], _combo_result(&"A_first"))
+	rules.add_recipe([{"kind":Move.Kind.ATTACK},{"kind":Move.Kind.ATTACK}], _combo_result(&"B_second"))
+	var p := Plan.new()
+	p.add(PlacedMove.new(_kick(), 0))  # dur=3, ATTACK + 腿法
+	p.add(PlacedMove.new(_kick(), 3))  # dur=3, ATTACK + 腿法
+	var fused := rules.apply(p)
+	assert_eq(fused.moves.size(), 1, "both recipes match; one fusion expected")
+	assert_eq(fused.moves[0].move.id, &"A_first", "first-registered recipe wins among equal-length recipes")
