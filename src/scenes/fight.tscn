@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://fight"]
+
+[ext_resource type="Script" path="res://src/scenes/fight.gd" id="1_fight"]
+[ext_resource type="PackedScene" path="res://src/scenes/plan_phase.tscn" id="2_pphase"]
+[ext_resource type="PackedScene" path="res://src/scenes/watch_phase.tscn" id="3_wphase"]
+
+[node name="Fight" type="Node"]
+script = ExtResource("1_fight")
+
+[node name="PlanPhase" parent="." instance=ExtResource("2_pphase")]
+
+[node name="WatchPhase" parent="." instance=ExtResource("3_wphase")]
+visible = false
+
+[node name="ResultLabel" type="Label" parent="."]
+visible = false
+text = ""
