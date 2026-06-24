@@ -42,7 +42,7 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 			order = [1, 0]
 		# resolve BOTH committed hits — double-KO is legitimate
 		for i in order:
-			_maybe_hit(state, snap, i, t, events)
+			_maybe_hit(state, actors, snap, i, t, events)
 		# 4. deaths — check both actors; actor 0 first for determinism
 		if state.hp[0] <= 0 or state.hp[1] <= 0:
 			if state.hp[0] <= 0:
@@ -99,17 +99,26 @@ static func _hit_priority(snap: Dictionary) -> int:
 		return (snap["move"] as Move).priority
 	return -9999
 
-static func _maybe_hit(state: CombatState, snap: Array, attacker: int, t: int, events) -> void:
+static func _maybe_hit(state: CombatState, actors: Array, snap: Array, attacker: int, t: int, events) -> void:
 	var a: Dictionary = snap[attacker]
 	if not a["hitting"]:
 		return
 	var defender := 1 - attacker
 	var d: Dictionary = snap[defender]
-	_resolve_hit(state, attacker, a["move"], d["phase"], d["move"], t, events)
+	_resolve_hit(state, actors, attacker, a["move"], d, t, events)
 
-# Extended by later tasks (interrupt, block, dodge, throw, stamina).
-static func _resolve_hit(state: CombatState, attacker: int, atk: Move, def_phase: StringName, def_move: Move, t: int, events) -> void:
+static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: Move, d: Dictionary, t: int, events) -> void:
 	var defender := 1 - attacker
+	var def_phase: StringName = d["phase"]
+	var def_move: Move = d["move"]
+	# Interrupt: hitting a defender mid-startup
+	if def_phase == &"startup" and atk.can_interrupt and def_move != null and not def_move.super_armor:
+		actors[defender].cur = null  # cancel
+		actors[defender].elapsed = 0
+		state.hp[defender] = max(0, state.hp[defender] - atk.damage)
+		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, atk.damage, atk.id))
+		return
+	# default: damage applies, defender move (if any) continues
 	state.hp[defender] = max(0, state.hp[defender] - atk.damage)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, atk.damage, atk.id))
 
