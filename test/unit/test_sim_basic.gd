@@ -20,7 +20,7 @@ func test_single_attack_deals_damage():
 	var p1 := Plan.new()
 	var ev := CombatSim.simulate(s, [p0, p1])
 	assert_eq(s.hp[1], 44, "enemy took 6")
-	assert_eq(s.stamina[0], 8, "player spent 2 stamina")
+	assert_eq(s.stamina[0], 9, "player spent 2 stamina, gained 1 hit reward")
 	var hits := ev.filter(func(e): return e.type == &"hit")
 	assert_eq(hits.size(), 1)
 	assert_eq(hits[0].tick, 1, "hit lands after 1 tick startup")

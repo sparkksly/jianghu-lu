@@ -9,6 +9,7 @@ const PENALTY_WHIFF := 2
 const PENALTY_WHIFF_HEAVY := 4
 const PENALTY_STAGGER := 2
 const THROW_BREAK_BONUS := 4
+const GASP_DAMAGE_BONUS := 3
 
 class _Actor:
 	var queue: Array[PlacedMove]
@@ -108,6 +109,22 @@ static func _maybe_hit(state: CombatState, actors: Array, snap: Array, attacker:
 	var d: Dictionary = snap[defender]
 	_resolve_hit(state, actors, attacker, a["move"], d, t, events)
 
+static func _add_stamina(state: CombatState, idx: int, delta: int, t: int, events) -> void:
+	if delta == 0:
+		return
+	state.stamina[idx] = clampi(state.stamina[idx] + delta, 0, state.sta_max[idx])
+	events.append(CombatEvent.new(t, &"stamina", idx, idx, delta, &""))
+
+static func _is_gasping(actors: Array, idx: int, t: int) -> bool:
+	return t < actors[idx].gasp_until
+
+static func _apply_damage(state: CombatState, actors: Array, defender: int, base: int, t: int) -> int:
+	var dmg := base
+	if _is_gasping(actors, defender, t) and base > 0:
+		dmg += GASP_DAMAGE_BONUS
+	state.hp[defender] = max(0, state.hp[defender] - dmg)
+	return dmg
+
 static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: Move, d: Dictionary, t: int, events) -> void:
 	var defender := 1 - attacker
 	var def_phase: StringName = d["phase"]
@@ -115,37 +132,39 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	var def_active_defense := def_phase == &"active" and def_move != null \
 		and (def_move.kind == Move.Kind.BLOCK or def_move.kind == Move.Kind.DODGE)
 
-	# DODGE beats everything that targets it: attack/throw whiffs.
 	if def_active_defense and def_move.kind == Move.Kind.DODGE:
 		_whiff(state, attacker, atk, t, events)
 		return
 
 	if atk.kind == Move.Kind.THROW:
 		if def_active_defense and def_move.kind == Move.Kind.BLOCK:
-			var dmg := atk.damage + THROW_BREAK_BONUS
-			state.hp[defender] = max(0, state.hp[defender] - dmg)
+			var dmg := _apply_damage(state, actors, defender, atk.damage + THROW_BREAK_BONUS, t)
 			events.append(CombatEvent.new(t, &"throw_break", attacker, defender, dmg, atk.id))
+			_add_stamina(state, attacker, REWARD_HIT, t, events)
 		else:
-			# blind throw: weak
 			_whiff(state, attacker, atk, t, events)
 		return
 
-	# atk.kind == ATTACK
 	if def_active_defense and def_move.kind == Move.Kind.BLOCK:
 		events.append(CombatEvent.new(t, &"block", attacker, defender, 0, atk.id))
+		_add_stamina(state, defender, REWARD_BLOCK, t, events)
 		return
 	if def_phase == &"startup" and atk.can_interrupt and def_move != null and not def_move.super_armor:
 		actors[defender].cur = null
 		actors[defender].elapsed = 0
-		state.hp[defender] = max(0, state.hp[defender] - atk.damage)
-		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, atk.damage, atk.id))
+		var dmg := _apply_damage(state, actors, defender, atk.damage, t)
+		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, dmg, atk.id))
+		_add_stamina(state, attacker, REWARD_INTERRUPT, t, events)
+		_add_stamina(state, defender, -PENALTY_STAGGER, t, events)
 		return
-	state.hp[defender] = max(0, state.hp[defender] - atk.damage)
-	events.append(CombatEvent.new(t, &"hit", attacker, defender, atk.damage, atk.id))
+	var hd := _apply_damage(state, actors, defender, atk.damage, t)
+	events.append(CombatEvent.new(t, &"hit", attacker, defender, hd, atk.id))
+	_add_stamina(state, attacker, REWARD_HIT, t, events)
 
 static func _whiff(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
-	# Damage handling only; stamina penalty added in Task 8.
 	events.append(CombatEvent.new(t, &"whiff", attacker, 1 - attacker, 0, atk.id))
+	var pen := PENALTY_WHIFF_HEAVY if atk.is_heavy else PENALTY_WHIFF
+	_add_stamina(state, attacker, -pen, t, events)
 
 static func _advance(a: _Actor) -> void:
 	if a.cur != null:
