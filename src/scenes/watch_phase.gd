@@ -24,6 +24,7 @@ func play(state_before: CombatState, _plans: Array, events: Array) -> void:
 	_p0s.max_value = _state.sta_max[0]; _p0s.value = _state.stamina[0]
 	_p1s.max_value = _state.sta_max[1]; _p1s.value = _state.stamina[1]
 	_t = 0
+	_accum = 0.0
 	_max_t = 0
 	for e in _events:
 		_max_t = max(_max_t, e.tick)
@@ -33,7 +34,7 @@ func _process(delta: float) -> void:
 	_accum += delta
 	if _accum < STEP:
 		return
-	_accum = 0.0
+	_accum -= STEP
 	_tick.text = "tick %d" % _t
 	for e in _events:
 		if e.tick == _t:
