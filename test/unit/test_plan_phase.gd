@@ -79,6 +79,29 @@ func test_soft_overflow_allowed_then_excluded_on_commit():
 	assert_eq(captured["plan"].moves.size(), 1, "overflow (red) move excluded from committed plan")
 	assert_eq(captured["plan"].moves[0].start, 0)
 
+func test_remove_one_combo_component_breaks_combo():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	var k = _kick(Deck.starter())
+	var dur = k.total_duration()
+	w.try_drop_new(k, 0.0); w.try_drop_new(k, dur * 40.0); w.try_drop_new(k, 2 * dur * 40.0)
+	var s = w._plan.sorted()
+	w._remove_move(s[1])   # remove the middle component
+	assert_eq(w._plan.moves.size(), 2, "one component removed")
+	var entries = w._rules.fuse_detailed(w._plan)
+	assert_eq(entries.size(), 2, "remaining two legs no longer fuse (no 2-leg recipe)")
+	assert_false(entries[0]["is_combo"])
+
+func test_overflow_move_excluded_from_effective_cost():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	var k = _kick(Deck.starter())   # cost 2
+	w.try_drop_new(k, 0.0)          # effective
+	w.try_drop_new(k, 11 * 40.0)    # overflow (red) -> shouldn't cost 气
+	assert_eq(w._effective_cost(), 2, "only effective moves count toward 气")
+
 func test_combo_block_removes_all_components():
 	var w = _load()
 	await get_tree().process_frame

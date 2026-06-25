@@ -2,13 +2,18 @@ class_name TimelineBlock
 extends Button
 
 signal remove_requested(sorted_indices: Array)
+signal expand_requested(block)   # combo blocks expand to edit components
 
 var sorted_indices: Array = []   # which plan.sorted() entries this block covers
 var is_combo := false
 var move: Move
 
 func _ready() -> void:
-	pressed.connect(func(): remove_requested.emit(sorted_indices))
+	pressed.connect(func():
+		if is_combo:
+			expand_requested.emit(self)   # combo: open the component editor
+		else:
+			remove_requested.emit(sorted_indices))   # single: remove
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
 	if is_combo:

@@ -17,6 +17,7 @@ var _stamina_now := 10
 var _sta_max := 10
 var _n_ticks := 10
 var _plan := Plan.new()
+var _popup: Control = null
 
 func setup(deck: Array[Move], rules: ComboRules, stamina_now: int, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
 	_deck = deck; _rules = rules; _stamina_now = stamina_now; _sta_max = sta_max; _n_ticks = n_ticks
@@ -39,6 +40,7 @@ func _build_deck() -> void:
 		_deck_row.add_child(b)
 
 func _redraw_timeline() -> void:
+	_close_popup()
 	for c in _timeline.get_children(): c.queue_free()
 	_timeline.custom_minimum_size = Vector2(_n_ticks * TICK_W, 44)
 	# grid cells (visual only)
@@ -72,10 +74,11 @@ func _redraw_timeline() -> void:
 		else:
 			blk.modulate = Color(1, 0.7, 0.4)
 		blk.remove_requested.connect(_on_block_remove)
+		blk.expand_requested.connect(_on_block_expand)
 		_timeline.add_child(blk)
 
 func _refresh_labels() -> void:
-	_stamina.text = "气 %d/%d  已排%d (可超至%d)" % [_stamina_now, _sta_max, _plan.total_cost(), _stamina_now + Plan.OVERCOMMIT_BUFFER]
+	_stamina.text = "气 %d/%d  已排%d (可超至%d)" % [_stamina_now, _sta_max, _effective_cost(), _stamina_now + Plan.OVERCOMMIT_BUFFER]
 	var fused := _rules.apply(_plan)
 	_combo.text = "连招预览: " + ", ".join(fused.moves.map(func(pm): return pm.move.move_name))
 
@@ -124,6 +127,54 @@ func _on_block_remove(sorted_indices: Array) -> void:
 			p.add(PlacedMove.new(pm.move, pm.start))
 	_plan = p
 	_redraw_timeline(); _refresh_labels()
+
+# 气 only counts moves that actually take effect — overflow (red) moves don't.
+func _effective_cost() -> int:
+	var s := _plan.sorted()
+	var c := 0
+	for e in _rules.fuse_detailed(_plan):
+		var mv: Move = e["move"]
+		if e["start"] + mv.total_duration() <= _n_ticks:
+			for si in e["sorted_indices"]:
+				c += s[si].move.stamina_cost
+	return c
+
+# Click a combo block -> popup listing its components, each removable.
+func _on_block_expand(block) -> void:
+	_close_popup()
+	var s := _plan.sorted()
+	var comps: Array[PlacedMove] = []
+	for si in block.sorted_indices:
+		if si >= 0 and si < s.size():
+			comps.append(s[si])
+	var panel := PanelContainer.new()
+	var vbox := VBoxContainer.new()
+	panel.add_child(vbox)
+	var title := Label.new()
+	title.text = "连招组件（点×移除）"
+	vbox.add_child(title)
+	for pm in comps:
+		var b := Button.new()
+		b.text = "✕ " + pm.move.move_name
+		b.pressed.connect(_remove_move.bind(pm))
+		vbox.add_child(b)
+	add_child(panel)
+	# position the popup just above the clicked block
+	panel.position = block.global_position - global_position + Vector2(0, -8.0 - comps.size() * 36.0)
+	_popup = panel
+
+func _remove_move(pm: PlacedMove) -> void:
+	var p := Plan.new()
+	for m in _plan.moves:
+		if m != pm:
+			p.add(PlacedMove.new(m.move, m.start))
+	_plan = p
+	_redraw_timeline(); _refresh_labels()
+
+func _close_popup() -> void:
+	if _popup != null and is_instance_valid(_popup):
+		_popup.queue_free()
+	_popup = null
 
 # Drag-and-drop is handled by the Timeline node itself (src/scenes/timeline_drop.gd),
 # which is the control under the cursor when dropping; it forwards to
