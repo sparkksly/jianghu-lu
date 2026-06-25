@@ -25,6 +25,8 @@ func is_valid(sta_max: int, n_ticks: int) -> bool:
 	for pm in s:
 		if pm.start < 0 or pm.start >= n_ticks:
 			return false
+		if pm.end_tick() > n_ticks:
+			return false # move would spill past the timeline grid
 		if pm.start < last_end:
 			return false # overlap
 		last_end = pm.end_tick()

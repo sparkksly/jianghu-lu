@@ -6,46 +6,69 @@
 [node name="PlanPhase" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 script = ExtResource("1_pphase")
 
+[node name="Bg" type="Panel" parent="."]
+offset_left = 36.0
+offset_top = 356.0
+offset_right = 1116.0
+offset_bottom = 642.0
+
+[node name="Title" type="Label" parent="."]
+offset_left = 56.0
+offset_top = 362.0
+offset_right = 400.0
+offset_bottom = 384.0
+text = "排招 — 拖动招式到下方时间轴"
+
 [node name="DeckRow" type="HBoxContainer" parent="."]
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 800.0
-offset_bottom = 60.0
+offset_left = 56.0
+offset_top = 390.0
+offset_right = 1096.0
+offset_bottom = 430.0
 
 [node name="Timeline" type="Control" parent="."]
-offset_left = 20.0
-offset_top = 80.0
-offset_right = 800.0
-offset_bottom = 124.0
-custom_minimum_size = Vector2(560, 44)
+offset_left = 56.0
+offset_top = 442.0
+offset_right = 656.0
+offset_bottom = 486.0
+custom_minimum_size = Vector2(600, 44)
 script = ExtResource("2_tldrop")
 
 [node name="StaminaLabel" type="Label" parent="."]
-offset_left = 20.0
-offset_top = 140.0
-offset_right = 500.0
-offset_bottom = 165.0
+offset_left = 700.0
+offset_top = 442.0
+offset_right = 1096.0
+offset_bottom = 466.0
 text = "体力 0 / 10 (可超额至 15)"
 
 [node name="ComboPreview" type="Label" parent="."]
-offset_left = 20.0
-offset_top = 175.0
-offset_right = 700.0
-offset_bottom = 200.0
+offset_left = 700.0
+offset_top = 470.0
+offset_right = 1096.0
+offset_bottom = 510.0
+autowrap_mode = 2
 text = "连招预览: "
 
 [node name="EnemyIntent" type="Label" parent="."]
-offset_left = 20.0
-offset_top = 210.0
-offset_right = 700.0
-offset_bottom = 235.0
+offset_left = 700.0
+offset_top = 514.0
+offset_right = 1096.0
+offset_bottom = 554.0
+autowrap_mode = 2
 text = "对手意图: "
 
+[node name="Hint" type="Label" parent="."]
+offset_left = 56.0
+offset_top = 498.0
+offset_right = 656.0
+offset_bottom = 520.0
+text = "点击时间轴上的招式可移除"
+
 [node name="CommitButton" type="Button" parent="."]
-offset_left = 20.0
-offset_top = 250.0
-offset_right = 120.0
-offset_bottom = 280.0
+offset_left = 980.0
+offset_top = 590.0
+offset_right = 1096.0
+offset_bottom = 628.0
 text = "出招"
