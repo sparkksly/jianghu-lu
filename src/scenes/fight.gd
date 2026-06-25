@@ -33,7 +33,7 @@ func _ready() -> void:
 	_state.hp = [p_hp, e_hp]; _state.max_hp = [p_mhp, e_hp]
 	_state.sta_max = [10, 10]; _state.stamina = [10, 10]
 	_state.regen = [6, e_reg]
-	_state.n_ticks = 10
+	_state.n_ticks = 12
 	_rules = ComboLibrary.build()
 	_deck = Deck.starter()
 	_plan_phase.plan_committed.connect(_on_player_plan)

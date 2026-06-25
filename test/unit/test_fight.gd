@@ -62,11 +62,11 @@ func test_codex_button_toggles_panel():
 	w.get_node("Codex").toggle()
 	assert_true(w.get_node("Codex").visible)
 
-func test_fight_uses_10_ticks():
+func test_fight_uses_12_ticks():
 	var w = load("res://src/scenes/fight.tscn").instantiate()
 	add_child_autofree(w)
 	await get_tree().process_frame
-	assert_eq(w._state.n_ticks, 10)
+	assert_eq(w._state.n_ticks, 12)
 
 func test_fight_round_one_starts_full_stamina():
 	var w = load("res://src/scenes/fight.tscn").instantiate()
