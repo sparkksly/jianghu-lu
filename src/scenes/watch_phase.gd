@@ -21,8 +21,21 @@ var _state: CombatState
 var _t := 0
 var _max_t := 0
 var _accum := 0.0
-const STEP := 0.35
+const STEP := 0.6     # seconds per tick (slower so the fight is readable)
 const RED_DRAIN := 6.0  # red bar units drained per second
+
+# Sync the bars to a state WITHOUT animating (used between rounds so the
+# health bars are always visible while the player is planning).
+func show_state(state: CombatState) -> void:
+	set_process(false)
+	var bars: Array = [[_p0h, _p0hr, _p0hl, 0], [_p1h, _p1hr, _p1hl, 1]]
+	for bar in bars:
+		var idx: int = bar[3]
+		bar[0].max_value = state.max_hp[idx]; bar[0].value = state.hp[idx]
+		bar[1].max_value = state.max_hp[idx]; bar[1].value = state.hp[idx]
+	_p0s.max_value = state.sta_max[0]; _p0s.value = state.stamina[0]
+	_p1s.max_value = state.sta_max[1]; _p1s.value = state.stamina[1]
+	_update_labels()
 
 func play(state_before: CombatState, _plans: Array, events: Array) -> void:
 	_state = state_before.clone()
@@ -96,9 +109,11 @@ func _spawn_float(side: int, text: String) -> void:
 		return
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.position = Vector2(80 if side == 0 else 360, 120)
+	# Place the popup under each fighter's health bar (P0 left, P1 right).
+	lbl.position = Vector2(120 if side == 0 else 940, 92)
 	_float.add_child(lbl)
 	var tw := create_tween()
-	tw.parallel().tween_property(lbl, "position:y", lbl.position.y - 40, 0.8)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.8)
+	# Drift up over the whole life, but linger before fading so it reads.
+	tw.parallel().tween_property(lbl, "position:y", lbl.position.y - 50, 1.3)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.8).set_delay(0.5)
 	tw.tween_callback(lbl.queue_free)

@@ -8,7 +8,9 @@ func test_scene_structure():
 	assert_not_null(w.get_node("PlanPhase"), "PlanPhase child exists")
 	assert_not_null(w.get_node("WatchPhase"), "WatchPhase child exists")
 	assert_not_null(w.get_node("ResultLabel"), "ResultLabel child exists")
-	assert_false(w.get_node("WatchPhase").visible, "WatchPhase starts hidden")
+	# Battle stage (health bars + log) stays visible behind the planning panel.
+	assert_true(w.get_node("WatchPhase").visible, "WatchPhase stage is visible during planning")
+	assert_true(w.get_node("PlanPhase").visible, "PlanPhase overlay is visible during planning")
 	assert_false(w.get_node("ResultLabel").visible, "ResultLabel starts hidden")
 
 func test_initial_state():
@@ -50,8 +52,15 @@ func test_codex_button_toggles_panel():
 	w.get_node("Codex").toggle()
 	assert_true(w.get_node("Codex").visible)
 
-func test_fight_uses_14_ticks():
+func test_fight_uses_10_ticks():
 	var w = load("res://src/scenes/fight.tscn").instantiate()
 	add_child_autofree(w)
 	await get_tree().process_frame
-	assert_eq(w._state.n_ticks, 14)
+	assert_eq(w._state.n_ticks, 10)
+
+func test_fight_round_one_starts_full_stamina():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	add_child_autofree(w)
+	await get_tree().process_frame
+	assert_eq(w._state.stamina, w._state.sta_max, "round 1 opens at full 气")
+	assert_eq(w._state.regen, [6, 6], "regen configured")

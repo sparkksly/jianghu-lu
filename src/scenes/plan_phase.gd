@@ -13,12 +13,13 @@ const TICK_W := 40.0
 
 var _deck: Array[Move] = []
 var _rules: ComboRules
+var _stamina_now := 10
 var _sta_max := 10
-var _n_ticks := 14
+var _n_ticks := 10
 var _plan := Plan.new()
 
-func setup(deck: Array[Move], rules: ComboRules, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
-	_deck = deck; _rules = rules; _sta_max = sta_max; _n_ticks = n_ticks
+func setup(deck: Array[Move], rules: ComboRules, stamina_now: int, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
+	_deck = deck; _rules = rules; _stamina_now = stamina_now; _sta_max = sta_max; _n_ticks = n_ticks
 	_plan = Plan.new()
 	_intent.text = "对手意图: " + ", ".join(enemy_intent)
 	_build_deck()
@@ -62,14 +63,14 @@ func _redraw_timeline() -> void:
 		_timeline.add_child(blk)
 
 func _refresh_labels() -> void:
-	_stamina.text = "体力 %d / %d (可超额至 %d)" % [_plan.total_cost(), _sta_max, int(floor(1.5 * _sta_max))]
+	_stamina.text = "气 %d/%d  已排%d (可超至%d)" % [_stamina_now, _sta_max, _plan.total_cost(), _stamina_now + Plan.OVERCOMMIT_BUFFER]
 	var fused := _rules.apply(_plan)
 	_combo.text = "连招预览: " + ", ".join(fused.moves.map(func(pm): return pm.move.move_name))
 
 # ---- testable drop entry points ----
 func try_drop_new(move: Move, local_x: float) -> bool:
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
-	if TimelineLogic.can_place(_plan, move, tick, _sta_max, _n_ticks):
+	if TimelineLogic.can_place(_plan, move, tick, _stamina_now, _n_ticks):
 		_plan = TimelineLogic.with_move(_plan, move, tick)
 		_redraw_timeline(); _refresh_labels()
 		return true
@@ -81,7 +82,7 @@ func try_move_existing(index: int, local_x: float) -> bool:
 	var pm: PlacedMove = s[index]
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
 	var raw := _raw_index(pm)
-	if TimelineLogic.can_place(_plan, pm.move, tick, _sta_max, _n_ticks, raw):
+	if TimelineLogic.can_place(_plan, pm.move, tick, _stamina_now, _n_ticks, raw):
 		var without := TimelineLogic.without_index(_plan, raw)
 		_plan = TimelineLogic.with_move(without, pm.move, tick)
 		_redraw_timeline(); _refresh_labels()
