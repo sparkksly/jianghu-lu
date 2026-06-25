@@ -10,6 +10,22 @@ func _kick(deck) -> Move:
 		if m.id == &"low_kick": return m
 	return null
 
+func test_timeline_node_is_the_drop_target():
+	# Reproduces the 🚫 bug: Godot calls _can_drop_data/_drop_data on the node
+	# under the cursor (the Timeline), not the PlanPhase root. The Timeline must
+	# accept the drop itself and place at the dropped tick (at_position is
+	# Timeline-local, so x / TICK_W = tick).
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	var tl = w.get_node("Timeline")
+	var k = _kick(Deck.starter())
+	var data = {"kind": "new", "move": k}
+	assert_true(tl._can_drop_data(Vector2(120, 10), data), "Timeline must accept drops")
+	tl._drop_data(Vector2(3 * 40 + 5, 10), data)  # x=125 → tick 3
+	assert_eq(w._plan.moves.size(), 1, "drop placed a move")
+	assert_eq(w._plan.sorted()[0].start, 3, "placed at the dropped tick")
+
 func test_nodes_wired():
 	var w = _load()
 	await get_tree().process_frame
