@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3 uid="uid://main_menu"]
+
+[ext_resource type="Script" path="res://src/scenes/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_menu")
+
+[node name="Bg" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.09, 0.1, 0.13, 1)
+
+[node name="Title" type="Label" parent="."]
+offset_left = 326.0
+offset_top = 120.0
+offset_right = 826.0
+offset_bottom = 210.0
+theme_override_font_sizes/font_size = 72
+horizontal_alignment = 1
+text = "江 湖 路"
+
+[node name="Subtitle" type="Label" parent="."]
+offset_left = 326.0
+offset_top = 214.0
+offset_right = 826.0
+offset_bottom = 244.0
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "从小渔村，到华山论剑"
+
+[node name="VBox" type="VBoxContainer" parent="."]
+offset_left = 476.0
+offset_top = 320.0
+offset_right = 676.0
+offset_bottom = 470.0
+theme_override_constants/separation = 16
+
+[node name="StartButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "开始游戏"
+
+[node name="LoadButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 44)
+disabled = true
+text = "读取存档（尚未开放）"
+
+[node name="QuitButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "退出"
