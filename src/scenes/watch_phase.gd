@@ -22,10 +22,11 @@ signal finished
 const N_CELLS := 12
 const CELL_W := 40.0
 const BAR_W := N_CELLS * CELL_W      # 480
-const LANE0_Y := 2.0                 # 我方 marker lane (top)
-const BAR_Y := 30.0
-const BAR_H := 24.0
-const LANE1_Y := 58.0                # 对手 marker lane (bottom)
+const LANE0_Y := 0.0                 # 我方 marker lane (top, vertical names)
+const BAR_Y := 50.0
+const BAR_H := 18.0
+const LANE1_Y := 70.0                # 对手 marker lane (bottom, vertical names)
+const TL_H := 116.0
 # Damage/heal numbers float at where each fighter roughly stands.
 const CHAR_X := [300.0, 840.0]       # 我方 偏左 / 对手 偏右
 const CHAR_Y := 300.0
@@ -92,7 +93,7 @@ func _build_timeline() -> void:
 	_playhead = ColorRect.new()
 	_playhead.color = Color(1, 1, 0.4, 0.9)
 	_playhead.position = Vector2(0, 0)
-	_playhead.size = Vector2(3, LANE1_Y + 22)
+	_playhead.size = Vector2(3, TL_H)
 	_playhead.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_timeline.add_child(_playhead)
 
@@ -169,9 +170,19 @@ func _spawn_number(side: int, text: String, color: Color, big: bool) -> void:
 
 func _spawn_marker(tick: int, lane: int, text: String, tone: String) -> void:
 	var lbl := Label.new()
-	lbl.text = text
+	lbl.text = _vertical(text)   # 招式名竖排，适配窄格
 	lbl.add_theme_font_size_override("font_size", 12)
 	lbl.add_theme_color_override("font_color", CombatFeed.tone_color(tone))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.position = Vector2(tick * CELL_W + 2, LANE0_Y if lane == 0 else LANE1_Y)
+	lbl.size = Vector2(CELL_W - 4, 0)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_timeline.add_child(lbl)
+
+func _vertical(text: String) -> String:
+	var out := ""
+	for i in text.length():
+		out += text[i]
+		if i < text.length() - 1:
+			out += "\n"
+	return out

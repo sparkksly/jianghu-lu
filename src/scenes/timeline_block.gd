@@ -16,8 +16,8 @@ func _ready() -> void:
 			remove_requested.emit(unit_index))   # single: remove
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
-	if is_combo:
-		return null  # combos are removed/expanded, not dragged
+	# Both singles and combos can be dragged left/right to retime; a plain click
+	# (no drag) still removes a single / expands a combo.
 	var preview := Label.new()
 	preview.text = move.move_name
 	set_drag_preview(preview)

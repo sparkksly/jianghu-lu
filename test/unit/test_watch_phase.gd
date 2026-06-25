@@ -62,19 +62,19 @@ func test_block_adds_marker_and_no_number():
 	var tl = w.get_node("CombatTimeline")
 	var has_marker := false
 	for c in tl.get_children():
-		if c is Label and c.text == "格挡":
+		if c is Label and c.text.replace("\n", "") == "格挡":
 			has_marker = true
 	assert_true(has_marker, "block drops a 格挡 marker on the timeline")
 	assert_eq(w.get_node("FloatingLayer").get_child_count(), 0, "block shows no damage number")
 
-func test_combo_hit_spawns_big_number_and_daZhao_marker():
+func test_combo_hit_spawns_big_number_and_move_name_marker():
 	var w = _load(); await get_tree().process_frame
 	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 14, &"chain_kick")])
 	w._process(1.0)
 	assert_true(w.get_node("FloatingLayer").get_child_count() >= 1, "大招命中浮大数字")
 	var tl = w.get_node("CombatTimeline")
-	var has_da := false
+	var marker_text := ""
 	for c in tl.get_children():
-		if c is Label and c.text == "大招":
-			has_da = true
-	assert_true(has_da, "大招 marker on timeline")
+		if c is Label and c.text.replace("\n", "") == "连环踢":
+			marker_text = "连环踢"
+	assert_eq(marker_text, "连环踢", "timeline marker shows the move name (vertical), not a category")

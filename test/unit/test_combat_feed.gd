@@ -35,16 +35,16 @@ func test_block_and_stamina_have_no_number():
 
 # ---- timeline markers (per-tick, in a player's lane) ----
 
-func test_combo_marks_big_in_attacker_lane():
+func test_combo_marks_move_name_big_in_attacker_lane():
 	var m := CombatFeed.marker(_ev(&"hit", 0, 1, 14, &"chain_kick"))
 	assert_eq(m["lane"], 0, "attacker's lane")
-	assert_eq(m["text"], "大招")
+	assert_eq(m["text"], "连环踢", "shows the move name, not a category")
 	assert_eq(m["tone"], "big")
 
-func test_interrupt_marks_attacker_lane():
+func test_interrupt_marks_move_name_in_attacker_lane():
 	var m := CombatFeed.marker(_ev(&"interrupt", 0, 1, 5, &"jab_kick"))
 	assert_eq(m["lane"], 0)
-	assert_eq(m["text"], "打断")
+	assert_eq(m["text"], "轻踢")
 
 func test_block_marks_defender_lane_good():
 	var m := CombatFeed.marker(_ev(&"block", 0, 1, 0, &"guard"))
@@ -57,6 +57,10 @@ func test_whiff_marks_dodger_lane():
 	assert_eq(m["lane"], 1, "the dodger is 1-actor")
 	assert_eq(m["text"], "闪避")
 
-func test_normal_hit_and_stamina_have_no_marker():
-	assert_true(CombatFeed.marker(_ev(&"hit", 0, 1, 5, &"low_kick")).is_empty(), "small hit: number only, no marker clutter")
+func test_normal_hit_marks_move_name():
+	var m := CombatFeed.marker(_ev(&"hit", 0, 1, 5, &"low_kick"))
+	assert_eq(m["text"], "扫腿", "every landed move names itself on the timeline")
+	assert_eq(m["tone"], "hit")
+
+func test_stamina_has_no_marker():
 	assert_true(CombatFeed.marker(_ev(&"stamina", 0, 0, -2)).is_empty())

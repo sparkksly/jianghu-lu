@@ -102,18 +102,10 @@ func try_drop_new(move: Move, local_x: float) -> bool:
 	return false
 
 func try_move_existing(unit_index: int, local_x: float) -> bool:
-	if unit_index < 0 or unit_index >= _model.units.size(): return false
-	var u: Dictionary = _model.units[unit_index]
-	if u["fused"]: return false   # combos aren't dragged
-	var move: Move = u["moves"][0]
-	var old_start: int = u["start"]
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
-	_model.remove_at(unit_index)
-	if _model.place(move, tick):
+	if _model.move_unit(unit_index, tick):   # works for singles AND combos
 		_redraw_timeline(); _refresh_labels()
 		return true
-	_model.place(move, old_start)   # restore
-	_redraw_timeline(); _refresh_labels()
 	return false
 
 func remove_at(unit_index: int) -> void:

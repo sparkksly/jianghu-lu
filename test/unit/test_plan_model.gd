@@ -51,6 +51,22 @@ func test_remove_component_breaks_combo_and_pushes_later_units_right():
 			thr_start = u["start"]
 	assert_eq(thr_start, 4, "later unit pushed right to avoid overlap")
 
+func test_move_unit_relocates_single():
+	var m := _model()
+	var k = _find(&"low_kick")
+	assert_true(m.place(k, 0))
+	assert_true(m.move_unit(0, 5), "a single can be dragged to a new tick")
+	assert_eq(m.units[0]["start"], 5)
+
+func test_move_unit_relocates_combo():
+	var m := _model()
+	var k = _find(&"low_kick")
+	m.place(k, 0); m.place(k, 2); m.place(k, 4)
+	m.fuse(m.fuse_opportunities()[0]["indices"])
+	assert_eq(m.units.size(), 1)
+	assert_true(m.move_unit(0, 6), "a fused combo can be dragged too")
+	assert_eq(m.units[0]["start"], 6)
+
 func test_overflow_flagged_and_excluded_from_commit():
 	var m := _model()
 	var k = _find(&"low_kick")   # dur 2

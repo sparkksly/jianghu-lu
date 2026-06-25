@@ -58,6 +58,21 @@ func remove_at(idx: int) -> void:
 	if idx >= 0 and idx < units.size():
 		units.remove_at(idx)
 
+# Drag a unit (single OR combo) to a new start tick. Soft overflow allowed.
+func can_move(idx: int, new_start: int) -> bool:
+	if idx < 0 or idx >= units.size():
+		return false
+	if new_start < 0 or new_start >= n_ticks:
+		return false
+	return not _overlaps(new_start, new_start + footprint(units[idx]), idx)
+
+func move_unit(idx: int, new_start: int) -> bool:
+	if not can_move(idx, new_start):
+		return false
+	units[idx]["start"] = new_start
+	_sort()
+	return true
+
 # --- fusion (explicit) ---
 # Contiguous runs of single units whose moves match a recipe -> a fuse hint.
 # Returns [{ "indices": Array[int], "start": int, "result": Move }] (indices into units, which is kept sorted).

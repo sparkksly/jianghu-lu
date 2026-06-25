@@ -113,28 +113,28 @@ text = "体力 10/10"
 
 [node name="TickLabel" type="Label" parent="."]
 offset_left = 336.0
-offset_top = 534.0
+offset_top = 498.0
 offset_right = 540.0
-offset_bottom = 558.0
+offset_bottom = 522.0
 text = "第0拍"
 
 [node name="MeLane" type="Label" parent="."]
 offset_left = 306.0
-offset_top = 560.0
+offset_top = 524.0
 offset_right = 332.0
-offset_bottom = 582.0
+offset_bottom = 546.0
 text = "我"
 
 [node name="FoeLane" type="Label" parent="."]
 offset_left = 306.0
-offset_top = 620.0
+offset_top = 594.0
 offset_right = 332.0
-offset_bottom = 642.0
+offset_bottom = 616.0
 text = "敌"
 
 [node name="CombatTimeline" type="Control" parent="."]
 offset_left = 336.0
-offset_top = 560.0
+offset_top = 524.0
 offset_right = 816.0
 offset_bottom = 644.0
 
