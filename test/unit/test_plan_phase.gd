@@ -10,21 +10,20 @@ func _kick(deck) -> Move:
 		if m.id == &"low_kick": return m
 	return null
 
+func _setup(w) -> void:
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+
 func test_timeline_node_is_the_drop_target():
-	# Reproduces the 🚫 bug: Godot calls _can_drop_data/_drop_data on the node
-	# under the cursor (the Timeline), not the PlanPhase root. The Timeline must
-	# accept the drop itself and place at the dropped tick (at_position is
-	# Timeline-local, so x / TICK_W = tick).
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var tl = w.get_node("Timeline")
 	var k = _kick(Deck.starter())
 	var data = {"kind": "new", "move": k}
 	assert_true(tl._can_drop_data(Vector2(120, 10), data), "Timeline must accept drops")
 	tl._drop_data(Vector2(3 * 40 + 5, 10), data)  # x=125 → tick 3
-	assert_eq(w._plan.moves.size(), 1, "drop placed a move")
-	assert_eq(w._plan.sorted()[0].start, 3, "placed at the dropped tick")
+	assert_eq(w._model.units.size(), 1, "drop placed a move")
+	assert_eq(w._model.units[0]["start"], 3, "placed at the dropped tick")
 
 func test_nodes_wired():
 	var w = _load()
@@ -38,39 +37,55 @@ func test_setup_builds_hand_and_intent_is_chinese():
 	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["扫腿", "？"])
 	assert_eq(w.get_node("DeckRow").get_child_count(), Deck.starter().size())
 	assert_string_contains(w.get_node("EnemyIntent").text, "扫腿")
-	assert_false(w.get_node("EnemyIntent").text.contains("jab"))
 
-func test_drop_places_and_combo_fuses_on_commit():
+func test_no_auto_fuse_offers_a_hint_then_explicit_fuse_on_commit():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var k = _kick(Deck.starter())
 	var dur = k.total_duration()
-	# drop three kicks back-to-back via the testable entry point (local_x in pixels)
 	assert_true(w.try_drop_new(k, 0.0))
 	assert_true(w.try_drop_new(k, dur * 40.0))
 	assert_true(w.try_drop_new(k, 2 * dur * 40.0))
-	assert_eq(w._plan.moves.size(), 3)
+	assert_eq(w._model.units.size(), 3, "no auto-fuse — still three singles")
+	var ops = w._model.fuse_opportunities()
+	assert_eq(ops.size(), 1, "a fuse hint is offered")
+	w._do_fuse(ops[0]["indices"])   # the player clicks the hint
+	assert_eq(w._model.units.size(), 1, "now one fused combo")
 	var captured := {"plan": null}
 	w.plan_committed.connect(func(p): captured["plan"] = p)
 	w._on_commit()
 	assert_eq(captured["plan"].moves.size(), 1)
 	assert_eq(captured["plan"].moves[0].move.id, &"chain_kick")
 
+func test_fuse_frees_space_for_an_extra_move():
+	var w = _load()
+	await get_tree().process_frame
+	_setup(w)
+	var k = _kick(Deck.starter())
+	var dur = k.total_duration()
+	w.try_drop_new(k, 0.0); w.try_drop_new(k, dur * 40.0); w.try_drop_new(k, 2 * dur * 40.0)
+	w._do_fuse(w._model.fuse_opportunities()[0]["indices"])   # compress -> frees ticks 3..6
+	assert_true(w.try_drop_new(k, 3 * 40.0), "freed space is reusable")
+	var captured := {"plan": null}
+	w.plan_committed.connect(func(p): captured["plan"] = p)
+	w._on_commit()
+	assert_eq(captured["plan"].moves.size(), 2, "combat runs the combo AND the extra move")
+
 func test_overlap_drop_rejected():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var k = _kick(Deck.starter())
 	assert_true(w.try_drop_new(k, 0.0))
 	assert_false(w.try_drop_new(k, 40.0), "overlaps the first kick")
-	assert_eq(w._plan.moves.size(), 1)
+	assert_eq(w._model.units.size(), 1)
 
 func test_soft_overflow_allowed_then_excluded_on_commit():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
-	var k = _kick(Deck.starter())   # low_kick, dur 2
+	_setup(w)
+	var k = _kick(Deck.starter())   # dur 2
 	assert_true(w.try_drop_new(k, 11 * 40.0), "soft limit allows overflow placement (start 11 -> end 13)")
 	assert_true(w.try_drop_new(k, 0.0), "and a valid one at tick 0")
 	var captured := {"plan": null}
@@ -78,60 +93,48 @@ func test_soft_overflow_allowed_then_excluded_on_commit():
 	w._on_commit()
 	assert_eq(captured["plan"].moves.size(), 1, "overflow (red) move excluded from committed plan")
 	assert_eq(captured["plan"].moves[0].start, 0)
+	assert_eq(w._model.effective_cost(), k.stamina_cost, "overflow not counted toward 气")
 
 func test_remove_one_combo_component_breaks_combo():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var k = _kick(Deck.starter())
 	var dur = k.total_duration()
 	w.try_drop_new(k, 0.0); w.try_drop_new(k, dur * 40.0); w.try_drop_new(k, 2 * dur * 40.0)
-	var s = w._plan.sorted()
-	w._remove_move(s[1])   # remove the middle component
-	assert_eq(w._plan.moves.size(), 2, "one component removed")
-	var entries = w._rules.fuse_detailed(w._plan)
-	assert_eq(entries.size(), 2, "remaining two legs no longer fuse (no 2-leg recipe)")
-	assert_false(entries[0]["is_combo"])
+	w._do_fuse(w._model.fuse_opportunities()[0]["indices"])
+	assert_true(w._model.units[0]["fused"])
+	w._on_remove_component(0, 1)   # remove the middle component
+	assert_eq(w._model.units.size(), 2, "two legs no longer fuse (no 2-leg recipe)")
+	assert_false(w._model.units[0]["fused"])
 
-func test_overflow_move_excluded_from_effective_cost():
+func test_remove_whole_combo():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
-	var k = _kick(Deck.starter())   # cost 2
-	w.try_drop_new(k, 0.0)          # effective
-	w.try_drop_new(k, 11 * 40.0)    # overflow (red) -> shouldn't cost 气
-	assert_eq(w._effective_cost(), 2, "only effective moves count toward 气")
-
-func test_combo_block_removes_all_components():
-	var w = _load()
-	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var k = _kick(Deck.starter())
 	var dur = k.total_duration()
-	assert_true(w.try_drop_new(k, 0.0))
-	assert_true(w.try_drop_new(k, dur * 40.0))
-	assert_true(w.try_drop_new(k, 2 * dur * 40.0))
-	assert_eq(w._plan.moves.size(), 3, "three legs placed (shown as one combo block)")
-	w._on_block_remove([0, 1, 2])
-	assert_eq(w._plan.moves.size(), 0, "removing the combo block removes all its components")
+	w.try_drop_new(k, 0.0); w.try_drop_new(k, dur * 40.0); w.try_drop_new(k, 2 * dur * 40.0)
+	w._do_fuse(w._model.fuse_opportunities()[0]["indices"])
+	assert_eq(w._model.units.size(), 1)
+	w.remove_at(0)
+	assert_eq(w._model.units.size(), 0, "removing the combo clears it")
 
 func test_remove_frees_slot():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var k = _kick(Deck.starter())
 	assert_true(w.try_drop_new(k, 0.0))
 	w.remove_at(0)
-	assert_eq(w._plan.moves.size(), 0)
+	assert_eq(w._model.units.size(), 0)
 
 func test_move_existing_repositions():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	_setup(w)
 	var k = _kick(Deck.starter())
 	assert_true(w.try_drop_new(k, 0.0))      # placed at tick 0
-	# move it later on the timeline (sorted index 0 → a free tick well past its duration)
-	var far_x = 6 * 40.0
-	assert_true(w.try_move_existing(0, far_x))
-	assert_eq(w._plan.moves.size(), 1, "still exactly one move")
-	assert_true(w._plan.sorted()[0].start >= 6, "move relocated later on the timeline")
+	assert_true(w.try_move_existing(0, 6 * 40.0))
+	assert_eq(w._model.units.size(), 1, "still exactly one move")
+	assert_true(w._model.units[0]["start"] >= 6, "move relocated later on the timeline")

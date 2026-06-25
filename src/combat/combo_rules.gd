@@ -67,6 +67,32 @@ func _matches_run(seq: Array, start_idx: int, recipe: Recipe) -> bool:
 func recipes() -> Array:
 	return _recipes
 
+func _recipes_by_len() -> Array:
+	var by_len := _recipes.duplicate()
+	by_len.sort_custom(func(a, b):
+		if a.slots.size() != b.slots.size():
+			return a.slots.size() > b.slots.size()
+		return a.reg_idx < b.reg_idx)
+	return by_len
+
+# If the ordered move list exactly matches a recipe, return the fused result
+# (with strength inherited from the components); otherwise null.
+func recipe_result(moves: Array) -> Move:
+	for recipe in _recipes_by_len():
+		if recipe.slots.size() != moves.size():
+			continue
+		var ok := true
+		for k in moves.size():
+			if not _slot_matches(recipe.slots[k], moves[k]):
+				ok = false
+				break
+		if ok:
+			var seq: Array = []
+			for m in moves:
+				seq.append(PlacedMove.new(m, 0))
+			return _fuse_result(recipe.result, seq, 0, moves.size())
+	return null
+
 func _slot_desc(slot: Dictionary) -> String:
 	if slot.has("any"): return "任意"
 	if slot.has("id"): return Loc.move_name(slot["id"])
