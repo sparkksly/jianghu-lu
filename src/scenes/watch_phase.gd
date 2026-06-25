@@ -79,7 +79,7 @@ func _apply_event(e) -> void:
 			var sb: ProgressBar = _p0s if e.actor == 0 else _p1s
 			sb.value = clampf(sb.value + e.amount, 0, sb.max_value)
 		&"block":
-			_spawn_float(e.actor, "格挡 回体力")
+			_spawn_float(e.target, "格挡 回体力")
 		&"whiff":
 			_spawn_float(e.actor, "用力过猛")     # attacker
 			_spawn_float(1 - e.actor, "闪避!")     # defender dodged

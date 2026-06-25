@@ -58,3 +58,15 @@ func test_remove_frees_slot():
 	assert_true(w.try_drop_new(k, 0.0))
 	w.remove_at(0)
 	assert_eq(w._plan.moves.size(), 0)
+
+func test_move_existing_repositions():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	var k = _kick(Deck.starter())
+	assert_true(w.try_drop_new(k, 0.0))      # placed at tick 0
+	# move it later on the timeline (sorted index 0 → a free tick well past its duration)
+	var far_x = 8 * 40.0
+	assert_true(w.try_move_existing(0, far_x))
+	assert_eq(w._plan.moves.size(), 1, "still exactly one move")
+	assert_true(w._plan.sorted()[0].start >= 8, "move relocated later on the timeline")

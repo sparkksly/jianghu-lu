@@ -46,3 +46,11 @@ func test_finished_emits():
 	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
 	for i in 6: w._process(1.0)
 	assert_signal_emitted(w, "finished")
+
+func test_block_float_on_blocker_side():
+	var w = _load(); await get_tree().process_frame
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"block", 0, 1, 0, &"guard")])
+	w._process(1.0)
+	var fl = w.get_node("FloatingLayer")
+	assert_true(fl.get_child_count() >= 1, "a block float spawned")
+	assert_gt(fl.get_child(0).position.x, 200.0, "block text on defender (right) side, not attacker")

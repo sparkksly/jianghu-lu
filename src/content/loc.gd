@@ -38,7 +38,6 @@ static func floating_text(e) -> String:
 		&"hit": return "命中 -%d" % e.amount
 		&"interrupt": return "打断! -%d" % e.amount
 		&"throw_break": return "投破防! -%d" % e.amount
-		&"block": return "格挡 回体力"
 		&"exhaust": return "气力不继!"
 		&"death": return ""
 		_: return ""
