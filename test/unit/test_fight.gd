@@ -39,3 +39,19 @@ func test_round_transition():
 	# so hp may or may not have changed depending on whether a hit landed.
 	# We just assert the call completed and watch is showing (already asserted above).
 	assert_not_null(w._state, "State still exists after simulation")
+
+func test_codex_button_toggles_panel():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	add_child_autofree(w)
+	await get_tree().process_frame
+	assert_not_null(w.get_node("CodexButton"))
+	assert_not_null(w.get_node("Codex"))
+	assert_false(w.get_node("Codex").visible)
+	w.get_node("Codex").toggle()
+	assert_true(w.get_node("Codex").visible)
+
+func test_fight_uses_14_ticks():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	add_child_autofree(w)
+	await get_tree().process_frame
+	assert_eq(w._state.n_ticks, 14)
