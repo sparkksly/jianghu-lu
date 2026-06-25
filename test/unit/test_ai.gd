@@ -13,6 +13,7 @@ func test_intent_partial_reveal():
 	var p := a.plan(Deck.starter(), 10, 10)
 	var shown := a.intent(p, 1)
 	assert_eq(shown.size(), p.sorted().size())
-	assert_ne(shown[0], &"?", "first move revealed")
+	assert_ne(shown[0], "？", "first move revealed as a Chinese name")
+	assert_false(shown[0].is_empty())
 	if shown.size() > 1:
-		assert_eq(shown[1], &"?", "later moves hidden")
+		assert_eq(shown[1], "？", "later moves hidden with fullwidth question mark")

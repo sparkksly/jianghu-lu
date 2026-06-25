@@ -16,7 +16,7 @@ var _n_ticks := 10
 var _selected: Move = null
 var _plan := Plan.new()
 
-func setup(deck: Array[Move], rules: ComboRules, sta_max: int, n_ticks: int, enemy_intent: Array[StringName]) -> void:
+func setup(deck: Array[Move], rules: ComboRules, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
 	_deck = deck; _rules = rules; _sta_max = sta_max; _n_ticks = n_ticks
 	_plan = Plan.new()
 	_intent.text = "对手意图: " + ", ".join(enemy_intent.map(func(x): return str(x)))

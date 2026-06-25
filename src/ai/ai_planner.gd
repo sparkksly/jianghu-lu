@@ -25,9 +25,9 @@ func plan(deck: Array[Move], sta_max: int, n_ticks: int) -> Plan:
 		t += m.total_duration()
 	return p
 
-func intent(plan: Plan, reveal_count: int) -> Array[StringName]:
-	var out: Array[StringName] = []
+func intent(plan: Plan, reveal_count: int) -> Array[String]:
+	var out: Array[String] = []
 	var s := plan.sorted()
 	for i in s.size():
-		out.append(s[i].move.id if i < reveal_count else &"?")
+		out.append(s[i].move.move_name if i < reveal_count else "？")
 	return out
