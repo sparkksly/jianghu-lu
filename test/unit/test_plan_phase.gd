@@ -17,7 +17,7 @@ func test_timeline_node_is_the_drop_target():
 	# Timeline-local, so x / TICK_W = tick).
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 10, ["？"])
 	var tl = w.get_node("Timeline")
 	var k = _kick(Deck.starter())
 	var data = {"kind": "new", "move": k}
@@ -35,7 +35,7 @@ func test_nodes_wired():
 func test_setup_builds_hand_and_intent_is_chinese():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["扫腿", "？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 10, ["扫腿", "？"])
 	assert_eq(w.get_node("DeckRow").get_child_count(), Deck.starter().size())
 	assert_string_contains(w.get_node("EnemyIntent").text, "扫腿")
 	assert_false(w.get_node("EnemyIntent").text.contains("jab"))
@@ -43,7 +43,7 @@ func test_setup_builds_hand_and_intent_is_chinese():
 func test_drop_places_and_combo_fuses_on_commit():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 10, ["？"])
 	var k = _kick(Deck.starter())
 	var dur = k.total_duration()
 	# drop three kicks back-to-back via the testable entry point (local_x in pixels)
@@ -60,7 +60,7 @@ func test_drop_places_and_combo_fuses_on_commit():
 func test_overlap_drop_rejected():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 10, ["？"])
 	var k = _kick(Deck.starter())
 	assert_true(w.try_drop_new(k, 0.0))
 	assert_false(w.try_drop_new(k, 40.0), "overlaps the first kick")
@@ -69,7 +69,7 @@ func test_overlap_drop_rejected():
 func test_remove_frees_slot():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 10, ["？"])
 	var k = _kick(Deck.starter())
 	assert_true(w.try_drop_new(k, 0.0))
 	w.remove_at(0)
@@ -78,11 +78,11 @@ func test_remove_frees_slot():
 func test_move_existing_repositions():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 10, ["？"])
 	var k = _kick(Deck.starter())
 	assert_true(w.try_drop_new(k, 0.0))      # placed at tick 0
 	# move it later on the timeline (sorted index 0 → a free tick well past its duration)
-	var far_x = 8 * 40.0
+	var far_x = 6 * 40.0
 	assert_true(w.try_move_existing(0, far_x))
 	assert_eq(w._plan.moves.size(), 1, "still exactly one move")
-	assert_true(w._plan.sorted()[0].start >= 8, "move relocated later on the timeline")
+	assert_true(w._plan.sorted()[0].start >= 6, "move relocated later on the timeline")

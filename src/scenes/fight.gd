@@ -14,7 +14,8 @@ func _ready() -> void:
 	_state = CombatState.new()
 	_state.hp = [40, 40]; _state.max_hp = [40, 40]
 	_state.sta_max = [10, 10]; _state.stamina = [10, 10]
-	_state.n_ticks = 15
+	_state.regen = [6, 6]
+	_state.n_ticks = 10
 	_rules = ComboLibrary.build()
 	_deck = Deck.starter()
 	_plan_phase.plan_committed.connect(_on_player_plan)
@@ -24,14 +25,15 @@ func _ready() -> void:
 
 func _start_round() -> void:
 	_round += 1
-	_state.stamina = _state.sta_max.duplicate()
+	if _round > 1:
+		_state.regen_round()  # 跨回合部分回气（不满回）
 	_result.visible = false
 	# Battle stage (health bars, log) stays visible; only the planning panel toggles.
 	_watch_phase.visible = true
 	_watch_phase.show_state(_state)
 	_plan_phase.visible = true
-	_pending_ai_plan = _rules.apply(_ai.plan(_deck, _state.sta_max[1], _state.n_ticks))
-	_plan_phase.setup(_deck, _rules, _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
+	_pending_ai_plan = _rules.apply(_ai.plan(_deck, _state.stamina[1], _state.n_ticks))
+	_plan_phase.setup(_deck, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
 
 var _pending_ai_plan: Plan
 

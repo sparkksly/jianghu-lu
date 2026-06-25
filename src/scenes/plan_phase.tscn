@@ -31,20 +31,20 @@ offset_bottom = 430.0
 [node name="Timeline" type="Control" parent="."]
 offset_left = 56.0
 offset_top = 442.0
-offset_right = 656.0
+offset_right = 456.0
 offset_bottom = 486.0
-custom_minimum_size = Vector2(600, 44)
+custom_minimum_size = Vector2(400, 44)
 script = ExtResource("2_tldrop")
 
 [node name="StaminaLabel" type="Label" parent="."]
-offset_left = 700.0
+offset_left = 480.0
 offset_top = 442.0
 offset_right = 1096.0
 offset_bottom = 466.0
-text = "体力 0 / 10 (可超额至 15)"
+text = "气 10/10  已排0 (可超至13)"
 
 [node name="ComboPreview" type="Label" parent="."]
-offset_left = 700.0
+offset_left = 480.0
 offset_top = 470.0
 offset_right = 1096.0
 offset_bottom = 510.0
@@ -52,7 +52,7 @@ autowrap_mode = 2
 text = "连招预览: "
 
 [node name="EnemyIntent" type="Label" parent="."]
-offset_left = 700.0
+offset_left = 480.0
 offset_top = 514.0
 offset_right = 1096.0
 offset_bottom = 554.0
