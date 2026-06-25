@@ -33,7 +33,9 @@ func _build_deck() -> void:
 	for m in _deck:
 		var b := DraggableCard.new()
 		b.move = m
-		b.text = "%s(%d)" % [m.move_name, m.stamina_cost]
+		# Show the move's full footprint in 拍 (startup+active+recovery) AND its 气 cost,
+		# so players can plan combos. The 拍 number is the timeline length it occupies.
+		b.text = "%s\n%d拍 · %d气" % [m.move_name, m.total_duration(), m.stamina_cost]
 		_deck_row.add_child(b)
 
 func _redraw_timeline() -> void:

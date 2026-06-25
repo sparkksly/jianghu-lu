@@ -24,46 +24,47 @@ text = "排招 — 拖动招式到下方时间轴"
 
 [node name="DeckRow" type="HBoxContainer" parent="."]
 offset_left = 56.0
-offset_top = 390.0
+offset_top = 388.0
 offset_right = 1096.0
-offset_bottom = 430.0
+offset_bottom = 446.0
+theme_override_constants/separation = 8
 
 [node name="Timeline" type="Control" parent="."]
 offset_left = 56.0
-offset_top = 442.0
-offset_right = 456.0
-offset_bottom = 486.0
-custom_minimum_size = Vector2(400, 44)
+offset_top = 456.0
+offset_right = 536.0
+offset_bottom = 500.0
+custom_minimum_size = Vector2(480, 44)
 script = ExtResource("2_tldrop")
 
 [node name="StaminaLabel" type="Label" parent="."]
-offset_left = 480.0
-offset_top = 442.0
+offset_left = 560.0
+offset_top = 456.0
 offset_right = 1096.0
-offset_bottom = 466.0
+offset_bottom = 480.0
 text = "气 10/10  已排0 (可超至13)"
 
 [node name="ComboPreview" type="Label" parent="."]
-offset_left = 480.0
-offset_top = 470.0
+offset_left = 560.0
+offset_top = 486.0
 offset_right = 1096.0
-offset_bottom = 510.0
+offset_bottom = 526.0
 autowrap_mode = 2
 text = "连招预览: "
 
 [node name="EnemyIntent" type="Label" parent="."]
-offset_left = 480.0
-offset_top = 514.0
+offset_left = 560.0
+offset_top = 530.0
 offset_right = 1096.0
-offset_bottom = 554.0
+offset_bottom = 570.0
 autowrap_mode = 2
 text = "对手意图: "
 
 [node name="Hint" type="Label" parent="."]
 offset_left = 56.0
-offset_top = 498.0
-offset_right = 656.0
-offset_bottom = 520.0
+offset_top = 508.0
+offset_right = 536.0
+offset_bottom = 530.0
 text = "点击时间轴上的招式可移除"
 
 [node name="CommitButton" type="Button" parent="."]
