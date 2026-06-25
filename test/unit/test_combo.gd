@@ -18,6 +18,26 @@ func _combo_result(id) -> Move:
 	m.hit_offsets=[0,1]; m.damage=8; m.stamina_cost=0  # paid via originals already
 	return m
 
+func _heavy_kick(id := &"heavy") -> Move:
+	var m := _kick(id); m.damage=12; m.super_armor=true; m.is_heavy=true
+	return m
+
+func test_combo_inherits_component_strength():
+	# Same recipe, different components: heavier legs -> stronger 连环踢 (+ inherits 霸体).
+	var rules := ComboRules.new()
+	rules.add_recipe([{"tag":&"腿法"},{"tag":&"腿法"},{"tag":&"腿法"}], _combo_result(&"chain"))
+	var light := Plan.new()
+	light.add(PlacedMove.new(_kick(), 0)); light.add(PlacedMove.new(_kick(), 3)); light.add(PlacedMove.new(_kick(), 6))
+	var light_res: Move = rules.apply(light).moves[0].move
+	var heavy := Plan.new()
+	heavy.add(PlacedMove.new(_heavy_kick(), 0)); heavy.add(PlacedMove.new(_heavy_kick(), 3)); heavy.add(PlacedMove.new(_heavy_kick(), 6))
+	var heavy_res: Move = rules.apply(heavy).moves[0].move
+	assert_gt(heavy_res.damage, light_res.damage, "heavier components -> stronger combo")
+	assert_true(heavy_res.super_armor, "combo inherits 霸体 from heavy components")
+	assert_false(light_res.super_armor, "light combo has no 霸体")
+	# shape (duration/hits) stays the combo's, only power/affixes inherit
+	assert_eq(heavy_res.total_duration(), _combo_result(&"chain").total_duration())
+
 func test_homogeneous_three_kicks_fuse():
 	var rules := ComboRules.new()
 	rules.add_recipe([{"tag":&"腿法"},{"tag":&"腿法"},{"tag":&"腿法"}], _combo_result(&"chain_kick"))

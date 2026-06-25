@@ -9,7 +9,31 @@ class Recipe:
 		slots = p_slots
 		result = p_result
 
+const COMBO_BONUS := 1.25  # synergy multiplier on the components' combined power
+
 var _recipes: Array[Recipe] = []
+
+# The fused move inherits its STRENGTH (damage + affixes) from the components used,
+# so a 连环踢 built from 重踢 hits harder / gains 霸体 than one from 轻踢 — while the
+# combo's SHAPE (duration / hit pattern) stays the recipe's template.
+func _fuse_result(template: Move, seq: Array, start_idx: int, n_slots: int) -> Move:
+	var r: Move = template.duplicate()
+	var dmg_sum := 0
+	var heavy := false
+	var armor := false
+	var interrupt := false
+	for k in n_slots:
+		var m: Move = seq[start_idx + k].move
+		dmg_sum += m.damage
+		heavy = heavy or m.is_heavy
+		armor = armor or m.super_armor
+		interrupt = interrupt or m.can_interrupt
+	var hits: int = max(1, r.hit_offsets.size())
+	r.damage = int(round(dmg_sum * COMBO_BONUS / hits))  # per-hit; total ≈ sum × bonus
+	r.is_heavy = heavy
+	r.super_armor = armor
+	r.can_interrupt = interrupt
+	return r
 
 func add_recipe(slots: Array, result: Move) -> void:
 	var r := Recipe.new(slots, result)
@@ -72,7 +96,8 @@ func apply(plan: Plan) -> Plan:
 		var fused := false
 		for recipe in by_len:
 			if _matches_run(seq, i, recipe):
-				out.add(PlacedMove.new(recipe.result, seq[i].start))
+				var fused_move := _fuse_result(recipe.result, seq, i, recipe.slots.size())
+				out.add(PlacedMove.new(fused_move, seq[i].start))
 				i += recipe.slots.size()
 				fused = true
 				break
