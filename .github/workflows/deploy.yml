@@ -1,0 +1,89 @@
+name: Test & Deploy Web
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.6.1-stable
+  TEMPLATES_DIR: /home/runner/.local/share/godot/export_templates/4.6.1.stable
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q "Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          sudo mv "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+      - name: Import project
+        run: godot --headless --import 2>/dev/null || true
+      - name: Run GUT tests
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gconfig=.gutconfig.json
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q "Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          sudo mv "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+      - name: Cache export templates
+        id: tplcache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.TEMPLATES_DIR }}
+          key: godot-templates-${{ env.GODOT_VERSION }}
+      - name: Install export templates
+        if: steps.tplcache.outputs.cache-hit != 'true'
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          unzip -q "Godot_v${GODOT_VERSION}_export_templates.tpz"
+          mkdir -p "${TEMPLATES_DIR}"
+          mv templates/* "${TEMPLATES_DIR}/"
+      - name: Refresh CJK font subset (best-effort)
+        run: |
+          python3 -m pip install --quiet fonttools brotli || true
+          if python3 -c "import fontTools" 2>/dev/null; then
+            wget -q -O /tmp/noto.ttf "https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf" \
+              && python3 scripts/build_font_subset.py /tmp/noto.ttf assets/fonts/NotoSansSC-subset.ttf \
+              || echo "subset step failed; using committed font"
+          fi
+      - name: Export web build
+        run: |
+          godot --headless --import 2>/dev/null || true
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+          touch build/web/.nojekyll
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
