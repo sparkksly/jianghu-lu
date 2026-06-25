@@ -66,6 +66,32 @@ func test_overlap_drop_rejected():
 	assert_false(w.try_drop_new(k, 40.0), "overlaps the first kick")
 	assert_eq(w._plan.moves.size(), 1)
 
+func test_soft_overflow_allowed_then_excluded_on_commit():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	var k = _kick(Deck.starter())   # low_kick, dur 2
+	assert_true(w.try_drop_new(k, 11 * 40.0), "soft limit allows overflow placement (start 11 -> end 13)")
+	assert_true(w.try_drop_new(k, 0.0), "and a valid one at tick 0")
+	var captured := {"plan": null}
+	w.plan_committed.connect(func(p): captured["plan"] = p)
+	w._on_commit()
+	assert_eq(captured["plan"].moves.size(), 1, "overflow (red) move excluded from committed plan")
+	assert_eq(captured["plan"].moves[0].start, 0)
+
+func test_combo_block_removes_all_components():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	var k = _kick(Deck.starter())
+	var dur = k.total_duration()
+	assert_true(w.try_drop_new(k, 0.0))
+	assert_true(w.try_drop_new(k, dur * 40.0))
+	assert_true(w.try_drop_new(k, 2 * dur * 40.0))
+	assert_eq(w._plan.moves.size(), 3, "three legs placed (shown as one combo block)")
+	w._on_block_remove([0, 1, 2])
+	assert_eq(w._plan.moves.size(), 0, "removing the combo block removes all its components")
+
 func test_remove_frees_slot():
 	var w = _load()
 	await get_tree().process_frame

@@ -19,7 +19,7 @@ func total_cost() -> int:
 		c += pm.move.stamina_cost
 	return c
 
-func is_valid(stamina_now: int, n_ticks: int) -> bool:
+func is_valid(stamina_now: int, n_ticks: int, allow_overflow := false) -> bool:
 	if total_cost() > stamina_now + OVERCOMMIT_BUFFER:
 		return false
 	var s := sorted()
@@ -27,8 +27,8 @@ func is_valid(stamina_now: int, n_ticks: int) -> bool:
 	for pm in s:
 		if pm.start < 0 or pm.start >= n_ticks:
 			return false
-		if pm.end_tick() > n_ticks:
-			return false # move would spill past the timeline grid
+		if not allow_overflow and pm.end_tick() > n_ticks:
+			return false # move would spill past the timeline grid (hard limit)
 		if pm.start < last_end:
 			return false # overlap
 		last_end = pm.end_tick()

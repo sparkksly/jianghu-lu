@@ -84,24 +84,40 @@ func describe_recipes() -> Array[Dictionary]:
 	return out
 
 func apply(plan: Plan) -> Plan:
+	var out := Plan.new()
+	for e in fuse_detailed(plan):
+		out.add(PlacedMove.new(e["move"], e["start"]))
+	return out
+
+# Like apply(), but returns rich entries for the planning UI:
+# [{move, start, sorted_indices:Array[int], is_combo:bool}], where sorted_indices
+# point into plan.sorted() (the raw moves the entry consumed).
+func fuse_detailed(plan: Plan) -> Array:
 	var seq := plan.sorted()
 	var by_len := _recipes.duplicate()
 	by_len.sort_custom(func(a, b):
 		if a.slots.size() != b.slots.size():
 			return a.slots.size() > b.slots.size()
 		return a.reg_idx < b.reg_idx)
-	var out := Plan.new()
+	var out: Array = []
 	var i := 0
 	while i < seq.size():
 		var fused := false
 		for recipe in by_len:
 			if _matches_run(seq, i, recipe):
-				var fused_move := _fuse_result(recipe.result, seq, i, recipe.slots.size())
-				out.add(PlacedMove.new(fused_move, seq[i].start))
-				i += recipe.slots.size()
+				var n: int = recipe.slots.size()
+				var fused_move := _fuse_result(recipe.result, seq, i, n)
+				out.append({
+					"move": fused_move, "start": seq[i].start,
+					"sorted_indices": range(i, i + n), "is_combo": true,
+				})
+				i += n
 				fused = true
 				break
 		if not fused:
-			out.add(seq[i])
+			out.append({
+				"move": seq[i].move, "start": seq[i].start,
+				"sorted_indices": [i], "is_combo": false,
+			})
 			i += 1
 	return out

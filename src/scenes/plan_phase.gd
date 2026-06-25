@@ -50,18 +50,28 @@ func _redraw_timeline() -> void:
 		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_timeline.add_child(cell)
 	# placed move blocks
-	var s := _plan.sorted()
-	for i in s.size():
-		var pm: PlacedMove = s[i]
+	# Show the FUSED view: combos appear as one compressed block (matching what
+	# combat actually runs). Overflow past the grid is allowed but marked red.
+	for e in _rules.fuse_detailed(_plan):
+		var mv: Move = e["move"]
+		var start: int = e["start"]
+		var dur := mv.total_duration()
+		var overflow := start + dur > _n_ticks
 		var blk := TimelineBlock.new()
-		blk.index = i
-		blk.move = pm.move
-		blk.text = pm.move.move_name
-		blk.position = Vector2(pm.start * TICK_W, 2)
-		blk.custom_minimum_size = Vector2(pm.move.total_duration() * TICK_W - 2, 40)
+		blk.sorted_indices = e["sorted_indices"]
+		blk.is_combo = e["is_combo"]
+		blk.move = mv
+		blk.text = ("✦" + mv.move_name) if e["is_combo"] else mv.move_name
+		blk.position = Vector2(start * TICK_W, 2)
+		blk.custom_minimum_size = Vector2(dur * TICK_W - 2, 40)
 		blk.size = blk.custom_minimum_size
-		blk.modulate = Color(1, 0.7, 0.4)
-		blk.remove_requested.connect(remove_at)
+		if overflow:
+			blk.modulate = Color(1, 0.3, 0.3)    # 红：超出上限，不生效
+		elif e["is_combo"]:
+			blk.modulate = Color(1, 0.85, 0.3)    # 金：连招
+		else:
+			blk.modulate = Color(1, 0.7, 0.4)
+		blk.remove_requested.connect(_on_block_remove)
 		_timeline.add_child(blk)
 
 func _refresh_labels() -> void:
@@ -72,7 +82,8 @@ func _refresh_labels() -> void:
 # ---- testable drop entry points ----
 func try_drop_new(move: Move, local_x: float) -> bool:
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
-	if TimelineLogic.can_place(_plan, move, tick, _stamina_now, _n_ticks):
+	# soft limit: allow placing past the grid (it renders red / won't take effect)
+	if TimelineLogic.can_place(_plan, move, tick, _stamina_now, _n_ticks, -1, true):
 		_plan = TimelineLogic.with_move(_plan, move, tick)
 		_redraw_timeline(); _refresh_labels()
 		return true
@@ -84,7 +95,7 @@ func try_move_existing(index: int, local_x: float) -> bool:
 	var pm: PlacedMove = s[index]
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
 	var raw := _raw_index(pm)
-	if TimelineLogic.can_place(_plan, pm.move, tick, _stamina_now, _n_ticks, raw):
+	if TimelineLogic.can_place(_plan, pm.move, tick, _stamina_now, _n_ticks, raw, true):
 		var without := TimelineLogic.without_index(_plan, raw)
 		_plan = TimelineLogic.with_move(without, pm.move, tick)
 		_redraw_timeline(); _refresh_labels()
@@ -98,10 +109,20 @@ func _raw_index(pm: PlacedMove) -> int:
 	return -1
 
 func remove_at(sorted_index: int) -> void:
+	_on_block_remove([sorted_index])
+
+# Remove every raw move a block covers (a combo block removes all its components).
+func _on_block_remove(sorted_indices: Array) -> void:
 	var s := _plan.sorted()
-	if sorted_index < 0 or sorted_index >= s.size(): return
-	var raw := _raw_index(s[sorted_index])
-	_plan = TimelineLogic.without_index(_plan, raw)
+	var doomed: Array[PlacedMove] = []
+	for si in sorted_indices:
+		if si >= 0 and si < s.size():
+			doomed.append(s[si])
+	var p := Plan.new()
+	for pm in _plan.moves:
+		if pm not in doomed:
+			p.add(PlacedMove.new(pm.move, pm.start))
+	_plan = p
 	_redraw_timeline(); _refresh_labels()
 
 # Drag-and-drop is handled by the Timeline node itself (src/scenes/timeline_drop.gd),
@@ -109,4 +130,10 @@ func remove_at(sorted_index: int) -> void:
 # try_drop_new / try_move_existing here.
 
 func _on_commit() -> void:
-	plan_committed.emit(_rules.apply(_plan))
+	# Drop anything that spills past the grid — those red moves don't take effect.
+	var fused := _rules.apply(_plan)
+	var p := Plan.new()
+	for pm in fused.moves:
+		if pm.end_tick() <= _n_ticks:
+			p.add(pm)
+	plan_committed.emit(p)

@@ -96,6 +96,17 @@ func test_equal_length_registration_order_wins():
 	assert_eq(fused.moves.size(), 1, "both recipes match; one fusion expected")
 	assert_eq(fused.moves[0].move.id, &"A_first", "first-registered recipe wins among equal-length recipes")
 
+func test_fuse_detailed_marks_combo_and_source_indices():
+	var rules := ComboRules.new()
+	rules.add_recipe([{"tag":&"腿法"},{"tag":&"腿法"},{"tag":&"腿法"}], _combo_result(&"chain"))
+	var p := Plan.new()
+	p.add(PlacedMove.new(_kick(), 0)); p.add(PlacedMove.new(_kick(), 3)); p.add(PlacedMove.new(_kick(), 6))
+	var entries := rules.fuse_detailed(p)
+	assert_eq(entries.size(), 1, "three legs collapse to one combo entry")
+	assert_true(entries[0]["is_combo"])
+	assert_eq(entries[0]["start"], 0)
+	assert_eq(entries[0]["sorted_indices"], [0, 1, 2], "covers all three raw moves")
+
 func test_describe_recipes_is_chinese():
 	var rules := ComboLibrary.build()
 	var desc := rules.describe_recipes()
