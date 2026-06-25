@@ -112,20 +112,56 @@ horizontal_alignment = 2
 text = "体力 10/10"
 
 [node name="TickLabel" type="Label" parent="."]
-offset_left = 526.0
-offset_top = 24.0
-offset_right = 626.0
-offset_bottom = 54.0
-horizontal_alignment = 1
+offset_left = 336.0
+offset_top = 534.0
+offset_right = 540.0
+offset_bottom = 558.0
 text = "第0拍"
 
-[node name="EventLog" type="VBoxContainer" parent="."]
-offset_left = 426.0
-offset_top = 84.0
-offset_right = 726.0
-offset_bottom = 340.0
+[node name="MeLane" type="Label" parent="."]
+offset_left = 306.0
+offset_top = 560.0
+offset_right = 332.0
+offset_bottom = 582.0
+text = "我"
+
+[node name="FoeLane" type="Label" parent="."]
+offset_left = 306.0
+offset_top = 620.0
+offset_right = 332.0
+offset_bottom = 642.0
+text = "敌"
+
+[node name="CombatTimeline" type="Control" parent="."]
+offset_left = 336.0
+offset_top = 560.0
+offset_right = 816.0
+offset_bottom = 644.0
 
 [node name="FloatingLayer" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
+
+[node name="LogButton" type="Button" parent="."]
+offset_left = 20.0
+offset_top = 604.0
+offset_right = 120.0
+offset_bottom = 640.0
+text = "战报 ▸"
+
+[node name="LogPanel" type="Panel" parent="."]
+visible = false
+offset_left = 20.0
+offset_top = 300.0
+offset_right = 410.0
+offset_bottom = 600.0
+
+[node name="Scroll" type="ScrollContainer" parent="LogPanel"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 382.0
+offset_bottom = 292.0
+
+[node name="EventLog" type="VBoxContainer" parent="LogPanel/Scroll"]
+custom_minimum_size = Vector2(366, 0)
