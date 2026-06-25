@@ -73,6 +73,30 @@ func move_unit(idx: int, new_start: int) -> bool:
 	_sort()
 	return true
 
+# Preview of dragging unit `dragged_idx` to `desired_start`: the dragged unit
+# claims that slot and the others are pushed right to make room (order follows
+# the new positions). Returns [{i, start}] keyed by current unit index; pure.
+func preview_layout(dragged_idx: int, desired_start: int) -> Array:
+	var items: Array = []
+	for i in units.size():
+		var s: int = desired_start if i == dragged_idx else units[i]["start"]
+		items.append({"i": i, "start": s, "fp": footprint(units[i]), "drag": i == dragged_idx})
+	items.sort_custom(func(a, b):
+		if a["start"] != b["start"]:
+			return a["start"] < b["start"]
+		return a["drag"] and not b["drag"])   # dragged wins ties -> inserts before
+	var cursor := 0
+	for it in items:
+		if it["start"] < cursor:
+			it["start"] = cursor
+		cursor = it["start"] + it["fp"]
+	return items
+
+func apply_layout(layout: Array) -> void:
+	for it in layout:
+		units[it["i"]]["start"] = it["start"]
+	_sort()
+
 # --- fusion (explicit) ---
 # Contiguous runs of single units whose moves match a recipe -> a fuse hint.
 # Returns [{ "indices": Array[int], "start": int, "result": Move }] (indices into units, which is kept sorted).

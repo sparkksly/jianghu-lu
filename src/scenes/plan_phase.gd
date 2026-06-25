@@ -19,6 +19,15 @@ var _n_ticks := 12
 var _model: PlanModel
 var _popup: Control = null
 
+# live-drag state
+var _blocks := {}          # unit_index -> TimelineBlock
+var _hints: Array = []
+var _drag_idx := -1
+var _dragging := false
+var _moved := false
+var _grab_off := 0.0       # cursor-to-block offset (timeline-local x)
+var _targets := {}         # unit_index -> target x
+
 func setup(deck: Array[Move], rules: ComboRules, stamina_now: int, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
 	_deck = deck; _rules = rules; _stamina_now = stamina_now; _sta_max = sta_max; _n_ticks = n_ticks
 	_model = PlanModel.new(rules, n_ticks)
@@ -39,6 +48,8 @@ func _build_deck() -> void:
 
 func _redraw_timeline() -> void:
 	_close_popup()
+	_blocks = {}
+	_hints = []
 	for c in _timeline.get_children(): c.queue_free()
 	_timeline.custom_minimum_size = Vector2(_n_ticks * TICK_W, 44)
 	for i in _n_ticks:
@@ -66,9 +77,9 @@ func _redraw_timeline() -> void:
 			blk.modulate = Color(1, 0.85, 0.3)     # 金：连招
 		else:
 			blk.modulate = Color(1, 0.7, 0.4)
-		blk.remove_requested.connect(remove_at)
-		blk.expand_requested.connect(_on_block_expand)
+		blk.grabbed.connect(_on_block_grabbed)
 		_timeline.add_child(blk)
+		_blocks[e["index"]] = blk
 	_draw_fuse_hints()
 
 # A clickable hint floats above any contiguous run of singles that can fuse.
@@ -80,6 +91,69 @@ func _draw_fuse_hints() -> void:
 		hint.position = Vector2(op["start"] * TICK_W, -26)
 		hint.pressed.connect(_do_fuse.bind(op["indices"]))
 		_timeline.add_child(hint)
+		_hints.append(hint)
+
+func _clear_hints() -> void:
+	for h in _hints:
+		if is_instance_valid(h): h.queue_free()
+	_hints = []
+
+# ---- live drag: block follows the cursor, others slide aside ----
+func _on_block_grabbed(unit_index: int) -> void:
+	if not _blocks.has(unit_index): return
+	_drag_idx = unit_index
+	_dragging = true
+	_moved = false
+	_close_popup()
+	_clear_hints()
+	var blk: Control = _blocks[unit_index]
+	blk.z_index = 1
+	_grab_off = _timeline.get_local_mouse_position().x - blk.position.x
+	_targets.clear()
+	set_process(true)
+
+func _input(event: InputEvent) -> void:
+	if not _dragging: return
+	if event is InputEventMouseMotion:
+		var mx: float = _timeline.get_local_mouse_position().x
+		var desired_x: float = mx - _grab_off
+		if absf(event.relative.x) > 0 and absf(mx - (_targets.get(_drag_idx, desired_x))) >= 0:
+			_moved = _moved or absf(event.relative.x) > 1
+		var tick := clampi(int(round(desired_x / TICK_W)), 0, _n_ticks - 1)
+		for it in _model.preview_layout(_drag_idx, tick):
+			_targets[it["i"]] = desired_x if it["i"] == _drag_idx else float(it["start"]) * TICK_W
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_finish_drag()
+
+func _process(delta: float) -> void:
+	if not _dragging: return
+	var t := clampf(delta * 18.0, 0.0, 1.0)
+	for ui in _blocks:
+		var blk: Control = _blocks[ui]
+		var tx: float = _targets.get(ui, blk.position.x)
+		if ui == _drag_idx:
+			blk.position.x = tx                         # 1:1 follow the cursor
+		else:
+			blk.position.x = lerpf(blk.position.x, tx, t)   # others ease into place
+
+func _finish_drag() -> void:
+	var dragged := _drag_idx
+	var moved := _moved
+	_dragging = false
+	_drag_idx = -1
+	set_process(false)
+	if moved:
+		var mx: float = _timeline.get_local_mouse_position().x
+		var tick := clampi(int(round((mx - _grab_off) / TICK_W)), 0, _n_ticks - 1)
+		_model.apply_layout(_model.preview_layout(dragged, tick))
+		_redraw_timeline(); _refresh_labels()
+	else:
+		# treated as a click
+		var blk = _blocks.get(dragged)
+		if blk and blk.is_combo:
+			_on_block_expand(blk)
+		else:
+			remove_at(dragged)
 
 func _do_fuse(indices: Array) -> void:
 	_model.fuse(indices)

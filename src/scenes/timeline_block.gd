@@ -1,24 +1,15 @@
 class_name TimelineBlock
 extends Button
 
-signal remove_requested(unit_index: int)
-signal expand_requested(block)   # combo blocks expand to edit components
+# A timeline block is grabbed on left-press; PlanPhase then drives a live drag
+# (the block follows the cursor, others slide aside). A press without movement
+# is treated as a click (remove single / expand combo) by PlanPhase.
+signal grabbed(unit_index)
 
-var unit_index := -1   # index into PlanModel.units (kept sorted)
+var unit_index := -1
 var is_combo := false
 var move: Move
 
-func _ready() -> void:
-	pressed.connect(func():
-		if is_combo:
-			expand_requested.emit(self)   # combo: open the component editor
-		else:
-			remove_requested.emit(unit_index))   # single: remove
-
-func _get_drag_data(_at_position: Vector2) -> Variant:
-	# Both singles and combos can be dragged left/right to retime; a plain click
-	# (no drag) still removes a single / expands a combo.
-	var preview := Label.new()
-	preview.text = move.move_name
-	set_drag_preview(preview)
-	return {"kind": "move", "index": unit_index}
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		grabbed.emit(unit_index)

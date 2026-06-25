@@ -67,6 +67,19 @@ func test_move_unit_relocates_combo():
 	assert_true(m.move_unit(0, 6), "a fused combo can be dragged too")
 	assert_eq(m.units[0]["start"], 6)
 
+func test_preview_layout_reorders_and_pushes_others():
+	var m := _model()
+	var k = _find(&"low_kick")   # dur 2
+	m.place(k, 0); m.place(k, 2)   # units[0]@0, units[1]@2
+	var layout := m.preview_layout(1, 0)   # drag unit 1 onto tick 0
+	var starts := {}
+	for it in layout:
+		starts[it["i"]] = it["start"]
+	assert_eq(starts[1], 0, "dragged unit takes tick 0")
+	assert_eq(starts[0], 2, "the other unit is pushed right")
+	m.apply_layout(layout)
+	assert_eq(m.units.size(), 2)
+
 func test_overflow_flagged_and_excluded_from_commit():
 	var m := _model()
 	var k = _find(&"low_kick")   # dur 2
