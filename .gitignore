@@ -2,6 +2,13 @@
 .godot/
 /android/
 
+# Export artifacts (web build, zips, etc.)
+/build/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
 # Godot/editor temp files
 *.TMP
 *~RF*.TMP
