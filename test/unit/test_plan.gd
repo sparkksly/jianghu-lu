@@ -17,13 +17,23 @@ func test_total_cost_and_sorted():
 	assert_eq(p.total_cost(), 5)
 	assert_eq(p.sorted()[0].start, 0)
 
-func test_overcommit_allowed_up_to_1_5x():
+func test_overcommit_up_to_current_plus_buffer():
+	# cap = stamina_now + OVERCOMMIT_BUFFER (10 + 3 = 13)
 	var p := Plan.new()
-	p.add(PlacedMove.new(_atk(15), 0)) # 15 == floor(1.5*10)
-	assert_true(p.is_valid(10, 10))
+	p.add(PlacedMove.new(_atk(13), 0))
+	assert_true(p.is_valid(10, 10), "13 == current(10)+buffer(3)")
 	var p2 := Plan.new()
-	p2.add(PlacedMove.new(_atk(16), 0))
-	assert_false(p2.is_valid(10, 10)) # over 1.5x
+	p2.add(PlacedMove.new(_atk(14), 0))
+	assert_false(p2.is_valid(10, 10), "14 over current+buffer")
+
+func test_overcommit_scales_with_current_stamina():
+	# at low current stamina you can plan far less
+	var p := Plan.new()
+	p.add(PlacedMove.new(_atk(7), 0))
+	assert_true(p.is_valid(4, 10), "7 == current(4)+buffer(3)")
+	var p2 := Plan.new()
+	p2.add(PlacedMove.new(_atk(8), 0))
+	assert_false(p2.is_valid(4, 10), "8 over current(4)+buffer(3)")
 
 func test_no_overlap():
 	var p := Plan.new()

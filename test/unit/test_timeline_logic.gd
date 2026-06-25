@@ -25,9 +25,10 @@ func test_can_place_rejects_overlap():
 	assert_true(TimelineLogic.can_place(p, _atk(2,1,1,1), 3, 10, 14), "fits after")
 
 func test_can_place_respects_overcommit():
-	var p := TimelineLogic.with_move(Plan.new(), _atk(14,1,1,1), 0) # cost 14 (==floor(1.5*10)-1)
-	assert_true(TimelineLogic.can_place(p, _atk(1,1,1,1), 3, 10, 14), "15 total ok")
-	assert_false(TimelineLogic.can_place(p, _atk(2,1,1,1), 3, 10, 14), "16 total over 1.5x")
+	# stamina_now=10 -> cap 13
+	var p := TimelineLogic.with_move(Plan.new(), _atk(11,1,1,1), 0) # cost 11
+	assert_true(TimelineLogic.can_place(p, _atk(2,1,1,1), 3, 10, 14), "13 total == cap")
+	assert_false(TimelineLogic.can_place(p, _atk(3,1,1,1), 3, 10, 14), "14 total over cap")
 
 func test_can_place_ignore_index_allows_self_move():
 	var p := TimelineLogic.with_move(Plan.new(), _atk(2,1,1,1), 0) # index 0 at tick 0
