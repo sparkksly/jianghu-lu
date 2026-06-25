@@ -6,9 +6,9 @@ var _rng := RandomNumberGenerator.new()
 func _init(seed: int) -> void:
 	_rng.seed = seed
 
-func plan(deck: Array[Move], sta_max: int, n_ticks: int) -> Plan:
+func plan(deck: Array[Move], stamina_now: int, n_ticks: int) -> Plan:
 	var p := Plan.new()
-	var budget := int(floor(1.5 * sta_max))
+	var budget := stamina_now  # plan within what you actually have; no self-gasp
 	var spent := 0
 	var t := 0
 	var guard := 0
