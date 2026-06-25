@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://plan_phase"]
+[gd_scene load_steps=3 format=3 uid="uid://plan_phase"]
 
 [ext_resource type="Script" path="res://src/scenes/plan_phase.gd" id="1_pphase"]
+[ext_resource type="Script" path="res://src/scenes/timeline_drop.gd" id="2_tldrop"]
 
 [node name="PlanPhase" type="Control"]
 anchor_right = 1.0
@@ -19,6 +20,7 @@ offset_top = 80.0
 offset_right = 800.0
 offset_bottom = 124.0
 custom_minimum_size = Vector2(560, 44)
+script = ExtResource("2_tldrop")
 
 [node name="StaminaLabel" type="Label" parent="."]
 offset_left = 20.0

@@ -101,16 +101,9 @@ func remove_at(sorted_index: int) -> void:
 	_plan = TimelineLogic.without_index(_plan, raw)
 	_redraw_timeline(); _refresh_labels()
 
-# ---- Godot drag-and-drop: root is the drop target ----
-func _can_drop_data(_at: Vector2, data) -> bool:
-	return typeof(data) == TYPE_DICTIONARY and data.has("kind")
-
-func _drop_data(_at: Vector2, data) -> void:
-	var local_x: float = _timeline.get_local_mouse_position().x
-	if data["kind"] == "new":
-		try_drop_new(data["move"], local_x)
-	elif data["kind"] == "move":
-		try_move_existing(data["index"], local_x)
+# Drag-and-drop is handled by the Timeline node itself (src/scenes/timeline_drop.gd),
+# which is the control under the cursor when dropping; it forwards to
+# try_drop_new / try_move_existing here.
 
 func _on_commit() -> void:
 	plan_committed.emit(_rules.apply(_plan))
