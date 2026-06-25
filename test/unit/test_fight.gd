@@ -13,6 +13,16 @@ func test_scene_structure():
 	assert_true(w.get_node("PlanPhase").visible, "PlanPhase overlay is visible during planning")
 	assert_false(w.get_node("ResultLabel").visible, "ResultLabel starts hidden")
 
+func test_watch_stage_does_not_block_planning_mouse():
+	# Regression: the always-visible WatchPhase is a full-rect Control drawn ON TOP
+	# of PlanPhase. If it captures mouse (default STOP), the deck cards never get the
+	# press and drag-and-drop dies. The stage must be mouse-transparent.
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	add_child_autofree(w)
+	await get_tree().process_frame
+	assert_eq(w.get_node("WatchPhase").mouse_filter, Control.MOUSE_FILTER_IGNORE,
+		"always-visible stage must ignore mouse so PlanPhase receives drags")
+
 func test_initial_state():
 	var w = load("res://src/scenes/fight.tscn").instantiate()
 	add_child_autofree(w)
