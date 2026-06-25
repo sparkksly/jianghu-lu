@@ -58,6 +58,18 @@ func remove_at(idx: int) -> void:
 	if idx >= 0 and idx < units.size():
 		units.remove_at(idx)
 
+# Append a fresh single (used while dragging a new move out of the deck). No
+# overlap check — the live drag repositions it via preview_layout. Returns its
+# index in the (kept-sorted) units array.
+func add_unit(move: Move, start: int) -> int:
+	var u := {"moves": [move], "fused": false, "start": start}
+	units.append(u)
+	_sort()
+	for i in units.size():
+		if is_same(units[i], u):
+			return i
+	return units.size() - 1
+
 # Drag a unit (single OR combo) to a new start tick. Soft overflow allowed.
 func can_move(idx: int, new_start: int) -> bool:
 	if idx < 0 or idx >= units.size():

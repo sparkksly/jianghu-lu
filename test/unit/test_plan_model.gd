@@ -51,6 +51,14 @@ func test_remove_component_breaks_combo_and_pushes_later_units_right():
 			thr_start = u["start"]
 	assert_eq(thr_start, 4, "later unit pushed right to avoid overlap")
 
+func test_add_unit_appends_a_single():
+	var m := _model()
+	var k = _find(&"low_kick")
+	var idx := m.add_unit(k, 5)
+	assert_eq(m.units.size(), 1)
+	assert_eq(m.units[idx]["start"], 5)
+	assert_false(m.units[idx]["fused"])
+
 func test_move_unit_relocates_single():
 	var m := _model()
 	var k = _find(&"low_kick")

@@ -25,8 +25,12 @@ var _hints: Array = []
 var _drag_idx := -1
 var _dragging := false
 var _moved := false
+var _is_new := false       # dragging a brand-new move out of the deck
 var _grab_off := 0.0       # cursor-to-block offset (timeline-local x)
+var _origin_x := 0.0       # block x at grab (for click-vs-drag)
 var _targets := {}         # unit_index -> target x
+var _pending_move: Move = null   # deck card pressed, awaiting drag threshold
+var _new_press := false
 
 func setup(deck: Array[Move], rules: ComboRules, stamina_now: int, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
 	_deck = deck; _rules = rules; _stamina_now = stamina_now; _sta_max = sta_max; _n_ticks = n_ticks
@@ -44,6 +48,7 @@ func _build_deck() -> void:
 		var b := DraggableCard.new()
 		b.move = m
 		b.text = "%s\n%d拍 · %d气" % [m.move_name, m.total_duration(), m.stamina_cost]
+		b.new_grabbed.connect(_on_new_grabbed)
 		_deck_row.add_child(b)
 
 func _redraw_timeline() -> void:
@@ -102,28 +107,59 @@ func _clear_hints() -> void:
 func _on_block_grabbed(unit_index: int) -> void:
 	if not _blocks.has(unit_index): return
 	_drag_idx = unit_index
+	_is_new = false
 	_dragging = true
 	_moved = false
 	_close_popup()
 	_clear_hints()
 	var blk: Control = _blocks[unit_index]
 	blk.z_index = 1
+	_origin_x = blk.position.x
 	_grab_off = _timeline.get_local_mouse_position().x - blk.position.x
 	_targets.clear()
 	set_process(true)
 
+func _on_new_grabbed(move: Move) -> void:
+	_pending_move = move
+	_new_press = true
+
+func _begin_new_drag() -> void:
+	if _pending_move == null: return
+	var tick := clampi(int(round(_timeline.get_local_mouse_position().x / TICK_W)), 0, _n_ticks - 1)
+	_drag_idx = _model.add_unit(_pending_move, tick)
+	_grab_off = _model.footprint(_model.units[_drag_idx]) * TICK_W / 2.0   # center under cursor
+	_pending_move = null
+	_new_press = false
+	_is_new = true
+	_dragging = true
+	_moved = true
+	_close_popup()
+	_redraw_timeline()
+	if _blocks.has(_drag_idx):
+		_blocks[_drag_idx].z_index = 1
+	set_process(true)
+	_update_drag()
+
 func _input(event: InputEvent) -> void:
-	if not _dragging: return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		if _dragging:
+			_finish_drag()
+		_new_press = false
+		_pending_move = null
+		return
 	if event is InputEventMouseMotion:
-		var mx: float = _timeline.get_local_mouse_position().x
-		var desired_x: float = mx - _grab_off
-		if absf(event.relative.x) > 0 and absf(mx - (_targets.get(_drag_idx, desired_x))) >= 0:
-			_moved = _moved or absf(event.relative.x) > 1
-		var tick := clampi(int(round(desired_x / TICK_W)), 0, _n_ticks - 1)
-		for it in _model.preview_layout(_drag_idx, tick):
-			_targets[it["i"]] = desired_x if it["i"] == _drag_idx else float(it["start"]) * TICK_W
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		_finish_drag()
+		if _new_press and not _dragging and absf(event.relative.x) + absf(event.relative.y) > 4.0:
+			_begin_new_drag()
+		elif _dragging:
+			_update_drag()
+
+func _update_drag() -> void:
+	var desired_x: float = _timeline.get_local_mouse_position().x - _grab_off
+	if absf(desired_x - _origin_x) > 6.0:
+		_moved = true
+	var tick := clampi(int(round(desired_x / TICK_W)), 0, _n_ticks - 1)
+	for it in _model.preview_layout(_drag_idx, tick):
+		_targets[it["i"]] = desired_x if it["i"] == _drag_idx else float(it["start"]) * TICK_W
 
 func _process(delta: float) -> void:
 	if not _dragging: return
@@ -138,18 +174,23 @@ func _process(delta: float) -> void:
 
 func _finish_drag() -> void:
 	var dragged := _drag_idx
+	var was_new := _is_new
 	var moved := _moved
 	_dragging = false
 	_drag_idx = -1
+	_is_new = false
 	set_process(false)
+	var over := _timeline.get_global_rect().grow(48.0).has_point(get_global_mouse_position())
+	if was_new and not over:
+		_model.remove_at(dragged)   # dropped outside the timeline -> cancel new move
+		_redraw_timeline(); _refresh_labels()
+		return
 	if moved:
-		var mx: float = _timeline.get_local_mouse_position().x
-		var tick := clampi(int(round((mx - _grab_off) / TICK_W)), 0, _n_ticks - 1)
+		var tick := clampi(int(round((_timeline.get_local_mouse_position().x - _grab_off) / TICK_W)), 0, _n_ticks - 1)
 		_model.apply_layout(_model.preview_layout(dragged, tick))
 		_redraw_timeline(); _refresh_labels()
 	else:
-		# treated as a click
-		var blk = _blocks.get(dragged)
+		var blk = _blocks.get(dragged)   # press without movement == a click
 		if blk and blk.is_combo:
 			_on_block_expand(blk)
 		else:
