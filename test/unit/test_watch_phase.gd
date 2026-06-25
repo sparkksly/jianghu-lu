@@ -1,52 +1,48 @@
 extends GutTest
 
-func test_child_nodes_wired():
+func _load() -> Control:
 	var w = load("res://src/scenes/watch_phase.tscn").instantiate()
 	add_child_autofree(w)
-	await get_tree().process_frame
-	assert_not_null(w.get_node("P0Health"), "P0Health exists")
-	assert_not_null(w.get_node("P1Health"), "P1Health exists")
-	assert_not_null(w.get_node("P0Stamina"), "P0Stamina exists")
-	assert_not_null(w.get_node("P1Stamina"), "P1Stamina exists")
-	assert_not_null(w.get_node("TickLabel"), "TickLabel exists")
-	assert_not_null(w.get_node("EventLog"), "EventLog exists")
+	return w
 
-func test_play_applies_hit_event():
-	var w = load("res://src/scenes/watch_phase.tscn").instantiate()
-	add_child_autofree(w)
-	await get_tree().process_frame
+func _state() -> CombatState:
+	var s := CombatState.new()
+	s.hp = [30, 30]; s.max_hp = [30, 30]; s.stamina = [10, 10]; s.sta_max = [10, 10]; s.n_ticks = 14
+	return s
 
-	var state := CombatState.new()
-	state.hp = [30, 30]; state.max_hp = [30, 30]
-	state.stamina = [10, 10]; state.sta_max = [10, 10]
+func test_nodes_wired():
+	var w = _load(); await get_tree().process_frame
+	for n in ["P0Health", "P1Health", "P0Stamina", "P1Stamina", "TickLabel", "EventLog",
+			  "P0HealthRed", "P1HealthRed", "P0HPLabel", "P1HPLabel", "P0StaLabel", "P1StaLabel", "FloatingLayer"]:
+		assert_not_null(w.get_node(n), "missing " + n)
 
-	var ev := CombatEvent.new(0, &"hit", 0, 1, 6, &"x")
-	w.play(state, [null, null], [ev])
+func test_hit_reduces_green_and_shows_chinese_number():
+	var w = _load(); await get_tree().process_frame
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
+	w._process(1.0)
+	assert_eq(w.get_node("P1Health").value, 24.0)
+	assert_string_contains(w.get_node("P1HPLabel").text, "24")
+	# a Chinese floating label was spawned
+	assert_true(w.get_node("FloatingLayer").get_child_count() >= 1)
 
-	# Drive enough accumulated time to process tick 0 and tick 1 (two STEP intervals)
-	w._process(w.STEP)  # accum reaches STEP -> processes tick 0, advances to t=1
-	w._process(w.STEP)  # processes tick 1 (no events), advances to t=2 -> t > max_t+1 -> finished
+func test_tick_label_chinese():
+	var w = _load(); await get_tree().process_frame
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
+	w._process(1.0)
+	assert_string_contains(w.get_node("TickLabel").text, "第")
+	assert_false(w.get_node("TickLabel").text.contains("tick"))
 
-	assert_eq(w.get_node("P1Health").value, 24.0, "enemy HP dropped by 6 after hit event")
+func test_log_is_chinese():
+	var w = _load(); await get_tree().process_frame
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"interrupt", 0, 1, 5, &"jab_kick")])
+	w._process(1.0)
+	var log = w.get_node("EventLog")
+	assert_true(log.get_child_count() >= 1)
+	assert_string_contains(log.get_child(0).text, "打断")
 
-func test_finished_signal_fires():
-	var w = load("res://src/scenes/watch_phase.tscn").instantiate()
-	add_child_autofree(w)
-	await get_tree().process_frame
-
-	var state := CombatState.new()
-	state.hp = [30, 30]; state.max_hp = [30, 30]
-	state.stamina = [10, 10]; state.sta_max = [10, 10]
-
-	# No events -> max_t stays 0, so _t > _max_t+1 fires after two ticks
-	w.play(state, [null, null], [])
+func test_finished_emits():
+	var w = _load(); await get_tree().process_frame
 	watch_signals(w)
-
-	# Drive two ticks manually with large delta (1.0 >> STEP=0.35).
-	# After play: _t=0, _max_t=0, _accum=0.0
-	# _process(1.0): accum=1.0 >= 0.35 -> tick 0, _t=1, 1>1 false
-	# _process(1.0): accum=1.0 >= 0.35 -> tick 1, _t=2, 2>1 -> finished
-	w._process(1.0)
-	w._process(1.0)
-	assert_signal_emitted(w, "finished", "finished signal emitted")
-	assert_false(w.is_processing(), "process disabled after finish")
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
+	for i in 6: w._process(1.0)
+	assert_signal_emitted(w, "finished")

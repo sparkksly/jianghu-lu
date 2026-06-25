@@ -7,6 +7,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1_wphase")
 
+[node name="P0HealthRed" type="ProgressBar" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 40.0
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+modulate = Color(1, 0, 0, 1)
+
 [node name="P0Health" type="ProgressBar" parent="."]
 offset_left = 20.0
 offset_top = 20.0
@@ -15,6 +25,14 @@ offset_bottom = 40.0
 min_value = 0.0
 max_value = 100.0
 value = 100.0
+modulate = Color(0, 1, 0, 1)
+
+[node name="P0HPLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 40.0
+text = "30/30"
 
 [node name="P0Stamina" type="ProgressBar" parent="."]
 offset_left = 20.0
@@ -25,6 +43,23 @@ min_value = 0.0
 max_value = 10.0
 value = 10.0
 
+[node name="P0StaLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 50.0
+offset_right = 300.0
+offset_bottom = 70.0
+text = "体力 10/10"
+
+[node name="P1HealthRed" type="ProgressBar" parent="."]
+offset_left = 724.0
+offset_top = 20.0
+offset_right = 1004.0
+offset_bottom = 40.0
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+modulate = Color(1, 0, 0, 1)
+
 [node name="P1Health" type="ProgressBar" parent="."]
 offset_left = 724.0
 offset_top = 20.0
@@ -33,6 +68,14 @@ offset_bottom = 40.0
 min_value = 0.0
 max_value = 100.0
 value = 100.0
+modulate = Color(0, 1, 0, 1)
+
+[node name="P1HPLabel" type="Label" parent="."]
+offset_left = 724.0
+offset_top = 20.0
+offset_right = 1004.0
+offset_bottom = 40.0
+text = "30/30"
 
 [node name="P1Stamina" type="ProgressBar" parent="."]
 offset_left = 724.0
@@ -43,15 +86,27 @@ min_value = 0.0
 max_value = 10.0
 value = 10.0
 
+[node name="P1StaLabel" type="Label" parent="."]
+offset_left = 724.0
+offset_top = 50.0
+offset_right = 1004.0
+offset_bottom = 70.0
+text = "体力 10/10"
+
 [node name="TickLabel" type="Label" parent="."]
 offset_left = 450.0
 offset_top = 20.0
 offset_right = 600.0
 offset_bottom = 50.0
-text = "tick 0"
+text = "第0拍"
 
 [node name="EventLog" type="VBoxContainer" parent="."]
 offset_left = 350.0
 offset_top = 80.0
 offset_right = 700.0
 offset_bottom = 400.0
+
+[node name="FloatingLayer" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
