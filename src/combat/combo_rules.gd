@@ -40,6 +40,25 @@ func _matches_run(seq: Array, start_idx: int, recipe: Recipe) -> bool:
 				return false # must be back-to-back
 	return true
 
+func recipes() -> Array:
+	return _recipes
+
+func _slot_desc(slot: Dictionary) -> String:
+	if slot.has("any"): return "任意"
+	if slot.has("id"): return Loc.move_name(slot["id"])
+	if slot.has("kind"): return Loc.kind_name(slot["kind"])
+	if slot.has("tag"): return str(slot["tag"])
+	return "?"
+
+func describe_recipes() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for r in _recipes:
+		var slots: Array[String] = []
+		for s in r.slots:
+			slots.append(_slot_desc(s))
+		out.append({"slots": slots, "result": r.result.move_name})
+	return out
+
 func apply(plan: Plan) -> Plan:
 	var seq := plan.sorted()
 	var by_len := _recipes.duplicate()

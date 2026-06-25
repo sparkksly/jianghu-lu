@@ -1,74 +1,72 @@
 extends GutTest
 
-func test_child_nodes_exist():
+func _load() -> Control:
 	var w = load("res://src/scenes/plan_phase.tscn").instantiate()
 	add_child_autofree(w)
-	await get_tree().process_frame
-	assert_not_null(w.get_node("DeckRow"), "DeckRow exists")
-	assert_not_null(w.get_node("Timeline"), "Timeline exists")
-	assert_not_null(w.get_node("StaminaLabel"), "StaminaLabel exists")
-	assert_not_null(w.get_node("ComboPreview"), "ComboPreview exists")
-	assert_not_null(w.get_node("EnemyIntent"), "EnemyIntent exists")
-	assert_not_null(w.get_node("CommitButton"), "CommitButton exists")
+	return w
 
-func test_setup_populates_deck_and_timeline():
-	var w = load("res://src/scenes/plan_phase.tscn").instantiate()
-	add_child_autofree(w)
-	await get_tree().process_frame
-
-	var deck := Deck.starter()
-	var rules := ComboLibrary.build()
-	var intent: Array[StringName] = [&"jab_kick", &"?"]
-	w.setup(deck, rules, 10, 10, intent)
-
-	var deck_row = w.get_node("DeckRow")
-	var timeline = w.get_node("Timeline")
-	assert_eq(deck_row.get_child_count(), deck.size(), "DeckRow has one button per deck move")
-	assert_eq(timeline.get_child_count(), 10, "Timeline has 10 slot buttons")
-
-func test_placement_and_commit_fuses_chain_kick():
-	var w = load("res://src/scenes/plan_phase.tscn").instantiate()
-	add_child_autofree(w)
-	await get_tree().process_frame
-
-	var deck := Deck.starter()
-	var rules := ComboLibrary.build()
-	var intent: Array[StringName] = [&"jab_kick", &"?"]
-	w.setup(deck, rules, 10, 10, intent)
-
-	# Find low_kick from the deck
-	var low_kick: Move = null
+func _kick(deck) -> Move:
 	for m in deck:
-		if m.id == &"low_kick":
-			low_kick = m
-			break
-	assert_not_null(low_kick, "low_kick found in deck")
+		if m.id == &"low_kick": return m
+	return null
 
-	# low_kick total_duration = startup(1) + active(1) + recovery(1) = 3
-	var dur := low_kick.total_duration()
-	assert_eq(dur, 3, "low_kick duration is 3")
+func test_nodes_wired():
+	var w = _load()
+	await get_tree().process_frame
+	for n in ["DeckRow", "Timeline", "StaminaLabel", "ComboPreview", "EnemyIntent", "CommitButton"]:
+		assert_not_null(w.get_node(n), "missing node " + n)
 
-	# Place three back-to-back low_kicks at ticks 0, 3, 6
-	w._selected = low_kick
-	w._on_slot(0)
-	w._selected = low_kick
-	w._on_slot(dur)
-	w._selected = low_kick
-	w._on_slot(2 * dur)
+func test_setup_builds_hand_and_intent_is_chinese():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["扫腿", "？"])
+	assert_eq(w.get_node("DeckRow").get_child_count(), Deck.starter().size())
+	assert_string_contains(w.get_node("EnemyIntent").text, "扫腿")
+	assert_false(w.get_node("EnemyIntent").text.contains("jab"))
 
-	# Verify three moves placed
-	assert_eq(w._plan.moves.size(), 3, "three low_kicks placed")
-
-	# Capture plan_committed signal via array container (GDScript lambdas capture arrays by ref)
-	var captured: Array = []
-	w.plan_committed.connect(func(p): captured.append(p))
-	watch_signals(w)
-
+func test_drop_places_and_combo_fuses_on_commit():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	var k = _kick(Deck.starter())
+	var dur = k.total_duration()
+	# drop three kicks back-to-back via the testable entry point (local_x in pixels)
+	assert_true(w.try_drop_new(k, 0.0))
+	assert_true(w.try_drop_new(k, dur * 40.0))
+	assert_true(w.try_drop_new(k, 2 * dur * 40.0))
+	assert_eq(w._plan.moves.size(), 3)
+	var captured := {"plan": null}
+	w.plan_committed.connect(func(p): captured["plan"] = p)
 	w._on_commit()
+	assert_eq(captured["plan"].moves.size(), 1)
+	assert_eq(captured["plan"].moves[0].move.id, &"chain_kick")
 
-	assert_signal_emitted(w, "plan_committed", "plan_committed was emitted")
-	assert_eq(captured.size(), 1, "plan was received")
-	var emitted_plan: Plan = captured[0] as Plan
-	assert_not_null(emitted_plan, "emitted plan is not null")
-	assert_eq(emitted_plan.moves.size(), 1, "three kicks fused into one move")
-	assert_eq(emitted_plan.moves[0].move.id, &"chain_kick", "fused move is chain_kick")
+func test_overlap_drop_rejected():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	var k = _kick(Deck.starter())
+	assert_true(w.try_drop_new(k, 0.0))
+	assert_false(w.try_drop_new(k, 40.0), "overlaps the first kick")
+	assert_eq(w._plan.moves.size(), 1)
+
+func test_remove_frees_slot():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	var k = _kick(Deck.starter())
+	assert_true(w.try_drop_new(k, 0.0))
+	w.remove_at(0)
+	assert_eq(w._plan.moves.size(), 0)
+
+func test_move_existing_repositions():
+	var w = _load()
+	await get_tree().process_frame
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 14, ["？"])
+	var k = _kick(Deck.starter())
+	assert_true(w.try_drop_new(k, 0.0))      # placed at tick 0
+	# move it later on the timeline (sorted index 0 → a free tick well past its duration)
+	var far_x = 8 * 40.0
+	assert_true(w.try_move_existing(0, far_x))
+	assert_eq(w._plan.moves.size(), 1, "still exactly one move")
+	assert_true(w._plan.sorted()[0].start >= 8, "move relocated later on the timeline")

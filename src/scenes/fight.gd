@@ -14,11 +14,12 @@ func _ready() -> void:
 	_state = CombatState.new()
 	_state.hp = [40, 40]; _state.max_hp = [40, 40]
 	_state.sta_max = [10, 10]; _state.stamina = [10, 10]
-	_state.n_ticks = 10
+	_state.n_ticks = 14
 	_rules = ComboLibrary.build()
 	_deck = Deck.starter()
 	_plan_phase.plan_committed.connect(_on_player_plan)
 	_watch_phase.finished.connect(_on_watch_done)
+	$CodexButton.pressed.connect($Codex.toggle)
 	_start_round()
 
 func _start_round() -> void:

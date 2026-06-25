@@ -75,3 +75,15 @@ func test_equal_length_registration_order_wins():
 	var fused := rules.apply(p)
 	assert_eq(fused.moves.size(), 1, "both recipes match; one fusion expected")
 	assert_eq(fused.moves[0].move.id, &"A_first", "first-registered recipe wins among equal-length recipes")
+
+func test_describe_recipes_is_chinese():
+	var rules := ComboLibrary.build()
+	var desc := rules.describe_recipes()
+	assert_true(desc.size() >= 3)
+	# find the qiankun (攻+防+投) recipe
+	var found := false
+	for d in desc:
+		if d["result"] == "乾坤大挪移":
+			assert_eq(d["slots"], ["攻", "格挡", "投"])
+			found = true
+	assert_true(found, "qiankun recipe described in Chinese")
