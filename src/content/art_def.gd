@@ -17,13 +17,13 @@ extends Resource
 @export var series: StringName = &""
 @export var series_index: int = 0
 @export var result: Move
-# 实战顿悟:{triggers:[Condition], chance:float}。有 discovery 的功夫不进普通磨练池,
-# 只能在战斗中满足行为条件后概率顿悟(如无影脚:腿法≥5+两连腿法→30%)。
-@export var discovery: Dictionary = {}
-# 稀缺:复杂稀有的招(绝世神功),只能靠奇遇获得,自己磨练/顿悟不出来。
-@export var exotic: bool = false
+# 获得途径(数据驱动):[{via, ...}]。
+#   via="encounter" 奇遇 / "practice" 磨练自悟 / "insight" 实战顿悟(带 triggers+chance)。
+# 独立组合即各种规则:只 [encounter]=稀缺仅奇遇; [encounter,insight]=可奇遇可顿悟但不可磨练;
+# 默认 [encounter,practice]。加新途径(boss奖励/购买…)只加个 via,不动核心。
+@export var sources: Array = []
 
-static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array, p_slots: Array, p_result: Move, p_requires := [], p_series := &"", p_index := 0, p_discovery := {}, p_exotic := false) -> ArtDef:
+static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array, p_slots: Array, p_result: Move, p_requires := [], p_series := &"", p_index := 0, p_sources = null) -> ArtDef:
 	var d := ArtDef.new()
 	d.id = p_id
 	d.art_name = p_name
@@ -36,6 +36,5 @@ static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array,
 	d.requires = p_requires
 	d.series = p_series
 	d.series_index = p_index
-	d.discovery = p_discovery
-	d.exotic = p_exotic
+	d.sources = p_sources if p_sources != null else [{"via": "encounter"}, {"via": "practice"}]
 	return d

@@ -83,21 +83,19 @@ func learn(id: StringName) -> void:
 		learned.append(id)
 
 # --- 奇遇效果 ---
-# 奇遇可学(万能池):本派未学 且 满足门槛 —— 含稀缺/实战顿悟功夫(奇遇能学到一切)。
-func unlearned_arts() -> Array:
+# 可通过某获得途径(via)得到的功夫:未学 + 满足门槛 + 该途径对它开放(数据驱动)。
+func acquirable_arts(via: String) -> Array:
 	var out: Array = []
 	for id in Menpai.learnable(menpai_id):
-		if not learned.has(id) and Arts.can_learn(id, learned, mastery):
+		if not learned.has(id) and Arts.can_learn(id, learned, mastery) and Arts.has_source(id, via):
 			out.append(id)
 	return out
 
-# 磨练可自悟:在奇遇池基础上排除稀缺(exotic,只能奇遇)和实战顿悟(discovery,靠战斗触发)。
-func self_learnable_arts() -> Array:
-	var out: Array = []
-	for id in unlearned_arts():
-		if not Arts.is_exotic(id) and not Arts.is_discovery(id):
-			out.append(id)
-	return out
+func unlearned_arts() -> Array:        # 奇遇万能池
+	return acquirable_arts("encounter")
+
+func self_learnable_arts() -> Array:   # 磨练自悟池
+	return acquirable_arts("practice")
 
 func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
 	if effect.has("learn_art") or effect.has("master_move"):

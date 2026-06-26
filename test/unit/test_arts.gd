@@ -54,17 +54,25 @@ func test_prajna_from_three_palms():
 	assert_not_null(res)
 	assert_eq(res.id, &"prajna")
 
-func test_wuying_is_discovery():
-	assert_true(Arts.is_discovery(&"wuying"), "无影脚=实战顿悟")
-	assert_false(Arts.is_discovery(&"luohan"))
+func test_sources_data_driven():
+	# 无影脚:奇遇可学 + 实战可顿悟,但不可磨练自悟
+	assert_true(Arts.has_source(&"wuying", "encounter"))
+	assert_true(Arts.has_source(&"wuying", "insight"))
+	assert_false(Arts.has_source(&"wuying", "practice"))
+	# 普通功夫默认:奇遇 + 磨练
+	assert_true(Arts.has_source(&"luohan", "encounter"))
+	assert_true(Arts.has_source(&"luohan", "practice"))
+	assert_false(Arts.has_source(&"luohan", "insight"))
 
 func test_recipe_text_shows_formula():
 	assert_string_contains(Arts.recipe_text(&"luohan"), "罗汉拳")
 	assert_string_contains(Arts.recipe_text(&"luohan"), "拳法")
 
-func test_qiankun_is_exotic():
-	assert_true(Arts.is_exotic(&"qiankun"), "乾坤=稀缺绝世神功")
-	assert_false(Arts.is_exotic(&"luohan"))
+func test_qiankun_only_encounter():
+	# 稀缺绝世神功 = 只声明 encounter source(不需要 exotic 标记,自然涌现)
+	assert_true(Arts.has_source(&"qiankun", "encounter"))
+	assert_false(Arts.has_source(&"qiankun", "practice"), "稀缺:磨练不出")
+	assert_false(Arts.has_source(&"qiankun", "insight"))
 
 func test_wuying_requires_chain_kick():
 	assert_false(Arts.can_learn(&"wuying", [], {}), "没会连环踢不能领悟无影脚")

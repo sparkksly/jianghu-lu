@@ -83,9 +83,9 @@ func _discover() -> Array:
 	var stats: Dictionary = _fight.combat_stats()
 	var got: Array = []
 	for id in Menpai.learnable(_run.menpai_id):
-		# 顿悟也要满足门槛(无影脚需先会连环踢)
-		if not _run.learned.has(id) and Arts.is_discovery(id) and Arts.can_learn(id, _run.learned, _run.mastery):
-			if Discovery.check(Arts.def(id).discovery, stats, _rng):
+		# 实战顿悟:有 insight 途径 + 满足门槛(无影脚需先会连环踢)
+		if not _run.learned.has(id) and Arts.has_source(id, "insight") and Arts.can_learn(id, _run.learned, _run.mastery):
+			if Discovery.check(Arts.source_via(id, "insight"), stats, _rng):
 				_run.learn(id)
 				got.append(Arts.display_name(id))
 	return got
