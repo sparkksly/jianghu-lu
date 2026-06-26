@@ -42,19 +42,54 @@ func setup(deck: Array[Move], rules: ComboRules, stamina_now: int, sta_max: int,
 	if not _commit.pressed.is_connected(_on_commit):
 		_commit.pressed.connect(_on_commit)
 
+# 手牌区:工具牌(非 ATTACK)全渲染(无限);进攻牌(ATTACK)按「手牌张数 − 已排」渲染剩余。
 func _build_deck() -> void:
-	for c in _deck_row.get_children(): c.queue_free()
+	for c in _deck_row.get_children():
+		_deck_row.remove_child(c)   # 立即脱离(queue_free 是延迟的,child_count 会失真)
+		c.queue_free()
+	var to_skip := _placed_attack_counts()   # id -> 还要隐藏的张数(已排)
 	for m in _deck:
-		var b := DraggableCard.new()
-		b.move = m
-		var tail := ""
-		if m.kind == Move.Kind.STEP:
-			tail = "进" if m.distance_delta < 0 else "退"
-		else:
-			tail = "%s-%s" % [CombatFeed.distance_label(m.range_min), CombatFeed.distance_label(m.range_max)]
-		b.text = "%s\n%d拍·%d气·%s" % [m.move_name, m.total_duration(), m.stamina_cost, tail]
-		b.new_grabbed.connect(_on_new_grabbed)
-		_deck_row.add_child(b)
+		if m.kind == Move.Kind.ATTACK and to_skip.get(m.id, 0) > 0:
+			to_skip[m.id] -= 1
+			continue
+		_add_card(m)
+
+func _add_card(m: Move) -> void:
+	var b := DraggableCard.new()
+	b.move = m
+	var tail := ""
+	if m.kind == Move.Kind.STEP:
+		tail = "进" if m.distance_delta < 0 else "退"
+	else:
+		# 紧凑距离带(贴/中/远),让 11 张手牌挤进一行
+		tail = "%s-%s" % [CombatFeed.distance_label(m.range_min).substr(0, 1), CombatFeed.distance_label(m.range_max).substr(0, 1)]
+	b.text = "%s\n%d拍·%d气·%s" % [m.move_name, m.total_duration(), m.stamina_cost, tail]
+	b.custom_minimum_size = Vector2(88, 52)   # 5 工具 + 6 进攻 = 11 张都落在屏内一行
+	b.clip_text = true
+	b.add_theme_font_size_override("font_size", 13)
+	b.new_grabbed.connect(_on_new_grabbed)
+	_deck_row.add_child(b)
+
+# 已放置的进攻招张数(含连招组件),按 id 计。
+func _placed_attack_counts() -> Dictionary:
+	var c := {}
+	for u in _model.units:
+		for mv in u["moves"]:
+			if (mv as Move).kind == Move.Kind.ATTACK:
+				c[mv.id] = c.get(mv.id, 0) + 1
+	return c
+
+# 手牌里该进攻招还剩几张可排(手牌张数 − 已排)。
+func available_attack_count(id: StringName) -> int:
+	var hand_n := 0
+	for m in _deck:
+		if m.id == id and m.kind == Move.Kind.ATTACK:
+			hand_n += 1
+	return hand_n - _placed_attack_counts().get(id, 0)
+
+# 任何 model 改动后:重建手牌区(消耗/退回生效) + 重画时间轴 + 刷新标签。
+func _refresh() -> void:
+	_build_deck(); _redraw_timeline(); _refresh_labels()
 
 func _redraw_timeline() -> void:
 	_close_popup()
@@ -188,12 +223,12 @@ func _finish_drag() -> void:
 	var over := _timeline.get_global_rect().grow(48.0).has_point(get_global_mouse_position())
 	if was_new and not over:
 		_model.remove_at(dragged)   # dropped outside the timeline -> cancel new move
-		_redraw_timeline(); _refresh_labels()
+		_refresh()
 		return
 	if moved:
 		var tick := clampi(int(round((_timeline.get_local_mouse_position().x - _grab_off) / TICK_W)), 0, _n_ticks - 1)
 		_model.apply_layout(_model.preview_layout(dragged, tick))
-		_redraw_timeline(); _refresh_labels()
+		_refresh()
 	else:
 		var blk = _blocks.get(dragged)   # press without movement == a click
 		if blk and blk.is_combo:
@@ -203,7 +238,7 @@ func _finish_drag() -> void:
 
 func _do_fuse(indices: Array) -> void:
 	_model.fuse(indices)
-	_redraw_timeline(); _refresh_labels()
+	_refresh()
 
 func _refresh_labels() -> void:
 	_stamina.text = "气 %d/%d  已排%d (可超至%d)" % [_stamina_now, _sta_max, _model.effective_cost(), _stamina_now + Plan.OVERCOMMIT_BUFFER]
@@ -217,20 +252,20 @@ func _refresh_labels() -> void:
 func try_drop_new(move: Move, local_x: float) -> bool:
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
 	if _model.place(move, tick):
-		_redraw_timeline(); _refresh_labels()
+		_refresh()
 		return true
 	return false
 
 func try_move_existing(unit_index: int, local_x: float) -> bool:
 	var tick := TimelineLogic.snap_tick(local_x, TICK_W, _n_ticks)
 	if _model.move_unit(unit_index, tick):   # works for singles AND combos
-		_redraw_timeline(); _refresh_labels()
+		_refresh()
 		return true
 	return false
 
 func remove_at(unit_index: int) -> void:
 	_model.remove_at(unit_index)
-	_redraw_timeline(); _refresh_labels()
+	_refresh()
 
 # Click a combo block -> popup listing its components, each removable.
 func _on_block_expand(block) -> void:
@@ -255,7 +290,7 @@ func _on_block_expand(block) -> void:
 
 func _on_remove_component(unit_index: int, comp_index: int) -> void:
 	_model.remove_component(unit_index, comp_index)
-	_redraw_timeline(); _refresh_labels()
+	_refresh()
 
 func _close_popup() -> void:
 	if _popup != null and is_instance_valid(_popup):

@@ -74,3 +74,16 @@ func test_fight_round_one_starts_full_stamina():
 	await get_tree().process_frame
 	assert_eq(w._state.stamina, w._state.sta_max, "round 1 opens at full 气")
 	assert_eq(w._state.regen, [6, 6], "regen configured")
+
+func test_round_hand_is_five_utilities_plus_six_attacks():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	add_child_autofree(w)
+	await get_tree().process_frame
+	var hand: Array = w._plan_phase._deck
+	var attacks := 0
+	var utils := 0
+	for m in hand:
+		if m.kind == Move.Kind.ATTACK: attacks += 1
+		else: utils += 1
+	assert_eq(attacks, 6, "每回合抽 6 张进攻牌")
+	assert_eq(utils, 5, "5 张固定工具牌(步×2/挡/闪/拿)")

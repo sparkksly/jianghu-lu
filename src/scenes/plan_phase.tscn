@@ -27,7 +27,7 @@ offset_left = 56.0
 offset_top = 388.0
 offset_right = 1096.0
 offset_bottom = 446.0
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="Timeline" type="Control" parent="."]
 offset_left = 56.0
