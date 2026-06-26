@@ -34,8 +34,15 @@ func test_same_tick_steps_cancel():
 	CombatSim.simulate(s, [p0, p1])
 	assert_eq(s.distance, 1, "一进一退抵消")
 
+func test_both_step_in_sums_and_applies():
+	var s := _state()   # distance = 1
+	var p0 := Plan.new(); p0.add(PlacedMove.new(_step(-1), 0))   # 双方同拍都上步
+	var p1 := Plan.new(); p1.add(PlacedMove.new(_step(-1), 0))
+	CombatSim.simulate(s, [p0, p1])
+	assert_eq(s.distance, 0, "1 + (-1) + (-1) = -1 → clamp 0(求和后应用)")
+
 func test_distance_clamps():
-	var s := _state(); s.distance = 0
-	var p0 := Plan.new(); p0.add(PlacedMove.new(_step(-1), 0))   # 再进也不能 < 0
+	var s := _state(); s.distance = 2   # 远
+	var p0 := Plan.new(); p0.add(PlacedMove.new(_step(1), 0))   # 再退也不能 > 2
 	CombatSim.simulate(s, [p0, Plan.new()])
-	assert_eq(s.distance, 0)
+	assert_eq(s.distance, 2, "+1 at 远(2) clamps to 2, not 3")
