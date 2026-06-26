@@ -142,7 +142,7 @@ text = "敌"
 [node name="CombatTimeline" type="Control" parent="."]
 offset_left = 336.0
 offset_top = 524.0
-offset_right = 816.0
+offset_right = 936.0
 offset_bottom = 644.0
 
 [node name="FloatingLayer" type="Control" parent="."]
