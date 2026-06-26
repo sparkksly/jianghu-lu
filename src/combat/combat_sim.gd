@@ -34,6 +34,15 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 		# 1. start moves due this tick
 		for i in 2:
 			_try_start(state, actors[i], i, t, events)
+		# 1.5 STEP: resolve distance changes this tick (sum both, apply once)
+		var ddelta := 0
+		for i in 2:
+			var a: _Actor = actors[i]
+			if a.cur != null and a.cur.move.kind == Move.Kind.STEP and a.elapsed == a.cur.move.startup:
+				ddelta += a.cur.move.distance_delta
+		if ddelta != 0:
+			state.distance = clampi(state.distance + ddelta, 0, 2)
+			events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &""))
 		# 2. snapshot phases for symmetric resolution
 		var snap := []
 		for i in 2:
@@ -106,6 +115,8 @@ static func _maybe_hit(state: CombatState, actors: Array, snap: Array, attacker:
 	var a: Dictionary = snap[attacker]
 	if not a["hitting"]:
 		return
+	if (a["move"] as Move).kind == Move.Kind.STEP:
+		return  # 步法不打人
 	var defender := 1 - attacker
 	var d: Dictionary = snap[defender]
 	_resolve_hit(state, actors, attacker, a["move"], d, t, events)
