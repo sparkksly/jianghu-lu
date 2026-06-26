@@ -44,3 +44,11 @@ func test_log_line_handles_distance_reach_stun_in_chinese():
 	var s = Loc.log_line(CombatEvent.new(5, &"stun", 0, 1, 2, &"elbow_strike"))
 	assert_string_contains(s, "踉跄")
 	assert_false(s.to_lower().contains("stun"))
+
+func test_log_line_localizes_leverage_and_guard():
+	var l = Loc.log_line(CombatEvent.new(6, &"leverage", 0, 1, 3, &"mian_zhang"))
+	assert_string_contains(l, "借力")
+	assert_false(l.to_lower().contains("leverage"))
+	var g = Loc.log_line(CombatEvent.new(7, &"guard", 0, 0, 4, &"jingang_fumo"))
+	assert_string_contains(g, "护体")
+	assert_false(g.to_lower().contains("guard"))

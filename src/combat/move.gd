@@ -26,6 +26,7 @@ enum Kind { ATTACK, BLOCK, DODGE, THROW, STEP }
 @export var distance_delta: int = 0  # STEP 用：上步-1 / 撤步+1
 @export var knockback: bool = false  # 击退：命中后距离+1
 @export var stun: int = 0            # 踉跄：命中令对手跳 N 拍
+@export var grants_guard: int = 0    # 护体：干净命中后给自己挂 N 拍受伤减免
 
 func active_count() -> int:
 	return max(1, active)

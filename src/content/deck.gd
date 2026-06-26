@@ -24,6 +24,7 @@ static func _m(id, name, kind, su, act, rec, dmg, cost, opts := {}) -> Move:
 	m.knockback = opts.get("knockback", false)
 	m.stun = opts.get("stun", 0)
 	m.distance_delta = opts.get("delta", 0)
+	m.grants_guard = opts.get("guard", 0)
 	return m
 
 static func starter() -> Array[Move]:
@@ -49,6 +50,35 @@ static func starter() -> Array[Move]:
 		_m(&"step_in", "上步", Move.Kind.STEP, 0, 1, 0, 0, 1, {"tags":[&"身法"], "delta":-1}),
 		_m(&"step_back", "撤步", Move.Kind.STEP, 0, 1, 1, 0, 1, {"tags":[&"身法"], "delta":1}),
 	]
+
+# 门派招式(少林/武当);加入门派进攻池,不在通用 starter()。
+static func menpai_moves() -> Array[Move]:
+	return [
+		# 少林:刚猛贴身 + 棍补中距
+		_m(&"beng_quan", "崩拳", Move.Kind.ATTACK, 0, 1, 1, 7, 2, {"tags":[&"拳法"], "range":[0,1]}),
+		_m(&"weituo", "韦陀掌", Move.Kind.ATTACK, 1, 1, 1, 8, 3, {"tags":[&"掌法"], "range":[0,1], "armor":true}),
+		_m(&"jingang_zhi", "金刚指", Move.Kind.ATTACK, 0, 1, 1, 6, 2, {"tags":[&"指法"], "range":[0,1], "interrupt":true}),
+		_m(&"longzhua", "龙爪手", Move.Kind.ATTACK, 1, 1, 1, 7, 2, {"tags":[&"擒拿"], "range":[0,0]}),
+		_m(&"shaolin_gun", "少林棍", Move.Kind.ATTACK, 1, 1, 1, 7, 3, {"tags":[&"棍法"], "range":[1,2], "knockback":true}),
+		# 武当:柔掌中距
+		_m(&"mian_zhang", "绵掌", Move.Kind.ATTACK, 0, 1, 1, 5, 2, {"tags":[&"掌法"], "range":[1,1]}),
+		_m(&"wudang_changquan", "武当长拳", Move.Kind.ATTACK, 0, 1, 1, 6, 2, {"tags":[&"拳法"], "range":[0,1]}),
+	]
+
+static func by_id(id: StringName) -> Move:
+	for m in starter():
+		if m.id == id: return m
+	for m in menpai_moves():
+		if m.id == id: return m
+	return null
+
+# 门派连招模板(融合产生;伤害按 _fuse_result 重算,模板的 hits/range/delta/guard 保留)
+static func luohan() -> Move:
+	return _m(&"luohan", "罗汉拳", Move.Kind.ATTACK, 0, 3, 1, 21, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1]})
+static func jingang_fumo() -> Move:
+	return _m(&"jingang_fumo", "金刚伏魔", Move.Kind.ATTACK, 0, 1, 2, 10, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "armor":true, "guard":4})
+static func taiji_yunshou() -> Move:
+	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 12, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6})
 
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
 static func chain_kick() -> Move:

@@ -10,6 +10,10 @@ const PENALTY_WHIFF_HEAVY := 4
 const PENALTY_STAGGER := 2
 const THROW_BREAK_BONUS := 4
 const GASP_DAMAGE_BONUS := 3
+# 状态系统(回合内)
+const LEVERAGE_WINDOW := 3      # 借力:成功格挡/闪避后的窗口拍数
+const LEVERAGE_PCT := 60        # 借力:窗口内下一击增伤 %
+const GUARD_REDUCTION_PCT := 50 # 护体:受伤减免 %
 
 class _Actor:
 	var queue: Array[PlacedMove]
@@ -17,6 +21,8 @@ class _Actor:
 	var cur: PlacedMove = null
 	var elapsed := 0
 	var gasp_until := -1
+	var guard_until := -1      # 护体生效到(不含)此拍
+	var leverage_until := -1   # 借力窗口到(含)此拍
 
 static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 	var events: Array[CombatEvent] = []
@@ -134,6 +140,8 @@ static func _apply_damage(state: CombatState, actors: Array, defender: int, base
 	var dmg := base
 	if _is_gasping(actors, defender, t) and base > 0:
 		dmg += GASP_DAMAGE_BONUS
+	if t < actors[defender].guard_until and dmg > 0:   # 护体:受伤减半
+		dmg = int(ceil(dmg * (100 - GUARD_REDUCTION_PCT) / 100.0))
 	state.hp[defender] = max(0, state.hp[defender] - dmg)
 	return dmg
 
@@ -150,6 +158,8 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		and (def_move.kind == Move.Kind.BLOCK or def_move.kind == Move.Kind.DODGE)
 
 	if def_active_defense and def_move.kind == Move.Kind.DODGE:
+		actors[defender].leverage_until = t + LEVERAGE_WINDOW   # 闪避成功 → 借力窗口
+		events.append(CombatEvent.new(t, &"leverage", defender, attacker, LEVERAGE_WINDOW, def_move.id))
 		_whiff(state, attacker, atk, t, events)
 		return
 
@@ -165,6 +175,8 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	if def_active_defense and def_move.kind == Move.Kind.BLOCK:
 		events.append(CombatEvent.new(t, &"block", attacker, defender, 0, atk.id))
 		_add_stamina(state, defender, REWARD_BLOCK, t, events)
+		actors[defender].leverage_until = t + LEVERAGE_WINDOW   # 格挡成功 → 借力窗口
+		events.append(CombatEvent.new(t, &"leverage", defender, attacker, LEVERAGE_WINDOW, atk.id))
 		return
 	if def_phase == &"startup" and atk.can_interrupt and def_move != null and not def_move.super_armor:
 		actors[defender].cur = null
@@ -174,9 +186,17 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		_add_stamina(state, attacker, REWARD_INTERRUPT, t, events)
 		_add_stamina(state, defender, -PENALTY_STAGGER, t, events)
 		return
-	var hd := _apply_damage(state, actors, defender, atk.damage, t)
+	var base := atk.damage
+	if t <= actors[attacker].leverage_until and base > 0:   # 借力:反打增伤,消耗窗口
+		base = int(ceil(base * (100 + LEVERAGE_PCT) / 100.0))
+		actors[attacker].leverage_until = -1
+		events.append(CombatEvent.new(t, &"leverage", attacker, defender, base, atk.id))
+	var hd := _apply_damage(state, actors, defender, base, t)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, hd, atk.id))
 	_add_stamina(state, attacker, REWARD_HIT, t, events)
+	if atk.grants_guard > 0:                                # 护体:命中给自己挂减伤
+		actors[attacker].guard_until = t + atk.grants_guard
+		events.append(CombatEvent.new(t, &"guard", attacker, attacker, atk.grants_guard, atk.id))
 	if atk.knockback:
 		state.distance = mini(2, state.distance + 1)
 		events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &""))

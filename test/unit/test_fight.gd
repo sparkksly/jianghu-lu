@@ -87,3 +87,13 @@ func test_round_hand_is_five_utilities_plus_six_attacks():
 		else: utils += 1
 	assert_eq(attacks, 6, "每回合抽 6 张进攻牌")
 	assert_eq(utils, 5, "5 张固定工具牌(步×2/挡/闪/拿)")
+
+func test_default_menpai_draws_from_shaolin_pool():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	add_child_autofree(w)
+	await get_tree().process_frame
+	var shaolin := []
+	for m in Menpai.pool(&"shaolin"): shaolin.append(m.id)
+	for m in w._plan_phase._deck:
+		if m.kind == Move.Kind.ATTACK:
+			assert_true(m.id in shaolin, "进攻牌来自少林池: " + str(m.id))
