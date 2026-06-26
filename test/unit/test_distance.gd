@@ -65,3 +65,19 @@ func test_attack_in_range_hits():
 	var p0 := Plan.new(); p0.add(PlacedMove.new(_atk(8, 0, 1), 0))  # 贴身~中
 	CombatSim.simulate(s, [p0, Plan.new()])
 	assert_eq(s.hp[1], 32, "距离对，命中 -8")
+
+func test_knockback_pushes_distance():
+	var s := _state(); s.distance = 0   # 贴身
+	var m := _atk(6, 0, 1); m.knockback = true
+	var p0 := Plan.new(); p0.add(PlacedMove.new(m, 0))
+	CombatSim.simulate(s, [p0, Plan.new()])
+	assert_eq(s.distance, 1, "击退把对手推到中距")
+
+func test_stun_makes_target_skip_next_move():
+	var s := _state(); s.distance = 0
+	var m := _atk(2, 0, 1); m.stun = 3   # 撞肘式踉跄
+	var p0 := Plan.new(); p0.add(PlacedMove.new(m, 0))     # 命中 t0, 令对手 gasp_until=3
+	# 对手本想在 t1 出一记攻击, 但被踉跄跳过
+	var p1 := Plan.new(); p1.add(PlacedMove.new(_atk(9, 0, 2), 1))
+	CombatSim.simulate(s, [p0, p1])
+	assert_eq(s.hp[0], 40, "我方未被对手的招命中(对手踉跄跳招)")

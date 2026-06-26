@@ -177,6 +177,12 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	var hd := _apply_damage(state, actors, defender, atk.damage, t)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, hd, atk.id))
 	_add_stamina(state, attacker, REWARD_HIT, t, events)
+	if atk.knockback:
+		state.distance = mini(2, state.distance + 1)
+		events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &""))
+	if atk.stun > 0:
+		actors[defender].gasp_until = t + atk.stun
+		events.append(CombatEvent.new(t, &"stun", attacker, defender, atk.stun, atk.id))
 
 static func _whiff(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
 	events.append(CombatEvent.new(t, &"whiff", attacker, 1 - attacker, 0, atk.id))
