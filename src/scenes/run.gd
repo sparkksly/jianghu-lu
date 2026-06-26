@@ -16,7 +16,7 @@ var _ended := false
 var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
-	_run = RunState.new(RunState.pending_menpai, RunState.pending_neigong, RunState.pending_moves)
+	_run = RunState.new(RunState.pending_menpai, RunState.pending_neigong, RunState.pending_arts)
 	_rng.seed = 2024
 	_next_node()
 
@@ -55,7 +55,6 @@ func _build_cfg() -> Dictionary:
 		"player_max_hp": _run.max_hp,
 		"seed": 1000 + _run.node_index,
 		"menpai": _run.menpai_id,
-		"known_moves": _run.known_moves,
 		"learned": _run.learned,
 		"qi_bonus": _run.qi_bonus(),
 		"evo": _run.evo,
@@ -95,7 +94,7 @@ func _show_evolution(id: StringName) -> void:
 func _show_basic() -> void:
 	var rs = REWARD.instantiate()
 	add_child(rs)
-	rs.setup(RunRewards.roll_basic(_run.known_moves, _rng))
+	rs.setup(RunRewards.roll_basic(_rng))
 	rs.chosen.connect(func(r):
 		_apply_basic(r)
 		rs.queue_free()

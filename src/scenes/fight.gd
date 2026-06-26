@@ -29,12 +29,9 @@ func _ready() -> void:
 	var p_mhp: int = _cfg.get("player_max_hp", 40)
 	var seed: int = _cfg.get("seed", 12345)
 	var menpai_id: StringName = _cfg.get("menpai", &"shaolin")
-	var known: Array = _cfg.get("known_moves", [])
-	if known.is_empty():
-		for m in Deck.basic_attacks(): known.append(m.id)   # standalone:全部基础招
 	var learned: Array = _cfg.get("learned", [])
 	if learned.is_empty():
-		learned = Menpai.starter_learned(menpai_id)
+		learned = Menpai.starter_pool(menpai_id).slice(0, 2)
 	var qi_bonus: int = _cfg.get("qi_bonus", 0)
 	var evo: Dictionary = _cfg.get("evo", {})
 	_weight = _cfg.get("weight", {})
@@ -55,12 +52,10 @@ func _ready() -> void:
 	_state.n_ticks = 15
 	_rules = Arts.build_rules(learned, evo)
 	_rng.seed = seed
-	# 玩家抽牌池 = 已学攻击招(进化/神兵) + 化境绝学单卡
+	# 玩家抽牌池 = 全部 9 门基础招(应用进化/神兵) + 化境绝学单卡
 	_pool.clear()
-	for id in known:
-		var m = Deck.by_id(id)
-		if m != null:
-			_pool.append(_finish_move(m, evo.get(id, {}), weapon))
+	for m in Deck.basic_attacks():
+		_pool.append(_finish_move(m, evo.get(m.id, {}), weapon))
 	for cid in compiled:
 		var res = Arts.recipe(cid).get("result", null)
 		if res != null:

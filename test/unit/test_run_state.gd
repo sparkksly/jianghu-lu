@@ -5,11 +5,10 @@ func _rng(s: int) -> RandomNumberGenerator:
 
 # --- 开局构筑 ---
 func test_init_from_choices():
-	var r := RunState.new(&"wudang", &"liangyi", [&"jab", &"snap_kick"])
+	var r := RunState.new(&"wudang", &"liangyi", [&"taiji_yunshou", &"mianli"])
 	assert_eq(r.menpai_id, &"wudang")
 	assert_eq(r.neigong_id, &"liangyi")
-	assert_eq(r.known_moves, [&"jab", &"snap_kick"])
-	assert_eq(r.learned, [&"taiji_yunshou"], "起手绝学=门派入门")
+	assert_eq(r.learned, [&"taiji_yunshou", &"mianli"], "起手=选的2门初级功夫")
 
 func test_default_neigong_follows_menpai():
 	assert_eq(RunState.new(&"shaolin").neigong_id, &"yijinjing")
@@ -74,16 +73,24 @@ func test_encounter_fruit_boosts_hp_and_neigong():
 	assert_eq(r.neigong_level, 2)
 
 func test_encounter_learn_art():
-	var r := RunState.new(&"shaolin")   # 已会 luohan
+	var r := RunState.new(&"shaolin")   # 开局 2 门初级功夫
+	var n0 := r.learned.size()
 	r.apply_encounter({"learn_art": true}, _rng(2))
-	assert_gt(r.learned.size(), 1, "领悟了新绝学")
+	assert_gt(r.learned.size(), n0, "领悟了一门新功夫")
 
 func test_encounter_weapon_and_master_move():
 	var r := RunState.new(&"shaolin")
 	r.apply_encounter({"weapon_dmg": 2}, _rng(3))
 	assert_eq(r.weapon_bonus, 2)
+	var n0 := r.learned.size()
 	r.apply_encounter({"master_move": true}, _rng(3))
-	assert_gt(r.known_moves.size(), 2, "学了一门大成招")
+	assert_gt(r.learned.size(), n0, "领悟一门功夫")
+
+func test_advanced_art_only_learnable_after_prereq():
+	var r := RunState.new(&"shaolin")
+	assert_false(&"prajna" in r.unlearned_arts(), "般若未达熟练,不可领悟")
+	r.gain_mastery([&"jingang_fumo", &"jingang_fumo", &"jingang_fumo"])
+	assert_true(&"prajna" in r.unlearned_arts(), "金刚伏魔熟练≥3后般若可领悟")
 
 func test_encounter_heal_full():
 	var r := RunState.new(&"shaolin")

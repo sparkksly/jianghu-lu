@@ -1,7 +1,8 @@
 class_name Loc
 extends RefCounted
 
-const _COMBO_RESULTS := [&"chain_kick", &"wuying", &"qiankun", &"luohan", &"jingang_fumo", &"taiji_yunshou"]
+const _COMBO_RESULTS := [&"chain_kick", &"wuying", &"qiankun", &"luohan", &"jingang_fumo", &"taiji_yunshou",
+	&"fuhu", &"wudang_changquan", &"mianli", &"rouyun", &"prajna", &"da_yunshou", &"liangyi"]
 
 static func kind_name(kind: int) -> String:
 	match kind:
@@ -15,11 +16,10 @@ static func _name_table() -> Dictionary:
 	var t := {}
 	for m in Deck.starter():
 		t[m.id] = m.move_name
-	for m in Deck.advanced_moves():
-		t[m.id] = m.move_name
 	for m in Deck.boss_moves():
 		t[m.id] = m.move_name
-	for m in [Deck.chain_kick(), Deck.wuying(), Deck.qiankun(), Deck.luohan(), Deck.jingang_fumo(), Deck.taiji_yunshou()]:
+	for m in [Deck.chain_kick(), Deck.wuying(), Deck.qiankun(), Deck.luohan(), Deck.jingang_fumo(), Deck.taiji_yunshou(),
+			Deck.fuhu(), Deck.wudang_changquan(), Deck.mianli(), Deck.rouyun(), Deck.prajna(), Deck.da_yunshou(), Deck.liangyi()]:
 		t[m.id] = m.move_name
 	return t
 

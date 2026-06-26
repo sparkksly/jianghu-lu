@@ -55,24 +55,13 @@ static func starter() -> Array[Move]:
 static func by_id(id: StringName) -> Move:
 	for m in starter():
 		if m.id == id: return m
-	for m in advanced_moves():
-		if m.id == id: return m
 	for m in boss_moves():
 		if m.id == id: return m
 	return null
 
-# 基础攻击招 = 全部(下劈掌/侧踢等也是基础);开局从这里选 2 门。
+# 基础攻击招 = 全部 9 门(下劈掌/侧踢等也是基础);这就是抽牌池。
 static func basic_attacks() -> Array[Move]:
 	return Hand.attack_pool(starter())
-
-# 大成招:稀有强力的进阶招(入门掌法→大成掌法),靠领悟/奇遇得,不在开局选项。
-static func advanced_moves() -> Array[Move]:
-	return [
-		_m(&"prajna_palm", "般若掌", Move.Kind.ATTACK, 1, 1, 2, 13, 4, {"tags":[&"掌法"], "range":[0,1], "heavy":true, "armor":true, "tier":2}),
-		_m(&"taizu_fist", "太祖长拳", Move.Kind.ATTACK, 0, 2, 1, 7, 3, {"tags":[&"拳法"], "range":[0,1], "hits":[0,1], "tier":2}),
-		_m(&"mandarin_kick", "鸳鸯连环腿", Move.Kind.ATTACK, 0, 2, 2, 8, 3, {"tags":[&"腿法"], "range":[0,1], "hits":[0,1], "knockback":true, "tier":2}),
-		_m(&"vajra_finger", "大力金刚指", Move.Kind.ATTACK, 1, 1, 1, 10, 3, {"tags":[&"指法"], "range":[0,1], "interrupt":true, "heavy":true, "tier":2}),
-	]
 
 # boss 专属招(用现有词缀做特色;不在玩家池)
 static func boss_moves() -> Array[Move]:
@@ -101,10 +90,28 @@ static func jingang_fumo() -> Move:  # 少林:格挡+掌法 → 金刚伏魔(护
 static func taiji_yunshou() -> Move:  # 武当:掌法×2 → 太极云手(柔掌走位)
 	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6})
 
+# --- 初级功夫(补足每派 4 门) ---
+static func fuhu() -> Move:  # 少林:拳+肘 → 伏虎拳
+	return _m(&"fuhu", "伏虎拳", Move.Kind.ATTACK, 0, 2, 1, 8, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
+static func wudang_changquan() -> Move:  # 武当:拳×2 → 武当长拳
+	return _m(&"wudang_changquan", "武当长拳", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
+static func mianli() -> Move:  # 武当:闪身+掌 → 绵里藏针(借力柔掌)
+	return _m(&"mianli", "绵里藏针", Move.Kind.ATTACK, 0, 1, 1, 7, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1]})
+static func rouyun() -> Move:  # 武当:掌+腿 → 柔云腿
+	return _m(&"rouyun", "柔云腿", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,1], "delta":-1})
+
+# --- 高级功夫(稀有强力;需初级功夫熟练才能领悟) ---
+static func prajna() -> Move:  # 少林:掌×3 → 般若神掌
+	return _m(&"prajna", "般若神掌", Move.Kind.ATTACK, 0, 1, 2, 14, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "armor":true, "guard":3})
+static func wuying() -> Move:  # 少林:连环踢+腿×2 → 佛山无影脚(已有,归高级)
+	return _m(&"wuying", "佛山无影脚", Move.Kind.ATTACK, 0, 3, 1, 8, 0, {"tags":[&"腿法"], "hits":[0,1,2], "armor":true, "range":[0,1]})
+static func da_yunshou() -> Move:  # 武当:掌×3 → 大成云手
+	return _m(&"da_yunshou", "大成·云手", Move.Kind.ATTACK, 0, 3, 1, 7, 0, {"tags":[&"掌法"], "hits":[0,1,2], "range":[0,2], "delta":-1, "priority":7})
+static func liangyi() -> Move:  # 武当:拳×3 → 两仪连环
+	return _m(&"liangyi", "两仪连环", Move.Kind.ATTACK, 0, 3, 1, 8, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true})
+
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
 static func chain_kick() -> Move:
 	return _m(&"chain_kick", "连环踢", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1]})
-static func wuying() -> Move:
-	return _m(&"wuying", "佛山无影脚", Move.Kind.ATTACK, 0, 3, 1, 22, 0, {"tags":[&"腿法"], "hits":[0,1,2], "armor":true, "range":[0,1]})
 static func qiankun() -> Move:
 	return _m(&"qiankun", "乾坤大挪移", Move.Kind.THROW, 0, 1, 1, 14, 0, {"range":[0,1]})

@@ -35,12 +35,12 @@ theme_override_constants/separation = 16
 
 [node name="Sub3" type="Label" parent="VBox"]
 theme_override_font_sizes/font_size = 20
-text = "起手招式 (选两门基础招;其余靠领悟/奇遇)"
+text = "起手功夫 (从本派初级功夫选两门;高级功夫靠领悟,需初级功夫熟练)"
 
 [node name="MovesGrid" type="GridContainer" parent="VBox"]
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
-columns = 5
+columns = 4
 
 [node name="StartButton" type="Button" parent="VBox"]
 custom_minimum_size = Vector2(0, 56)

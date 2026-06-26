@@ -1,28 +1,25 @@
 class_name Menpai
 extends RefCounted
 
-# 门派 = 开局风格:决定起手已会的绝学 + 这一脉能领悟哪些绝学。
-# 进攻抽牌池是通用基础动作(两派相同);门派功夫靠把基础动作合成的连招(见 Arts)。
-#   少林=刚猛:起手罗汉拳;武当=柔劲:起手太极云手。
+# 门派 = 一套功夫(组合招/绝学)。9 门基础招两派通用(抽牌池);门派定能合成哪些功夫。
+# 开局从本派 4 门初级功夫里选 2 门会的;高级功夫靠领悟(需初级功夫熟练)。
+#   少林=刚猛:罗汉拳/连环踢/金刚伏魔/伏虎拳 → 般若神掌/佛山无影脚
+#   武当=柔劲:太极云手/武当长拳/绵里藏针/柔云腿 → 大成云手/两仪连环
 
 const SHAOLIN := &"shaolin"
 const WUDANG := &"wudang"
 
-# 进攻池 = 通用基础动作(两派相同)。
-static func pool(_id: StringName) -> Array[Move]:
-	return Hand.attack_pool(Deck.starter())
-
-# 开局已会的入门绝学。
-static func starter_learned(id: StringName) -> Array:
+# 4 门初级功夫(开局选 2)。
+static func starter_pool(id: StringName) -> Array:
 	match id:
-		WUDANG: return [&"taiji_yunshou"]
-		_: return [&"luohan"]
+		WUDANG: return [&"taiji_yunshou", &"wudang_changquan", &"mianli", &"rouyun"]
+		_: return [&"luohan", &"chain_kick", &"jingang_fumo", &"fuhu"]
 
-# 这一脉能领悟的全部绝学(通用 + 本门),含起手那个。
+# 本派能领悟的全部功夫(初级 + 通用乾坤 + 高级)。
 static func learnable(id: StringName) -> Array:
 	match id:
-		WUDANG: return [&"chain_kick", &"qiankun", &"taiji_yunshou"]
-		_: return [&"chain_kick", &"qiankun", &"luohan", &"jingang_fumo"]
+		WUDANG: return [&"taiji_yunshou", &"wudang_changquan", &"mianli", &"rouyun", &"qiankun", &"da_yunshou", &"liangyi"]
+		_: return [&"luohan", &"chain_kick", &"jingang_fumo", &"fuhu", &"qiankun", &"prajna", &"wuying"]
 
 static func display_name(id: StringName) -> String:
 	match id:
