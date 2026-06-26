@@ -18,10 +18,11 @@ var _pool: Array[Move] = []
 # When empty, the scene runs standalone with default values (still playable on its own).
 var _cfg := {}
 
-func configure(player_hp: int, player_max_hp: int, enemy_hp: int, enemy_regen: int, seed: int) -> void:
+func configure(player_hp: int, player_max_hp: int, enemy_hp: int, enemy_regen: int, seed: int, menpai_id := &"shaolin") -> void:
 	_cfg = {
 		"hp": player_hp, "mhp": player_max_hp,
 		"ehp": enemy_hp, "ereg": enemy_regen, "seed": seed,
+		"menpai": menpai_id,
 	}
 
 func _ready() -> void:
@@ -30,16 +31,17 @@ func _ready() -> void:
 	var e_hp: int = _cfg.get("ehp", 40)
 	var e_reg: int = _cfg.get("ereg", 6)
 	var seed: int = _cfg.get("seed", 12345)
+	var menpai_id: StringName = _cfg.get("menpai", &"shaolin")
 	_ai = AiPlanner.new(seed)
 	_state = CombatState.new()
 	_state.hp = [p_hp, e_hp]; _state.max_hp = [p_mhp, e_hp]
 	_state.sta_max = [10, 10]; _state.stamina = [10, 10]
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 15
-	_rules = ComboLibrary.build()
+	_rules = Menpai.rules(menpai_id)
 	_deck = Deck.starter()
 	_rng.seed = seed
-	_pool = Hand.attack_pool(_deck)
+	_pool = Menpai.pool(menpai_id)   # 进攻牌从门派池抽;工具牌仍取通用 starter
 	_plan_phase.plan_committed.connect(_on_player_plan)
 	_watch_phase.finished.connect(_on_watch_done)
 	$CodexButton.pressed.connect($Codex.toggle)
