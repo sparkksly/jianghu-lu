@@ -16,6 +16,7 @@ signal finished
 @onready var _dist: Label = $DistanceLabel
 @onready var _timeline: Control = $CombatTimeline
 @onready var _float: Control = $FloatingLayer
+@onready var _stage: Control = $FighterStage
 @onready var _log: VBoxContainer = $LogPanel/Scroll/EventLog
 @onready var _log_panel: Panel = $LogPanel
 @onready var _log_button: Button = $LogButton
@@ -61,9 +62,10 @@ func show_state(state: CombatState) -> void:
 	_p0s.max_value = state.sta_max[0]; _p0s.value = state.stamina[0]
 	_p1s.max_value = state.sta_max[1]; _p1s.value = state.stamina[1]
 	_dist.text = "距离 " + CombatFeed.distance_label(state.distance)
+	_stage.idle(state.distance)
 	_update_labels()
 
-func play(state_before: CombatState, _plans: Array, events: Array) -> void:
+func play(state_before: CombatState, plans: Array, events: Array) -> void:
 	_state = state_before.clone()
 	_events = events
 	var bars: Array = [[_p0h, _p0hr, _p0hl, 0], [_p1h, _p1hr, _p1hl, 1]]
@@ -74,6 +76,7 @@ func play(state_before: CombatState, _plans: Array, events: Array) -> void:
 	_p0s.max_value = _state.sta_max[0]; _p0s.value = _state.stamina[0]
 	_p1s.max_value = _state.sta_max[1]; _p1s.value = _state.stamina[1]
 	_dist.text = "距离 " + CombatFeed.distance_label(_state.distance)
+	_stage.setup(plans[0], plans[1], _state.distance)
 	_update_labels()
 	_build_timeline()
 	_t = 0; _accum = 0.0; _max_t = 0
@@ -116,6 +119,7 @@ func _process(delta: float) -> void:
 	if _playhead:
 		var prog := clampf((float(_t) + _accum / STEP) / float(N_CELLS), 0.0, 1.0)
 		_playhead.position.x = prog * BAR_W
+	_stage.set_time(float(_t) + _accum / STEP)
 	_accum += delta
 	if _accum < STEP:
 		return
@@ -134,11 +138,13 @@ func _apply_event(e) -> void:
 	match e.type:
 		&"distance":
 			_dist.text = "距离 " + CombatFeed.distance_label(e.amount)
+			_stage.set_distance(e.amount)
 		&"reach":
 			_spawn_number(e.actor, "够不着", Color(0.8, 0.8, 0.85), false)
 		&"hit", &"interrupt", &"throw_break":
 			var gh: ProgressBar = _p0h if e.target == 0 else _p1h
 			gh.value = max(0, gh.value - e.amount)  # green drops instantly; red trails
+			_stage.flinch(e.target)
 		&"stamina":
 			var sb: ProgressBar = _p0s if e.actor == 0 else _p1s
 			sb.value = clampf(sb.value + e.amount, 0, sb.max_value)
