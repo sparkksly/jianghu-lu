@@ -46,3 +46,22 @@ func test_distance_clamps():
 	var p0 := Plan.new(); p0.add(PlacedMove.new(_step(1), 0))   # 再退也不能 > 2
 	CombatSim.simulate(s, [p0, Plan.new()])
 	assert_eq(s.distance, 2, "+1 at 远(2) clamps to 2, not 3")
+
+func _atk(dmg, rmin, rmax) -> Move:
+	var m := Move.new(); m.id=&"a"; m.kind=Move.Kind.ATTACK
+	m.startup=0; m.active=1; m.recovery=1; m.hit_offsets=[0]; m.damage=dmg
+	m.stamina_cost=2; m.range_min=rmin; m.range_max=rmax
+	return m
+
+func test_attack_out_of_range_whiffs():
+	var s := _state()   # distance = 1 (中)
+	var p0 := Plan.new(); p0.add(PlacedMove.new(_atk(8, 0, 0), 0))  # 贴身-only
+	var ev := CombatSim.simulate(s, [p0, Plan.new()])
+	assert_eq(s.hp[1], 40, "够不着，无伤")
+	assert_true(ev.any(func(e): return e.type == &"reach"), "发了 reach 事件")
+
+func test_attack_in_range_hits():
+	var s := _state()   # distance = 1
+	var p0 := Plan.new(); p0.add(PlacedMove.new(_atk(8, 0, 1), 0))  # 贴身~中
+	CombatSim.simulate(s, [p0, Plan.new()])
+	assert_eq(s.hp[1], 32, "距离对，命中 -8")
