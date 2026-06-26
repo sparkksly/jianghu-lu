@@ -33,3 +33,14 @@ func test_affixes():
 	var a := Loc.affixes(m)
 	assert_string_contains(a, "打断")
 	assert_string_contains(a, "重击")
+
+func test_log_line_handles_distance_reach_stun_in_chinese():
+	var d = Loc.log_line(CombatEvent.new(3, &"distance", -1, -1, 1, &""))
+	assert_string_contains(d, "距离→中")
+	assert_false(d.to_lower().contains("distance"))
+	var r = Loc.log_line(CombatEvent.new(4, &"reach", 0, 1, 0, &"jab"))
+	assert_string_contains(r, "够不着")
+	assert_false(r.to_lower().contains("reach"))
+	var s = Loc.log_line(CombatEvent.new(5, &"stun", 0, 1, 2, &"elbow_strike"))
+	assert_string_contains(s, "踉跄")
+	assert_false(s.to_lower().contains("stun"))

@@ -52,9 +52,15 @@ static func event_zh(type: StringName) -> String:
 		&"exhaust": return "气力不继"
 		&"stamina": return "体力"
 		&"death": return "倒下"
+		&"reach": return "够不着"
+		&"stun": return "踉跄"
+		&"distance": return "距离"
 	return str(type)
 
 static func log_line(e) -> String:
+	if e.type == &"distance":
+		var dname := "贴身" if e.amount == 0 else ("中" if e.amount == 1 else "远")
+		return "第%d拍 距离→%s" % [e.tick, dname]
 	var who := "你" if e.actor == 0 else "敌"
 	var mv := ""
 	if e.move_id != &"":
