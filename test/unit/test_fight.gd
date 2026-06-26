@@ -97,3 +97,12 @@ func test_default_menpai_draws_from_shaolin_pool():
 	for m in w._plan_phase._deck:
 		if m.kind == Move.Kind.ATTACK:
 			assert_true(m.id in shaolin, "进攻牌来自少林池: " + str(m.id))
+
+func test_compiled_art_enters_draw_pool():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	w.configure(40, 40, 40, 6, 1, &"shaolin", [&"luohan"], 0, {}, {}, [&"luohan"])
+	add_child_autofree(w)
+	await get_tree().process_frame
+	var ids: Array = []
+	for m in w._pool: ids.append(m.id)
+	assert_true(&"luohan" in ids, "化境绝学作单卡进抽牌池")

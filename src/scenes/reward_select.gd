@@ -6,8 +6,9 @@ signal chosen(reward)
 
 var _rewards: Array = []
 
-func setup(rewards: Array) -> void:
+func setup(rewards: Array, title := "机缘 · 精进   —   三选一") -> void:
 	_rewards = rewards
+	$Title.text = title
 	for i in _btns.size():
 		var b: Button = _btns[i]
 		if i < rewards.size():
