@@ -98,6 +98,17 @@ func test_encounter_heal_full():
 	r.apply_encounter({"heal_full": true}, _rng(4))
 	assert_eq(r.player_hp, r.max_hp)
 
-func test_discovery_art_not_in_normal_pool():
-	var r := RunState.new(&"shaolin")
-	assert_false(&"wuying" in r.unlearned_arts(), "无影脚靠实战顿悟,不在磨练/奇遇领悟池")
+func test_discovery_and_exotic_pools():
+	var r := RunState.new(&"shaolin")   # 开局会 罗汉拳 + 连环踢
+	# 无影脚(连环踢升级·顿悟):奇遇能学(已会连环踢满足门槛),磨练自悟不出
+	assert_true(&"wuying" in r.unlearned_arts(), "奇遇能学无影脚")
+	assert_false(&"wuying" in r.self_learnable_arts(), "磨练不出无影脚(实战顿悟)")
+	# 乾坤(稀缺绝世神功):奇遇能学,磨练不出
+	assert_true(&"qiankun" in r.unlearned_arts(), "奇遇能学乾坤")
+	assert_false(&"qiankun" in r.self_learnable_arts(), "磨练不出乾坤(稀缺)")
+
+func test_wuying_needs_chain_kick_first():
+	var r := RunState.new(&"shaolin", &"", [&"luohan", &"fuhu"])   # 不会连环踢
+	assert_false(&"wuying" in r.unlearned_arts(), "没会连环踢→无影脚学不了")
+	r.learn(&"chain_kick")
+	assert_true(&"wuying" in r.unlearned_arts(), "会连环踢后无影脚可由奇遇学")

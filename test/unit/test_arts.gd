@@ -61,3 +61,11 @@ func test_wuying_is_discovery():
 func test_recipe_text_shows_formula():
 	assert_string_contains(Arts.recipe_text(&"luohan"), "罗汉拳")
 	assert_string_contains(Arts.recipe_text(&"luohan"), "拳法")
+
+func test_qiankun_is_exotic():
+	assert_true(Arts.is_exotic(&"qiankun"), "乾坤=稀缺绝世神功")
+	assert_false(Arts.is_exotic(&"luohan"))
+
+func test_wuying_requires_chain_kick():
+	assert_false(Arts.can_learn(&"wuying", [], {}), "没会连环踢不能领悟无影脚")
+	assert_true(Arts.can_learn(&"wuying", [&"chain_kick"], {}), "会连环踢→可领悟其升级版")

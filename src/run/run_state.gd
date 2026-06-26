@@ -83,12 +83,19 @@ func learn(id: StringName) -> void:
 		learned.append(id)
 
 # --- 奇遇效果 ---
-# 可领悟的功夫 = 本派未学 且 满足解锁(高级需初级功夫熟练)。
+# 奇遇可学(万能池):本派未学 且 满足门槛 —— 含稀缺/实战顿悟功夫(奇遇能学到一切)。
 func unlearned_arts() -> Array:
 	var out: Array = []
 	for id in Menpai.learnable(menpai_id):
-		# discovery 功夫(实战顿悟)不进普通领悟池
-		if not learned.has(id) and Arts.can_learn(id, learned, mastery) and not Arts.is_discovery(id):
+		if not learned.has(id) and Arts.can_learn(id, learned, mastery):
+			out.append(id)
+	return out
+
+# 磨练可自悟:在奇遇池基础上排除稀缺(exotic,只能奇遇)和实战顿悟(discovery,靠战斗触发)。
+func self_learnable_arts() -> Array:
+	var out: Array = []
+	for id in unlearned_arts():
+		if not Arts.is_exotic(id) and not Arts.is_discovery(id):
 			out.append(id)
 	return out
 
