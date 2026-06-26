@@ -13,6 +13,7 @@ signal finished
 @onready var _p0sl: Label = $P0StaLabel
 @onready var _p1sl: Label = $P1StaLabel
 @onready var _tick: Label = $TickLabel
+@onready var _dist: Label = $DistanceLabel
 @onready var _timeline: Control = $CombatTimeline
 @onready var _float: Control = $FloatingLayer
 @onready var _log: VBoxContainer = $LogPanel/Scroll/EventLog
@@ -59,6 +60,7 @@ func show_state(state: CombatState) -> void:
 		bar[1].max_value = state.max_hp[idx]; bar[1].value = state.hp[idx]
 	_p0s.max_value = state.sta_max[0]; _p0s.value = state.stamina[0]
 	_p1s.max_value = state.sta_max[1]; _p1s.value = state.stamina[1]
+	_dist.text = "距离 " + CombatFeed.distance_label(state.distance)
 	_update_labels()
 
 func play(state_before: CombatState, _plans: Array, events: Array) -> void:
@@ -71,6 +73,7 @@ func play(state_before: CombatState, _plans: Array, events: Array) -> void:
 		bar[1].max_value = _state.max_hp[idx]; bar[1].value = _state.hp[idx]
 	_p0s.max_value = _state.sta_max[0]; _p0s.value = _state.stamina[0]
 	_p1s.max_value = _state.sta_max[1]; _p1s.value = _state.stamina[1]
+	_dist.text = "距离 " + CombatFeed.distance_label(_state.distance)
 	_update_labels()
 	_build_timeline()
 	_t = 0; _accum = 0.0; _max_t = 0
@@ -129,6 +132,10 @@ func _process(delta: float) -> void:
 
 func _apply_event(e) -> void:
 	match e.type:
+		&"distance":
+			_dist.text = "距离 " + CombatFeed.distance_label(e.amount)
+		&"reach":
+			_spawn_number(e.actor, "够不着", Color(0.8, 0.8, 0.85), false)
 		&"hit", &"interrupt", &"throw_break":
 			var gh: ProgressBar = _p0h if e.target == 0 else _p1h
 			gh.value = max(0, gh.value - e.amount)  # green drops instantly; red trails

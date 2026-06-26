@@ -118,6 +118,13 @@ offset_right = 540.0
 offset_bottom = 522.0
 text = "第0拍"
 
+[node name="DistanceLabel" type="Label" parent="."]
+offset_left = 556.0
+offset_top = 498.0
+offset_right = 760.0
+offset_bottom = 522.0
+text = "距离 中"
+
 [node name="MeLane" type="Label" parent="."]
 offset_left = 306.0
 offset_top = 524.0

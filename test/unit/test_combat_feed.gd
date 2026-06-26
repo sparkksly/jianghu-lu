@@ -64,3 +64,12 @@ func test_normal_hit_marks_move_name():
 
 func test_stamina_has_no_marker():
 	assert_true(CombatFeed.marker(_ev(&"stamina", 0, 0, -2)).is_empty())
+
+func test_reach_floats_no_number_but_marks_attacker():
+	# 够不着：不浮伤害数字
+	assert_true(CombatFeed.float_number(_ev(&"reach", 0, 1, 0, &"jab")).is_empty())
+
+func test_distance_label_text():
+	assert_eq(CombatFeed.distance_label(0), "贴身")
+	assert_eq(CombatFeed.distance_label(1), "中")
+	assert_eq(CombatFeed.distance_label(2), "远")

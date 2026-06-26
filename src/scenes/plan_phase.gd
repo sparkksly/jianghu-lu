@@ -47,7 +47,12 @@ func _build_deck() -> void:
 	for m in _deck:
 		var b := DraggableCard.new()
 		b.move = m
-		b.text = "%s\n%d拍 · %d气" % [m.move_name, m.total_duration(), m.stamina_cost]
+		var tail := ""
+		if m.kind == Move.Kind.STEP:
+			tail = "进" if m.distance_delta < 0 else "退"
+		else:
+			tail = "%s-%s" % [CombatFeed.distance_label(m.range_min), CombatFeed.distance_label(m.range_max)]
+		b.text = "%s\n%d拍·%d气·%s" % [m.move_name, m.total_duration(), m.stamina_cost, tail]
 		b.new_grabbed.connect(_on_new_grabbed)
 		_deck_row.add_child(b)
 

@@ -43,6 +43,13 @@ static func marker(e) -> Dictionary:
 			return {"lane": e.actor, "text": "气力不继", "tone": "bad"}
 	return {}
 
+static func distance_label(d: int) -> String:
+	match d:
+		0: return "贴身"
+		1: return "中"
+		2: return "远"
+	return "?"
+
 static func tone_color(tone: String) -> Color:
 	match tone:
 		"big": return Color(1, 0.82, 0.2)
