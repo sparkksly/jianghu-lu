@@ -66,7 +66,7 @@ func show_state(state: CombatState) -> void:
 		bar[1].max_value = state.max_hp[idx]; bar[1].value = state.hp[idx]
 	_p0s.max_value = state.sta_max[0]; _p0s.value = state.stamina[0]
 	_p1s.max_value = state.sta_max[1]; _p1s.value = state.stamina[1]
-	_dist.text = "距离 " + CombatFeed.distance_label(state.distance)
+	_show_distance(state.distance)
 	_stage.idle(state.distance)
 	_update_labels()
 
@@ -80,7 +80,7 @@ func play(state_before: CombatState, plans: Array, events: Array) -> void:
 		bar[1].max_value = _state.max_hp[idx]; bar[1].value = _state.hp[idx]
 	_p0s.max_value = _state.sta_max[0]; _p0s.value = _state.stamina[0]
 	_p1s.max_value = _state.sta_max[1]; _p1s.value = _state.stamina[1]
-	_dist.text = "距离 " + CombatFeed.distance_label(_state.distance)
+	_show_distance(_state.distance)
 	_stage.setup(plans[0], plans[1], _state.distance)
 	_update_labels()
 	_build_timeline()
@@ -146,6 +146,16 @@ func _process(delta: float) -> void:
 		set_process(false)
 		finished.emit()
 
+func _show_distance(d: int) -> void:
+	_dist.text = "距离 " + CombatFeed.distance_label(d)
+	# 贴身红橙(危险)/中黄/远蓝灰,让逼近有视觉提示
+	var col := Color(1, 0.55, 0.45)
+	if d == 1:
+		col = Color(1, 0.88, 0.4)
+	elif d >= 2:
+		col = Color(0.62, 0.82, 1)
+	_dist.add_theme_color_override("font_color", col)
+
 func _apply_shake(delta: float) -> void:
 	if _shake > 0.05:
 		_shake = maxf(0.0, _shake - delta * SHAKE_DECAY)
@@ -156,7 +166,7 @@ func _apply_shake(delta: float) -> void:
 func _apply_event(e) -> void:
 	match e.type:
 		&"distance":
-			_dist.text = "距离 " + CombatFeed.distance_label(e.amount)
+			_show_distance(e.amount)
 			_stage.set_distance(e.amount)
 		&"reach":
 			_spawn_number(e.actor, "够不着", Color(0.8, 0.8, 0.85), false)
