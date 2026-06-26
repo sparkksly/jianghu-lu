@@ -61,8 +61,12 @@ func _add_card(m: Move) -> void:
 	if m.kind == Move.Kind.STEP:
 		tail = "进" if m.distance_delta < 0 else "退"
 	else:
-		tail = "%s-%s" % [CombatFeed.distance_label(m.range_min), CombatFeed.distance_label(m.range_max)]
+		# 紧凑距离带(贴/中/远),让 11 张手牌挤进一行
+		tail = "%s-%s" % [CombatFeed.distance_label(m.range_min).substr(0, 1), CombatFeed.distance_label(m.range_max).substr(0, 1)]
 	b.text = "%s\n%d拍·%d气·%s" % [m.move_name, m.total_duration(), m.stamina_cost, tail]
+	b.custom_minimum_size = Vector2(88, 52)   # 5 工具 + 6 进攻 = 11 张都落在屏内一行
+	b.clip_text = true
+	b.add_theme_font_size_override("font_size", 13)
 	b.new_grabbed.connect(_on_new_grabbed)
 	_deck_row.add_child(b)
 
