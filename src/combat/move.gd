@@ -1,7 +1,7 @@
 class_name Move
 extends Resource
 
-enum Kind { ATTACK, BLOCK, DODGE, THROW }
+enum Kind { ATTACK, BLOCK, DODGE, THROW, STEP }
 
 @export var id: StringName = &""
 @export var move_name: String = "招式"
@@ -20,6 +20,12 @@ enum Kind { ATTACK, BLOCK, DODGE, THROW }
 @export var can_interrupt: bool = false  # 打断 词缀
 @export var super_armor: bool = false    # 霸体 词缀
 @export var is_heavy: bool = false       # 重击 (extra whiff penalty)
+
+@export var range_min: int = 0     # 适用距离带 [min,max]，默认任意
+@export var range_max: int = 2
+@export var distance_delta: int = 0  # STEP 用：上步-1 / 撤步+1
+@export var knockback: bool = false  # 击退：命中后距离+1
+@export var stun: int = 0            # 踉跄：命中令对手跳 N 拍
 
 func active_count() -> int:
 	return max(1, active)
@@ -40,3 +46,6 @@ func is_hit_tick(elapsed: int) -> bool:
 	if phase_at(elapsed) != &"active":
 		return false
 	return (elapsed - startup) in hit_offsets
+
+func in_range(d: int) -> bool:
+	return range_min <= d and d <= range_max
