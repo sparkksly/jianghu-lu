@@ -18,11 +18,11 @@ var _pool: Array[Move] = []
 # When empty, the scene runs standalone with default values (still playable on its own).
 var _cfg := {}
 
-func configure(player_hp: int, player_max_hp: int, enemy_hp: int, enemy_regen: int, seed: int, menpai_id := &"shaolin") -> void:
+func configure(player_hp: int, player_max_hp: int, enemy_hp: int, enemy_regen: int, seed: int, menpai_id := &"shaolin", learned := [], bonus_qi := 0) -> void:
 	_cfg = {
 		"hp": player_hp, "mhp": player_max_hp,
 		"ehp": enemy_hp, "ereg": enemy_regen, "seed": seed,
-		"menpai": menpai_id,
+		"menpai": menpai_id, "learned": learned, "bonus_qi": bonus_qi,
 	}
 
 func _ready() -> void:
@@ -32,16 +32,20 @@ func _ready() -> void:
 	var e_reg: int = _cfg.get("ereg", 6)
 	var seed: int = _cfg.get("seed", 12345)
 	var menpai_id: StringName = _cfg.get("menpai", &"shaolin")
+	var learned: Array = _cfg.get("learned", [])
+	if learned.is_empty():
+		learned = Menpai.starter_learned(menpai_id)
+	var bonus_qi: int = _cfg.get("bonus_qi", 0)
 	_ai = AiPlanner.new(seed)
 	_state = CombatState.new()
 	_state.hp = [p_hp, e_hp]; _state.max_hp = [p_mhp, e_hp]
-	_state.sta_max = [10, 10]; _state.stamina = [10, 10]
+	_state.sta_max = [10 + bonus_qi, 10]; _state.stamina = [10 + bonus_qi, 10]
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 15
-	_rules = Menpai.rules(menpai_id)
+	_rules = Arts.build_rules(learned)   # 连招规则 = 已领悟绝学
 	_deck = Deck.starter()
 	_rng.seed = seed
-	_pool = Menpai.pool(menpai_id)   # 进攻牌从门派池抽;工具牌仍取通用 starter
+	_pool = Menpai.pool(menpai_id)   # 进攻牌共享基础动作池
 	_plan_phase.plan_committed.connect(_on_player_plan)
 	_watch_phase.finished.connect(_on_watch_done)
 	$CodexButton.pressed.connect($Codex.toggle)

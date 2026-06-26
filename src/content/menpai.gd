@@ -1,36 +1,30 @@
 class_name Menpai
 extends RefCounted
 
-# 门派 = 你能用基础动作合成出哪些「功夫/绝学」(连招配方),不是一套独立的基础招。
-# 双方都从同一套基础动作里抽牌;门派只决定可合成的绝学 + 风格(少林护体 / 武当借力)。
-#   少林=刚猛:拳法×3→罗汉拳;格挡+掌法→金刚伏魔(护体)。
-#   武当=柔劲:掌法×2→太极云手(走位);借力(通用)是其反打核心。
+# 门派 = 开局风格:决定起手已会的绝学 + 这一脉能领悟哪些绝学。
+# 进攻抽牌池是通用基础动作(两派相同);门派功夫靠把基础动作合成的连招(见 Arts)。
+#   少林=刚猛:起手罗汉拳;武当=柔劲:起手太极云手。
 
 const SHAOLIN := &"shaolin"
 const WUDANG := &"wudang"
 
-# 进攻池 = 通用基础动作(两派相同)。门派的差别在连招,不在抽牌池。
+# 进攻池 = 通用基础动作(两派相同)。
 static func pool(_id: StringName) -> Array[Move]:
 	return Hand.attack_pool(Deck.starter())
 
-# 连招规则 = 通用 base + 门派绝学配方(都用基础动作做输入)。
-static func rules(id: StringName) -> ComboRules:
-	var r := ComboLibrary.build()
+# 开局已会的入门绝学。
+static func starter_learned(id: StringName) -> Array:
 	match id:
-		WUDANG:
-			# 掌法×2 → 太极云手(柔掌连绵 + 贴近)
-			r.add_recipe([{"tag":&"掌法"}, {"tag":&"掌法"}], Deck.taiji_yunshou())
-		_:  # 少林(默认)
-			# 拳法×3 → 罗汉拳(刚猛三连;有放回抽牌可凑同名拳)
-			r.add_recipe([{"tag":&"拳法"}, {"tag":&"拳法"}, {"tag":&"拳法"}], Deck.luohan())
-			# 格挡 + 掌法 → 金刚伏魔(重掌 + 自挂护体)
-			r.add_recipe([{"kind":Move.Kind.BLOCK}, {"tag":&"掌法"}], Deck.jingang_fumo())
-	return r
+		WUDANG: return [&"taiji_yunshou"]
+		_: return [&"luohan"]
+
+# 这一脉能领悟的全部绝学(通用 + 本门),含起手那个。
+static func learnable(id: StringName) -> Array:
+	match id:
+		WUDANG: return [&"chain_kick", &"qiankun", &"taiji_yunshou"]
+		_: return [&"chain_kick", &"qiankun", &"luohan", &"jingang_fumo"]
 
 static func display_name(id: StringName) -> String:
 	match id:
 		WUDANG: return "武当"
 		_: return "少林"
-
-static func info(id: StringName) -> Dictionary:
-	return {"id": id, "name": display_name(id), "pool": pool(id), "rules": rules(id)}

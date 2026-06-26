@@ -12,6 +12,8 @@ var fight_index: int   # 0-based index of the current fight
 var player_hp: int
 var max_hp: int
 var menpai_id: StringName
+var learned: Array = []      # 已领悟绝学 id(开局=门派入门)
+var bonus_qi: int = 0        # 气海精进累加(+最大气)
 
 func _init(total: int = 3, hp: int = 40, menpai: StringName = &"shaolin") -> void:
 	fights_total = total
@@ -19,6 +21,19 @@ func _init(total: int = 3, hp: int = 40, menpai: StringName = &"shaolin") -> voi
 	player_hp = hp
 	max_hp = hp
 	menpai_id = menpai
+	learned = Menpai.starter_learned(menpai)
+
+# 应用一个机缘奖励。
+func apply_reward(r: Dictionary) -> void:
+	match r.get("type", ""):
+		"combo":
+			if not learned.has(r["id"]):
+				learned.append(r["id"])
+		"qi":
+			bonus_qi += 2
+		"hp":
+			max_hp += 6
+			player_hp += 6
 
 func advance() -> void:
 	fight_index += 1

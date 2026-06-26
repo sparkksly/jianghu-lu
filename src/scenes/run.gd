@@ -4,6 +4,7 @@ extends Node
 # Map / events / rewards / reputation are later slices.
 
 const FIGHT := preload("res://src/scenes/fight.tscn")
+const REWARD := preload("res://src/scenes/reward_select.tscn")
 const MENU_PATH := "res://src/scenes/main_menu.tscn"
 
 @onready var _banner: Control = $BannerLayer/Banner
@@ -12,9 +13,11 @@ const MENU_PATH := "res://src/scenes/main_menu.tscn"
 var _run: RunState
 var _fight: Node
 var _ended := false
+var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_run = RunState.new(3, 40, RunState.pending_menpai)
+	_rng.seed = 2024
 	_start_fight()
 
 func _start_fight() -> void:
@@ -23,7 +26,7 @@ func _start_fight() -> void:
 	if _fight:
 		_fight.queue_free()
 	_fight = FIGHT.instantiate()
-	_fight.configure(_run.player_hp, _run.max_hp, _run.enemy_hp(), _run.enemy_regen(), 1000 + _run.fight_index, _run.menpai_id)
+	_fight.configure(_run.player_hp, _run.max_hp, _run.enemy_hp(), _run.enemy_regen(), 1000 + _run.fight_index, _run.menpai_id, _run.learned, _run.bonus_qi)
 	_fight.fight_finished.connect(_on_fight_finished)
 	add_child(_fight)
 	_hide_banner()
@@ -37,7 +40,21 @@ func _on_fight_finished(player_won: bool) -> void:
 	if _run.is_complete():
 		_end_run("通关! 华山扬名\n气血余 %d" % _run.player_hp)
 	else:
-		_start_fight()
+		_show_reward()
+
+# 战后机缘:三选一,选完进下一场。
+func _show_reward() -> void:
+	var rs = REWARD.instantiate()
+	add_child(rs)
+	var unlearned: Array = []
+	for id in Menpai.learnable(_run.menpai_id):
+		if not _run.learned.has(id):
+			unlearned.append(id)
+	rs.setup(RunRewards.roll(unlearned, _rng))
+	rs.chosen.connect(func(r):
+		_run.apply_reward(r)
+		rs.queue_free()
+		_start_fight())
 
 func _end_run(text: String) -> void:
 	_ended = true
