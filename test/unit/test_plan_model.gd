@@ -15,7 +15,7 @@ func test_three_legs_offer_a_fuse_opportunity():
 	assert_true(m.place(k, 0)); assert_true(m.place(k, 2)); assert_true(m.place(k, 4))
 	var ops := m.fuse_opportunities()
 	assert_eq(ops.size(), 1, "a 连环踢 fuse hint is offered")
-	assert_eq(ops[0]["result"].id, &"chain_kick")
+	assert_eq(ops[0]["candidates"][0].id, &"chain_kick")
 	assert_eq(ops[0]["indices"].size(), 3)
 
 func test_fuse_compresses_and_frees_reusable_space():

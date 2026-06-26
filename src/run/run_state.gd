@@ -87,7 +87,7 @@ func learn(id: StringName) -> void:
 func unlearned_arts() -> Array:
 	var out: Array = []
 	for id in Menpai.learnable(menpai_id):
-		if not learned.has(id) and Arts.can_learn(id, mastery):
+		if not learned.has(id) and Arts.can_learn(id, learned, mastery):
 			out.append(id)
 	return out
 
