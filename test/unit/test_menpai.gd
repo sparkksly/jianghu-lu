@@ -1,23 +1,18 @@
 extends GutTest
 
-# 门派 = 开局起手绝学 + 可领悟池;进攻抽牌池两派共享基础动作。
+func test_starter_pool_is_four_arts():
+	assert_eq(Menpai.starter_pool(&"shaolin").size(), 4, "少林4门初级功夫")
+	assert_true(&"luohan" in Menpai.starter_pool(&"shaolin"))
+	assert_eq(Menpai.starter_pool(&"wudang").size(), 4)
+	assert_true(&"taiji_yunshou" in Menpai.starter_pool(&"wudang"))
 
-func test_pool_shared_base_attacks():
-	var sh := Menpai.pool(&"shaolin")
-	assert_eq(sh.size(), Menpai.pool(&"wudang").size(), "两派抽牌池相同")
-	for m in sh:
-		assert_eq(m.kind, Move.Kind.ATTACK)
-
-func test_starter_learned():
-	assert_eq(Menpai.starter_learned(&"shaolin"), [&"luohan"])
-	assert_eq(Menpai.starter_learned(&"wudang"), [&"taiji_yunshou"])
-	assert_eq(Menpai.starter_learned(&"???"), [&"luohan"], "未知默认少林")
-
-func test_learnable_pool():
+func test_learnable_own_advanced_not_others():
 	var sh := Menpai.learnable(&"shaolin")
-	assert_true(&"luohan" in sh and &"jingang_fumo" in sh, "含本门绝学")
-	assert_true(&"chain_kick" in sh and &"qiankun" in sh, "含通用绝学")
-	assert_false(&"taiji_yunshou" in sh, "少林学不了武当云手")
-	var wu := Menpai.learnable(&"wudang")
-	assert_true(&"taiji_yunshou" in wu)
-	assert_false(&"luohan" in wu, "武当学不了少林罗汉拳")
+	assert_true(&"prajna" in sh and &"wuying" in sh, "少林高级功夫可学")
+	assert_false(&"da_yunshou" in sh, "学不了武当高级功夫")
+	assert_true(&"qiankun" in sh, "通用乾坤可学")
+	assert_false(&"prajna" in Menpai.learnable(&"wudang"))
+
+func test_display_name():
+	assert_eq(Menpai.display_name(&"shaolin"), "少林")
+	assert_eq(Menpai.display_name(&"wudang"), "武当")

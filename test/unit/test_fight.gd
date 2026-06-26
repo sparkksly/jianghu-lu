@@ -92,11 +92,11 @@ func test_default_menpai_draws_from_shaolin_pool():
 	var w = load("res://src/scenes/fight.tscn").instantiate()
 	add_child_autofree(w)
 	await get_tree().process_frame
-	var shaolin := []
-	for m in Menpai.pool(&"shaolin"): shaolin.append(m.id)
+	var basics := []
+	for m in Deck.basic_attacks(): basics.append(m.id)
 	for m in w._plan_phase._deck:
 		if m.kind == Move.Kind.ATTACK:
-			assert_true(m.id in shaolin, "进攻牌来自少林池: " + str(m.id))
+			assert_true(m.id in basics, "进攻牌来自基础招: " + str(m.id))
 
 func test_compiled_art_enters_draw_pool():
 	var w = load("res://src/scenes/fight.tscn").instantiate()

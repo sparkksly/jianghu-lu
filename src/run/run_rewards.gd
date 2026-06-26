@@ -5,9 +5,12 @@ extends RefCounted
 #  基础提升:强身 / 打坐修炼 / 磨练招式(随机一门基础攻击招)
 #  招式进化:某招熟练满 → 迅捷/凝气/沉重(绝学第2次进化可出化境单卡)
 
-# 基础提升三选一(磨练目标 = 你已学的某招,随机)。
-static func roll_basic(known_ids: Array, rng: RandomNumberGenerator) -> Array:
-	var hone_id: StringName = known_ids[rng.randi_range(0, known_ids.size() - 1)] if known_ids.size() > 0 else &"jab"
+# 基础提升三选一(磨练目标 = 随机一门基础招)。
+static func roll_basic(rng: RandomNumberGenerator) -> Array:
+	var ids: Array = []
+	for m in Deck.basic_attacks():
+		ids.append(m.id)
+	var hone_id: StringName = ids[rng.randi_range(0, ids.size() - 1)]
 	return [
 		{"type": "hp"},
 		{"type": "meditate"},

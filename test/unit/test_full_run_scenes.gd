@@ -6,7 +6,7 @@ func test_setup_select_builds_choices():
 	await get_tree().process_frame
 	assert_eq(s.get_node("VBox/MenpaiRow").get_child_count(), 2)
 	assert_eq(s.get_node("VBox/NeigongRow").get_child_count(), 3)
-	assert_eq(s.get_node("VBox/MovesGrid").get_child_count(), 9, "9门基础招可选")
+	assert_eq(s.get_node("VBox/MovesGrid").get_child_count(), 4, "本派4门初级功夫可选")
 
 func test_encounter_renders():
 	var e = load("res://src/scenes/encounter.tscn").instantiate()

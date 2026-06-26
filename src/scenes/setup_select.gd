@@ -4,14 +4,13 @@ const RUN_PATH := "res://src/scenes/run.tscn"
 
 var _menpai: StringName = &"shaolin"
 var _neigong: StringName = &"yijinjing"
-var _picked: Array = []   # 选中的起手招(最多 2)
+var _picked: Array = []   # 选中的初级功夫(最多 2)
 
 func _ready() -> void:
 	_build_menpai()
 	_build_neigong()
-	_build_moves()
 	$VBox/StartButton.pressed.connect(_start)
-	_refresh_start()
+	_rebuild_arts()
 
 func _build_menpai() -> void:
 	var grp := ButtonGroup.new()
@@ -20,7 +19,7 @@ func _build_menpai() -> void:
 		b.toggle_mode = true; b.button_group = grp
 		b.custom_minimum_size = Vector2(150, 48)
 		b.text = Menpai.display_name(id)
-		b.toggled.connect(func(on): if on: _menpai = id)
+		b.toggled.connect(func(on): if on: _menpai = id; _rebuild_arts())
 		if id == _menpai: b.button_pressed = true
 		$VBox/MenpaiRow.add_child(b)
 
@@ -36,19 +35,24 @@ func _build_neigong() -> void:
 		if id == _neigong: b.button_pressed = true
 		$VBox/NeigongRow.add_child(b)
 
-func _build_moves() -> void:
-	for m in Deck.basic_attacks():
+# 按当前门派的 4 门初级功夫重建选项。
+func _rebuild_arts() -> void:
+	_picked.clear()
+	for c in $VBox/MovesGrid.get_children():
+		$VBox/MovesGrid.remove_child(c); c.queue_free()
+	for id in Menpai.starter_pool(_menpai):
 		var b := Button.new()
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(120, 44)
-		b.text = m.move_name
-		b.toggled.connect(_on_move_toggled.bind(m.id, b))
+		b.custom_minimum_size = Vector2(160, 48)
+		b.text = Arts.display_name(id)
+		b.toggled.connect(_on_art_toggled.bind(id, b))
 		$VBox/MovesGrid.add_child(b)
+	_refresh_start()
 
-func _on_move_toggled(on: bool, id: StringName, b: Button) -> void:
+func _on_art_toggled(on: bool, id: StringName, b: Button) -> void:
 	if on:
 		if _picked.size() >= 2:
-			b.button_pressed = false   # 最多两门
+			b.button_pressed = false
 			return
 		_picked.append(id)
 	else:
@@ -57,10 +61,10 @@ func _on_move_toggled(on: bool, id: StringName, b: Button) -> void:
 
 func _refresh_start() -> void:
 	$VBox/StartButton.disabled = _picked.size() != 2
-	$VBox/StartButton.text = "入江湖" if _picked.size() == 2 else "请选两门起手招 (%d/2)" % _picked.size()
+	$VBox/StartButton.text = "入江湖" if _picked.size() == 2 else "请选两门初级功夫 (%d/2)" % _picked.size()
 
 func _start() -> void:
 	RunState.pending_menpai = _menpai
 	RunState.pending_neigong = _neigong
-	RunState.pending_moves = _picked.duplicate()
+	RunState.pending_arts = _picked.duplicate()
 	get_tree().change_scene_to_file(RUN_PATH)

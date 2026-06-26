@@ -12,13 +12,12 @@ const CHAPTER_TITLES := ["第一章 · 毒蛛潭", "第二章 · 断魂崖", "�
 # 开局构筑在场景间传递(change_scene 不能传参)
 static var pending_menpai: StringName = &"shaolin"
 static var pending_neigong: StringName = &"yijinjing"
-static var pending_moves: Array = [&"jab", &"push_palm"]
+static var pending_arts: Array = [&"luohan", &"chain_kick"]   # 开局选的 2 门初级功夫
 
 var menpai_id: StringName
 var neigong_id: StringName
 var neigong_level: int = 0
-var known_moves: Array = []         # 已学攻击招 id(开局选 2 门基础;途中奇遇/磨练扩充)
-var learned: Array = []             # 已领悟绝学 id
+var learned: Array = []             # 已领悟功夫(绝学)id;开局=选的 2 门初级
 var mastery: Dictionary = {}
 var weight: Dictionary = {}
 var evo: Dictionary = {}
@@ -27,11 +26,10 @@ var node_index: int = 0
 var player_hp: int = 40
 var max_hp: int = 40
 
-func _init(menpai := &"shaolin", neigong := &"", moves := []) -> void:
+func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	menpai_id = menpai
 	neigong_id = neigong if neigong != &"" else Neigong.starter(menpai)
-	known_moves = (moves.duplicate() if not moves.is_empty() else [&"jab", &"push_palm"])
-	learned = Menpai.starter_learned(menpai)
+	learned = (arts.duplicate() if not arts.is_empty() else Menpai.starter_pool(menpai).slice(0, 2))
 	node_index = 0
 	player_hp = 40; max_hp = 40
 	neigong_level = 0
@@ -84,37 +82,23 @@ func learn(id: StringName) -> void:
 	if not learned.has(id):
 		learned.append(id)
 
-func learn_move(id: StringName) -> void:
-	if not known_moves.has(id):
-		known_moves.append(id)
-
 # --- 奇遇效果 ---
+# 可领悟的功夫 = 本派未学 且 满足解锁(高级需初级功夫熟练)。
 func unlearned_arts() -> Array:
 	var out: Array = []
 	for id in Menpai.learnable(menpai_id):
-		if not learned.has(id):
+		if not learned.has(id) and Arts.can_learn(id, mastery):
 			out.append(id)
 	return out
 
-func unknown_advanced() -> Array:
-	var out: Array = []
-	for m in Deck.advanced_moves():
-		if not known_moves.has(m.id):
-			out.append(m.id)
-	return out
-
 func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
-	if effect.has("learn_art"):
+	if effect.has("learn_art") or effect.has("master_move"):
 		var un := unlearned_arts()
 		if un.size() > 0:
 			learn(un[rng.randi_range(0, un.size() - 1)])
-	if effect.has("master_move"):
-		var av := unknown_advanced()
-		if av.size() > 0:
-			learn_move(av[rng.randi_range(0, av.size() - 1)])
-	if effect.has("master_master") and known_moves.size() > 0:
-		var mid = known_moves[rng.randi_range(0, known_moves.size() - 1)]
-		mastery[mid] = int(mastery.get(mid, 0)) + 5
+	if effect.has("master_master") and learned.size() > 0:
+		var mid = learned[rng.randi_range(0, learned.size() - 1)]
+		mastery[mid] = int(mastery.get(mid, 0)) + 5   # 一门功夫大进
 	if effect.has("weapon_dmg"):
 		weapon_bonus += int(effect["weapon_dmg"])
 	if effect.has("hp"):
