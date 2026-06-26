@@ -24,6 +24,7 @@ static func _m(id, name, kind, su, act, rec, dmg, cost, opts := {}) -> Move:
 	m.knockback = opts.get("knockback", false)
 	m.stun = opts.get("stun", 0)
 	m.distance_delta = opts.get("delta", 0)
+	m.grants_guard = opts.get("guard", 0)
 	return m
 
 static func starter() -> Array[Move]:
