@@ -14,7 +14,7 @@ var _fight: Node
 var _ended := false
 
 func _ready() -> void:
-	_run = RunState.new(3, 40)
+	_run = RunState.new(3, 40, RunState.pending_menpai)
 	_start_fight()
 
 func _start_fight() -> void:
@@ -23,7 +23,7 @@ func _start_fight() -> void:
 	if _fight:
 		_fight.queue_free()
 	_fight = FIGHT.instantiate()
-	_fight.configure(_run.player_hp, _run.max_hp, _run.enemy_hp(), _run.enemy_regen(), 1000 + _run.fight_index)
+	_fight.configure(_run.player_hp, _run.max_hp, _run.enemy_hp(), _run.enemy_regen(), 1000 + _run.fight_index, _run.menpai_id)
 	_fight.fight_finished.connect(_on_fight_finished)
 	add_child(_fight)
 	_hide_banner()

@@ -1,6 +1,6 @@
 extends Control
 
-const RUN_PATH := "res://src/scenes/run.tscn"
+const RUN_PATH := "res://src/scenes/menpai_select.tscn"  # 开始 → 先选门派
 
 @onready var _start: Button = $VBox/StartButton
 @onready var _load: Button = $VBox/LoadButton

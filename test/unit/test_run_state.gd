@@ -27,3 +27,10 @@ func test_enemy_scaling_grows_each_fight():
 	r.advance()
 	assert_true(r.enemy_hp() > 30, "fight 2 enemy is tougher")
 	assert_true(r.enemy_regen() >= 5)
+
+func test_run_state_carries_menpai():
+	var r := RunState.new(3, 40, &"wudang")
+	assert_eq(r.menpai_id, &"wudang")
+
+func test_run_state_defaults_shaolin():
+	assert_eq(RunState.new().menpai_id, &"shaolin")

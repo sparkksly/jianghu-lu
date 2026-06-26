@@ -4,16 +4,21 @@ extends RefCounted
 # A "基础 run": a fixed linear sequence of fights, player HP carried across them.
 # Map / events / rewards / reputation are later slices — this is the minimal loop.
 
+# 选派在场景间传递:menpai_select 设置,run 读取(change_scene 不能传参)。
+static var pending_menpai: StringName = &"shaolin"
+
 var fights_total: int
 var fight_index: int   # 0-based index of the current fight
 var player_hp: int
 var max_hp: int
+var menpai_id: StringName
 
-func _init(total: int = 3, hp: int = 40) -> void:
+func _init(total: int = 3, hp: int = 40, menpai: StringName = &"shaolin") -> void:
 	fights_total = total
 	fight_index = 0
 	player_hp = hp
 	max_hp = hp
+	menpai_id = menpai
 
 func advance() -> void:
 	fight_index += 1
