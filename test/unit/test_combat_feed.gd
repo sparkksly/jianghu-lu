@@ -73,3 +73,11 @@ func test_distance_label_text():
 	assert_eq(CombatFeed.distance_label(0), "贴身")
 	assert_eq(CombatFeed.distance_label(1), "中")
 	assert_eq(CombatFeed.distance_label(2), "远")
+
+func test_leverage_and_guard_markers():
+	var lv := CombatFeed.marker(_ev(&"leverage", 0, 1, 3, &"mian_zhang"))
+	assert_eq(lv["text"], "借力")
+	assert_eq(lv["lane"], 0)
+	var gd := CombatFeed.marker(_ev(&"guard", 1, 1, 4, &"jingang_fumo"))
+	assert_eq(gd["text"], "护体")
+	assert_eq(gd["lane"], 1)

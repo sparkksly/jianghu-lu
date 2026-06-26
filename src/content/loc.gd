@@ -55,6 +55,8 @@ static func event_zh(type: StringName) -> String:
 		&"reach": return "够不着"
 		&"stun": return "踉跄"
 		&"distance": return "距离"
+		&"leverage": return "借力"
+		&"guard": return "护体"
 	return str(type)
 
 static func log_line(e) -> String:

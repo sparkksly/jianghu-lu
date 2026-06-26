@@ -41,6 +41,10 @@ static func marker(e) -> Dictionary:
 			return {"lane": 1 - e.actor, "text": "闪避", "tone": "good"}
 		&"exhaust":
 			return {"lane": e.actor, "text": "气力不继", "tone": "bad"}
+		&"leverage":
+			return {"lane": e.actor, "text": "借力", "tone": "leverage"}
+		&"guard":
+			return {"lane": e.actor, "text": "护体", "tone": "guard"}
 	return {}
 
 static func distance_label(d: int) -> String:
@@ -56,4 +60,6 @@ static func tone_color(tone: String) -> Color:
 		"hit": return Color(1, 0.72, 0.42)
 		"good": return Color(0.5, 1, 0.6)
 		"bad": return Color(0.85, 0.85, 0.9)
+		"leverage": return Color(1, 0.95, 0.3)
+		"guard": return Color(1, 0.85, 0.45)
 	return Color(1, 1, 1)
