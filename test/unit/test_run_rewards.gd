@@ -4,18 +4,18 @@ func _rng(s: int) -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new(); r.seed = s; return r
 
 func test_basic_three_options():
-	var out := RunRewards.roll_basic(_rng(1))
+	var out := RunRewards.roll_basic([&"jab", &"push_palm"], _rng(1))
 	assert_eq(out.size(), 3)
 	var types: Array = []
 	for r in out: types.append(r["type"])
 	assert_true("hp" in types and "meditate" in types and "hone" in types)
 
-func test_hone_targets_a_base_attack():
-	var out := RunRewards.roll_basic(_rng(2))
-	var ids := RunRewards.basic_attack_ids()
+func test_hone_targets_a_known_move():
+	var known := [&"jab", &"snap_kick"]
+	var out := RunRewards.roll_basic(known, _rng(2))
 	for r in out:
 		if r["type"] == "hone":
-			assert_true(r["id"] in ids)
+			assert_true(r["id"] in known)
 
 func test_evolution_first_time_no_compiled():
 	var out := RunRewards.roll_evolution(&"luohan", 0, true)

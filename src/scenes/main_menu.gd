@@ -1,6 +1,6 @@
 extends Control
 
-const RUN_PATH := "res://src/scenes/menpai_select.tscn"  # 开始 → 先选门派
+const RUN_PATH := "res://src/scenes/setup_select.tscn"  # 开始 → 开局立派(门派/内功/2招)
 
 @onready var _start: Button = $VBox/StartButton
 @onready var _load: Button = $VBox/LoadButton

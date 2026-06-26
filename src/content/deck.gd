@@ -25,6 +25,7 @@ static func _m(id, name, kind, su, act, rec, dmg, cost, opts := {}) -> Move:
 	m.stun = opts.get("stun", 0)
 	m.distance_delta = opts.get("delta", 0)
 	m.grants_guard = opts.get("guard", 0)
+	m.tier = opts.get("tier", 1)
 	return m
 
 static func starter() -> Array[Move]:
@@ -54,7 +55,41 @@ static func starter() -> Array[Move]:
 static func by_id(id: StringName) -> Move:
 	for m in starter():
 		if m.id == id: return m
+	for m in advanced_moves():
+		if m.id == id: return m
+	for m in boss_moves():
+		if m.id == id: return m
 	return null
+
+# 基础攻击招 = 全部(下劈掌/侧踢等也是基础);开局从这里选 2 门。
+static func basic_attacks() -> Array[Move]:
+	return Hand.attack_pool(starter())
+
+# 大成招:稀有强力的进阶招(入门掌法→大成掌法),靠领悟/奇遇得,不在开局选项。
+static func advanced_moves() -> Array[Move]:
+	return [
+		_m(&"prajna_palm", "般若掌", Move.Kind.ATTACK, 1, 1, 2, 13, 4, {"tags":[&"掌法"], "range":[0,1], "heavy":true, "armor":true, "tier":2}),
+		_m(&"taizu_fist", "太祖长拳", Move.Kind.ATTACK, 0, 2, 1, 7, 3, {"tags":[&"拳法"], "range":[0,1], "hits":[0,1], "tier":2}),
+		_m(&"mandarin_kick", "鸳鸯连环腿", Move.Kind.ATTACK, 0, 2, 2, 8, 3, {"tags":[&"腿法"], "range":[0,1], "hits":[0,1], "knockback":true, "tier":2}),
+		_m(&"vajra_finger", "大力金刚指", Move.Kind.ATTACK, 1, 1, 1, 10, 3, {"tags":[&"指法"], "range":[0,1], "interrupt":true, "heavy":true, "tier":2}),
+	]
+
+# boss 专属招(用现有词缀做特色;不在玩家池)
+static func boss_moves() -> Array[Move]:
+	return [
+		# 青鳞毒叟(西毒/星宿):阴毒、霸体反震
+		_m(&"toad_power", "蛤蟆劲", Move.Kind.ATTACK, 2, 1, 2, 10, 3, {"range":[0,1], "armor":true, "heavy":true}),
+		_m(&"venom_palm", "毒砂掌", Move.Kind.ATTACK, 1, 1, 1, 11, 3, {"range":[0,1], "heavy":true}),
+		_m(&"rot_claw", "腐骨爪", Move.Kind.ATTACK, 1, 1, 1, 7, 2, {"range":[0,0], "stun":2}),
+		# 血河老魔(血刀):凶猛重斩
+		_m(&"blood_blade", "血河刀", Move.Kind.ATTACK, 1, 1, 1, 12, 3, {"range":[0,1], "heavy":true, "knockback":true}),
+		_m(&"soul_reap", "噬魂斩", Move.Kind.ATTACK, 2, 1, 1, 13, 3, {"range":[0,1], "heavy":true, "interrupt":true}),
+		_m(&"massacre", "狂屠", Move.Kind.ATTACK, 0, 3, 1, 6, 3, {"range":[0,1], "hits":[0,1,2]}),
+		# 无影魔君(东方不败):极快瞬身
+		_m(&"phantom_needle", "千幻针", Move.Kind.ATTACK, 0, 2, 0, 5, 2, {"range":[0,1], "hits":[0,1], "priority":7}),
+		_m(&"ghost_step", "鬼魅步", Move.Kind.STEP, 0, 1, 0, 0, 0, {"tags":[&"身法"], "delta":-1, "priority":9}),
+		_m(&"reaper_stab", "夺命刺", Move.Kind.ATTACK, 1, 1, 1, 12, 3, {"range":[0,0], "interrupt":true, "priority":8}),
+	]
 
 # 门派功夫 = 基础动作合成的连招(绝学)。下面是融合结果模板:
 # 伤害按 _fuse_result 用组件重算,模板的 hits/range/delta/guard 保留。

@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3 uid="uid://setup_select"]
+
+[ext_resource type="Script" path="res://src/scenes/setup_select.gd" id="1_setup"]
+
+[node name="SetupSelect" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_setup")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+offset_left = 176.0
+offset_top = 60.0
+offset_right = 976.0
+offset_bottom = 660.0
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="VBox"]
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+text = "开局立派 — 门派 · 内功 · 两门起手招"
+
+[node name="Sub1" type="Label" parent="VBox"]
+theme_override_font_sizes/font_size = 20
+text = "门派"
+
+[node name="MenpaiRow" type="HBoxContainer" parent="VBox"]
+theme_override_constants/separation = 16
+
+[node name="Sub2" type="Label" parent="VBox"]
+theme_override_font_sizes/font_size = 20
+text = "内功 (三选一)"
+
+[node name="NeigongRow" type="HBoxContainer" parent="VBox"]
+theme_override_constants/separation = 16
+
+[node name="Sub3" type="Label" parent="VBox"]
+theme_override_font_sizes/font_size = 20
+text = "起手招式 (选两门基础招;其余靠领悟/奇遇)"
+
+[node name="MovesGrid" type="GridContainer" parent="VBox"]
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 5
+
+[node name="StartButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 24
+disabled = true
+text = "请选两门起手招 (0/2)"

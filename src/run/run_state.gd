@@ -1,38 +1,61 @@
 class_name RunState
 extends RefCounted
 
-# 一局 run 的成长状态:门派/内功、已领悟绝学、招式熟练度/抽取权重/进化。
-# 三层成长:基础提升(强身/打坐/磨练) + 实战熟练 → 招式进化。
+# 一局 run:三章,每章节点序列 小怪→奇遇→精英→boss。成长跨节点累积。
 
-const MEDITATE_HEAL := 12      # 打坐疗伤
-const EVOLVE_AT := [3, 6]      # 熟练度达此值且进化级未到 → 可进化(level 0→1 需3, 1→2 需6)
+const MEDITATE_HEAL := 12
+const EVOLVE_AT := [3, 6]
+const NODE_SEQ := ["grunt", "encounter", "elite", "boss"]
+const CHAPTERS := 3
+const CHAPTER_TITLES := ["第一章 · 毒蛛潭", "第二章 · 断魂崖", "第三章 · 华山之巅"]
 
-# 选派在场景间传递(change_scene 不能传参)
+# 开局构筑在场景间传递(change_scene 不能传参)
 static var pending_menpai: StringName = &"shaolin"
+static var pending_neigong: StringName = &"yijinjing"
+static var pending_moves: Array = [&"jab", &"push_palm"]
 
-var fights_total: int
-var fight_index: int
-var player_hp: int
-var max_hp: int
 var menpai_id: StringName
 var neigong_id: StringName
 var neigong_level: int = 0
-var learned: Array = []                 # 已领悟绝学 id(开局=门派入门)
-var mastery: Dictionary = {}            # 招式/绝学 id → 熟练计数
-var weight: Dictionary = {}             # 招式 id → 抽取额外权重
-var evo: Dictionary = {}                # 招式 id → {level,spd,qi,dmg,compiled}
+var known_moves: Array = []         # 已学攻击招 id(开局选 2 门基础;途中奇遇/磨练扩充)
+var learned: Array = []             # 已领悟绝学 id
+var mastery: Dictionary = {}
+var weight: Dictionary = {}
+var evo: Dictionary = {}
+var weapon_bonus: int = 0           # 神兵:全攻击招 +伤
+var node_index: int = 0
+var player_hp: int = 40
+var max_hp: int = 40
 
-func _init(total: int = 3, hp: int = 40, menpai: StringName = &"shaolin") -> void:
-	fights_total = total
-	fight_index = 0
-	player_hp = hp
-	max_hp = hp
+func _init(menpai := &"shaolin", neigong := &"", moves := []) -> void:
 	menpai_id = menpai
-	neigong_id = Neigong.starter(menpai)
+	neigong_id = neigong if neigong != &"" else Neigong.starter(menpai)
+	known_moves = (moves.duplicate() if not moves.is_empty() else [&"jab", &"push_palm"])
 	learned = Menpai.starter_learned(menpai)
-	mastery = {}; weight = {}; evo = {}
+	node_index = 0
+	player_hp = 40; max_hp = 40
+	neigong_level = 0
+	mastery = {}; weight = {}; evo = {}; weapon_bonus = 0
 
-# 内功带来的额外气(进 sta_max)。
+# --- 节点 / 章节 ---
+func current_node() -> Dictionary:
+	var per := NODE_SEQ.size()
+	return {"chapter": node_index / per, "type": NODE_SEQ[node_index % per], "in_chapter": node_index % per}
+
+func advance_node() -> void:
+	node_index += 1
+
+func is_complete() -> bool:
+	return node_index >= CHAPTERS * NODE_SEQ.size()
+
+func chapter_title() -> String:
+	return CHAPTER_TITLES[clampi(current_node()["chapter"], 0, 2)]
+
+func current_enemy() -> Dictionary:
+	var n := current_node()
+	return Enemies.spawn(n["chapter"], n["type"])
+
+# --- 内功 ---
 func qi_bonus() -> int:
 	return neigong_level * Neigong.qi_per_level(neigong_id)
 
@@ -49,7 +72,7 @@ func apply_reward(r: Dictionary) -> void:
 
 func _meditate() -> void:
 	neigong_level += 1
-	var dh: int = Neigong.hp_per_level(neigong_id)   # 内功长血
+	var dh: int = Neigong.hp_per_level(neigong_id)
 	max_hp += dh
 	player_hp = mini(max_hp, player_hp + MEDITATE_HEAL + dh)
 
@@ -61,6 +84,49 @@ func learn(id: StringName) -> void:
 	if not learned.has(id):
 		learned.append(id)
 
+func learn_move(id: StringName) -> void:
+	if not known_moves.has(id):
+		known_moves.append(id)
+
+# --- 奇遇效果 ---
+func unlearned_arts() -> Array:
+	var out: Array = []
+	for id in Menpai.learnable(menpai_id):
+		if not learned.has(id):
+			out.append(id)
+	return out
+
+func unknown_advanced() -> Array:
+	var out: Array = []
+	for m in Deck.advanced_moves():
+		if not known_moves.has(m.id):
+			out.append(m.id)
+	return out
+
+func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
+	if effect.has("learn_art"):
+		var un := unlearned_arts()
+		if un.size() > 0:
+			learn(un[rng.randi_range(0, un.size() - 1)])
+	if effect.has("master_move"):
+		var av := unknown_advanced()
+		if av.size() > 0:
+			learn_move(av[rng.randi_range(0, av.size() - 1)])
+	if effect.has("master_master") and known_moves.size() > 0:
+		var mid = known_moves[rng.randi_range(0, known_moves.size() - 1)]
+		mastery[mid] = int(mastery.get(mid, 0)) + 5
+	if effect.has("weapon_dmg"):
+		weapon_bonus += int(effect["weapon_dmg"])
+	if effect.has("hp"):
+		max_hp += int(effect["hp"]); player_hp += int(effect["hp"])
+	if effect.has("neigong"):
+		var lv := int(effect["neigong"])
+		neigong_level += lv
+		var dh := Neigong.hp_per_level(neigong_id) * lv
+		max_hp += dh; player_hp += dh
+	if effect.has("heal_full"):
+		player_hp = max_hp
+
 # --- 实战熟练 + 进化 ---
 func gain_mastery(ids: Array) -> void:
 	for id in ids:
@@ -69,7 +135,6 @@ func gain_mastery(ids: Array) -> void:
 func evo_level(id: StringName) -> int:
 	return int(evo.get(id, {}).get("level", 0))
 
-# 熟练达标且进化级未到的招 → 待进化(玩家三选一)。
 func pending_evolutions() -> Array:
 	var out: Array = []
 	for id in mastery:
@@ -88,25 +153,9 @@ func apply_evolution(id: StringName, choice: String) -> void:
 		"compiled": e["compiled"] = true
 	evo[id] = e
 
-# 已化境(压缩成单卡)的绝学 id → 进抽牌池。
 func compiled_arts() -> Array:
 	var out: Array = []
 	for id in evo:
 		if bool(evo[id].get("compiled", false)):
 			out.append(id)
 	return out
-
-func advance() -> void:
-	fight_index += 1
-
-func is_complete() -> bool:
-	return fight_index >= fights_total
-
-func label() -> String:
-	return "第%d战 / 共%d战" % [min(fight_index + 1, fights_total), fights_total]
-
-func enemy_hp() -> int:
-	return 30 + fight_index * 10
-
-func enemy_regen() -> int:
-	return 5 + fight_index

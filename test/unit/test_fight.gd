@@ -100,9 +100,16 @@ func test_default_menpai_draws_from_shaolin_pool():
 
 func test_compiled_art_enters_draw_pool():
 	var w = load("res://src/scenes/fight.tscn").instantiate()
-	w.configure(40, 40, 40, 6, 1, &"shaolin", [&"luohan"], 0, {}, {}, [&"luohan"])
+	w.configure({"known_moves": [&"jab"], "learned": [&"luohan"], "compiled": [&"luohan"], "enemy": {"hp": 30, "regen": 5, "pool": [&"jab"], "name": "测试"}})
 	add_child_autofree(w)
 	await get_tree().process_frame
 	var ids: Array = []
 	for m in w._pool: ids.append(m.id)
 	assert_true(&"luohan" in ids, "化境绝学作单卡进抽牌池")
+
+func test_enemy_name_shown():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	w.configure({"known_moves": [&"jab"], "enemy": {"hp": 30, "regen": 5, "pool": [&"venom_palm"], "name": "青鳞毒叟"}})
+	add_child_autofree(w)
+	await get_tree().process_frame
+	assert_eq(w.get_node("WatchPhase/P1Name").text, "青鳞毒叟", "敌方名显示")

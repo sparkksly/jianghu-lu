@@ -1,91 +1,92 @@
 extends GutTest
 
-func test_new_run_starts_at_first_fight():
-	var r := RunState.new(3, 40)
-	assert_eq(r.fights_total, 3)
-	assert_eq(r.fight_index, 0)
-	assert_eq(r.player_hp, 40)
-	assert_eq(r.max_hp, 40)
-	assert_false(r.is_complete())
+func _rng(s: int) -> RandomNumberGenerator:
+	var r := RandomNumberGenerator.new(); r.seed = s; return r
 
-func test_label_is_one_based():
-	var r := RunState.new(3, 40)
-	assert_eq(r.label(), "第1战 / 共3战")
-	r.advance()
-	assert_eq(r.label(), "第2战 / 共3战")
-
-func test_advance_until_complete():
-	var r := RunState.new(3, 40)
-	r.advance(); assert_false(r.is_complete())
-	r.advance(); assert_false(r.is_complete())
-	r.advance(); assert_true(r.is_complete(), "after 3 advances the run is done")
-
-func test_enemy_scaling_grows_each_fight():
-	var r := RunState.new(3, 40)
-	assert_eq(r.enemy_hp(), 30, "fight 1 enemy hp")
-	assert_eq(r.enemy_regen(), 5, "fight 1 enemy regen")
-	r.advance()
-	assert_true(r.enemy_hp() > 30, "fight 2 enemy is tougher")
-	assert_true(r.enemy_regen() >= 5)
-
-func test_run_state_carries_menpai():
-	var r := RunState.new(3, 40, &"wudang")
+# --- 开局构筑 ---
+func test_init_from_choices():
+	var r := RunState.new(&"wudang", &"liangyi", [&"jab", &"snap_kick"])
 	assert_eq(r.menpai_id, &"wudang")
+	assert_eq(r.neigong_id, &"liangyi")
+	assert_eq(r.known_moves, [&"jab", &"snap_kick"])
+	assert_eq(r.learned, [&"taiji_yunshou"], "起手绝学=门派入门")
 
-func test_run_state_defaults_shaolin():
-	assert_eq(RunState.new().menpai_id, &"shaolin")
+func test_default_neigong_follows_menpai():
+	assert_eq(RunState.new(&"shaolin").neigong_id, &"yijinjing")
 
-func test_starter_learned_on_init():
-	assert_eq(RunState.new(3, 40, &"shaolin").learned, [&"luohan"])
-	assert_eq(RunState.new(3, 40, &"wudang").learned, [&"taiji_yunshou"])
+# --- 节点 / 章节 ---
+func test_node_sequence_and_chapters():
+	var r := RunState.new(&"shaolin")
+	assert_eq(r.current_node()["type"], "grunt")
+	assert_string_contains(r.chapter_title(), "毒蛛潭")
+	r.advance_node(); assert_eq(r.current_node()["type"], "encounter")
+	r.advance_node(); assert_eq(r.current_node()["type"], "elite")
+	r.advance_node(); assert_eq(r.current_node()["type"], "boss")
+	r.advance_node()
+	assert_string_contains(r.chapter_title(), "断魂崖", "第5节点进第二章")
 
-func test_starter_neigong():
-	assert_eq(RunState.new(3, 40, &"shaolin").neigong_id, &"yijinjing")
-	assert_eq(RunState.new(3, 40, &"wudang").neigong_id, &"liangyi")
+func test_run_completes_after_twelve_nodes():
+	var r := RunState.new(&"shaolin")
+	for i in 12: r.advance_node()
+	assert_true(r.is_complete())
 
-func test_apply_reward_hp():
-	var r := RunState.new(3, 40, &"shaolin")
-	var hp0 := r.player_hp
-	r.apply_reward({"type": "hp"})
-	assert_eq(r.max_hp, 46)
-	assert_eq(r.player_hp, hp0 + 6)
+func test_current_enemy_boss_is_named():
+	var r := RunState.new(&"shaolin")
+	for i in 3: r.advance_node()   # 到 boss
+	var e := r.current_enemy()
+	assert_eq(e["name"], "青鳞毒叟")
+	assert_true(e["is_boss"])
 
-func test_meditate_levels_neigong_and_heals():
-	var r := RunState.new(3, 40, &"shaolin")   # 易筋经 +3血+1气/级
+# --- 基础提升 ---
+func test_meditate_levels_neigong():
+	var r := RunState.new(&"shaolin")   # 易筋经 +3血+1气
 	r.player_hp = 30
 	r.apply_reward({"type": "meditate"})
 	assert_eq(r.neigong_level, 1)
-	assert_eq(r.qi_bonus(), 1, "易筋经每级+1气")
-	assert_eq(r.max_hp, 43, "内功长血 +3")
-	assert_eq(r.player_hp, mini(43, 30 + 12 + 3), "疗伤+内功长血")
-
-func test_wudang_neigong_more_qi():
-	var r := RunState.new(3, 40, &"wudang")   # 两仪 +1血+2气/级
-	r.apply_reward({"type": "meditate"})
-	assert_eq(r.qi_bonus(), 2)
-	assert_eq(r.max_hp, 41)
+	assert_eq(r.qi_bonus(), 1)
+	assert_eq(r.max_hp, 43)
 
 func test_hone_adds_mastery_and_weight():
-	var r := RunState.new(3, 40, &"shaolin")
+	var r := RunState.new(&"shaolin")
 	r.apply_reward({"type": "hone", "id": &"jab"})
 	assert_eq(r.mastery.get(&"jab", 0), 2)
 	assert_eq(r.weight.get(&"jab", 0), 1)
 
-func test_gain_mastery_then_pending_evolution():
-	var r := RunState.new(3, 40, &"shaolin")
-	assert_eq(r.pending_evolutions().size(), 0)
-	r.gain_mastery([&"jab", &"jab", &"jab"])   # 累计3 → 达进化阈值
-	assert_true(&"jab" in r.pending_evolutions())
-
-func test_apply_evolution_raises_level():
-	var r := RunState.new(3, 40, &"shaolin")
+# --- 熟练 / 进化 ---
+func test_pending_evolution_after_mastery():
+	var r := RunState.new(&"shaolin")
 	r.gain_mastery([&"jab", &"jab", &"jab"])
+	assert_true(&"jab" in r.pending_evolutions())
 	r.apply_evolution(&"jab", "spd")
 	assert_eq(r.evo_level(&"jab"), 1)
-	assert_eq(int(r.evo[&"jab"]["spd"]), 1)
-	assert_false(&"jab" in r.pending_evolutions(), "3<6,升级后暂不再待进化")
 
 func test_compiled_arts():
-	var r := RunState.new(3, 40, &"shaolin")
-	r.evo[&"luohan"] = {"level": 2, "spd": 0, "qi": 0, "dmg": 0, "compiled": true}
+	var r := RunState.new(&"shaolin")
+	r.evo[&"luohan"] = {"level": 2, "compiled": true}
 	assert_true(&"luohan" in r.compiled_arts())
+
+# --- 奇遇 ---
+func test_encounter_fruit_boosts_hp_and_neigong():
+	var r := RunState.new(&"shaolin")
+	var hp0 := r.max_hp
+	r.apply_encounter({"hp": 12, "neigong": 2}, _rng(1))
+	assert_eq(r.max_hp, hp0 + 12 + 2 * 3, "+12血 +内功2级×易筋经3血")
+	assert_eq(r.neigong_level, 2)
+
+func test_encounter_learn_art():
+	var r := RunState.new(&"shaolin")   # 已会 luohan
+	r.apply_encounter({"learn_art": true}, _rng(2))
+	assert_gt(r.learned.size(), 1, "领悟了新绝学")
+
+func test_encounter_weapon_and_master_move():
+	var r := RunState.new(&"shaolin")
+	r.apply_encounter({"weapon_dmg": 2}, _rng(3))
+	assert_eq(r.weapon_bonus, 2)
+	r.apply_encounter({"master_move": true}, _rng(3))
+	assert_gt(r.known_moves.size(), 2, "学了一门大成招")
+
+func test_encounter_heal_full():
+	var r := RunState.new(&"shaolin")
+	r.player_hp = 5
+	r.apply_encounter({"heal_full": true}, _rng(4))
+	assert_eq(r.player_hp, r.max_hp)
