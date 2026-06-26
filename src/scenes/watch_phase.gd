@@ -20,7 +20,7 @@ signal finished
 @onready var _log_panel: Panel = $LogPanel
 @onready var _log_button: Button = $LogButton
 
-const N_CELLS := 12
+const N_CELLS := 15
 const CELL_W := 40.0
 const BAR_W := N_CELLS * CELL_W      # 480
 const LANE0_Y := 0.0                 # 我方 marker lane (top, vertical names)
