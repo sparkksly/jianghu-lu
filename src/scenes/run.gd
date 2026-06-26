@@ -83,7 +83,8 @@ func _discover() -> Array:
 	var stats: Dictionary = _fight.combat_stats()
 	var got: Array = []
 	for id in Menpai.learnable(_run.menpai_id):
-		if not _run.learned.has(id) and Arts.is_discovery(id):
+		# 顿悟也要满足门槛(无影脚需先会连环踢)
+		if not _run.learned.has(id) and Arts.is_discovery(id) and Arts.can_learn(id, _run.learned, _run.mastery):
 			if Discovery.check(Arts.def(id).discovery, stats, _rng):
 				_run.learn(id)
 				got.append(Arts.display_name(id))
@@ -118,9 +119,9 @@ func _show_basic() -> void:
 
 func _apply_basic(r: Dictionary) -> void:
 	_run.apply_reward(r)
-	# 磨练招式:几率"顿悟"领悟一门未学绝学
+	# 磨练招式:几率"顿悟"领悟一门可自悟功夫(稀缺/实战顿悟功夫不在此池)
 	if r.get("type", "") == "hone" and _rng.randf() < 0.35:
-		var un := _run.unlearned_arts()
+		var un := _run.self_learnable_arts()
 		if un.size() > 0:
 			_run.learn(un[_rng.randi_range(0, un.size() - 1)])
 
