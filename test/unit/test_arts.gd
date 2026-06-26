@@ -53,3 +53,11 @@ func test_prajna_from_three_palms():
 	var res := r.recipe_result([_m("push_palm"), _m("chop_palm"), _m("push_palm")])
 	assert_not_null(res)
 	assert_eq(res.id, &"prajna")
+
+func test_wuying_is_discovery():
+	assert_true(Arts.is_discovery(&"wuying"), "无影脚=实战顿悟")
+	assert_false(Arts.is_discovery(&"luohan"))
+
+func test_recipe_text_shows_formula():
+	assert_string_contains(Arts.recipe_text(&"luohan"), "罗汉拳")
+	assert_string_contains(Arts.recipe_text(&"luohan"), "拳法")

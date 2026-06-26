@@ -20,7 +20,7 @@ static func _defs() -> Array:
 		ArtDef.make(&"qiankun", "乾坤大挪移", 1, [&"综合"], [{"kind": Move.Kind.ATTACK}, {"kind": Move.Kind.BLOCK}, {"kind": Move.Kind.THROW}], Deck.qiankun()),
 		# --- 高级功夫(需初级功夫熟练) ---
 		ArtDef.make(&"prajna", "般若神掌", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.prajna(), [M.call(&"jingang_fumo", 3)]),
-		ArtDef.make(&"wuying", "佛山无影脚", 2, [&"腿法"], [{"id": &"chain_kick"}, {"tag": &"腿法"}, {"tag": &"腿法"}], Deck.wuying(), [M.call(&"chain_kick", 3)]),
+		ArtDef.make(&"wuying", "佛山无影脚", 2, [&"腿法"], [{"tag": &"腿法"}, {"tag": &"腿法"}, {"tag": &"腿法"}, {"tag": &"腿法"}], Deck.wuying(), [], &"", 0, {"triggers": [{"type": "tag_hits", "tag": &"腿法", "need": 5}, {"type": "tag_two_combo", "tag": &"腿法"}], "chance": 0.3}),
 		ArtDef.make(&"da_yunshou", "大成·云手", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.da_yunshou(), [M.call(&"taiji_yunshou", 3)]),
 		ArtDef.make(&"liangyi", "两仪连环", 2, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"拳法"}, {"tag": &"拳法"}], Deck.liangyi(), [M.call(&"wudang_changquan", 3)]),
 	]
@@ -46,6 +46,24 @@ static func family(id: StringName) -> Array:
 static func display_name(id: StringName) -> String:
 	var a := def(id)
 	return a.art_name if a != null else str(id)
+
+# 配方文本(图鉴用):"拳法 + 拳法 + 拳法 → 罗汉拳"。
+static func recipe_text(id: StringName) -> String:
+	var a := def(id)
+	if a == null:
+		return ""
+	var parts: Array = []
+	for s in a.slots:
+		if s.has("id"): parts.append(Loc.move_name(s["id"]))
+		elif s.has("tag"): parts.append(str(s["tag"]))
+		elif s.has("kind"): parts.append(Loc.kind_name(s["kind"]))
+		else: parts.append("任意")
+	return " + ".join(parts) + " → " + a.art_name
+
+# 有 discovery 的功夫(实战顿悟)不进普通领悟池。
+static func is_discovery(id: StringName) -> bool:
+	var a := def(id)
+	return a != null and not a.discovery.is_empty()
 
 # 是否满足领悟条件(通用依赖;高级功夫需前置功夫熟练/数量等)。
 static func can_learn(id: StringName, learned: Array, mastery: Dictionary) -> bool:
