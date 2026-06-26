@@ -11,6 +11,8 @@ var _rules: ComboRules
 var _deck: Array[Move]
 var _ai: AiPlanner
 var _round := 0
+var _rng := RandomNumberGenerator.new()
+var _pool: Array[Move] = []
 
 # Optional run configuration (set by run.gd before _ready via configure()).
 # When empty, the scene runs standalone with default values (still playable on its own).
@@ -36,6 +38,8 @@ func _ready() -> void:
 	_state.n_ticks = 15
 	_rules = ComboLibrary.build()
 	_deck = Deck.starter()
+	_rng.seed = seed
+	_pool = Hand.attack_pool(_deck)
 	_plan_phase.plan_committed.connect(_on_player_plan)
 	_watch_phase.finished.connect(_on_watch_done)
 	$CodexButton.pressed.connect($Codex.toggle)
@@ -54,7 +58,10 @@ func _start_round() -> void:
 	_watch_phase.show_state(_state)
 	_plan_phase.visible = true
 	_pending_ai_plan = _rules.apply(_ai.plan(_deck, _state.stamina[1], _state.n_ticks, _state.distance))
-	_plan_phase.setup(_deck, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
+	# 本回合手牌:固定工具牌 + 有放回抽 6 张进攻牌(可重复、一次性消耗)
+	var hand: Array[Move] = Hand.utilities(_deck)
+	hand.append_array(Hand.draw(_pool, 6, _rng))
+	_plan_phase.setup(hand, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
 
 var _pending_ai_plan: Plan
 
