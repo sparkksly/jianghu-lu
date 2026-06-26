@@ -8,8 +8,9 @@ signal fight_finished(player_won: bool)
 
 var _state: CombatState
 var _rules: ComboRules
-var _deck: Array[Move]
 var _ai: AiPlanner
+var _enemy_deck: Array[Move] = []
+var _enemy_name := "对手"
 var _round := 0
 var _rng := RandomNumberGenerator.new()
 var _pool: Array[Move] = []
@@ -20,21 +21,17 @@ var _landed: Dictionary = {}   # 本场玩家命中过的招(去重)→ 战后�
 # When empty, the scene runs standalone with default values (still playable on its own).
 var _cfg := {}
 
-func configure(player_hp: int, player_max_hp: int, enemy_hp: int, enemy_regen: int, seed: int, menpai_id := &"shaolin", learned := [], qi_bonus := 0, evo := {}, weight := {}, compiled := []) -> void:
-	_cfg = {
-		"hp": player_hp, "mhp": player_max_hp,
-		"ehp": enemy_hp, "ereg": enemy_regen, "seed": seed,
-		"menpai": menpai_id, "learned": learned, "qi_bonus": qi_bonus,
-		"evo": evo, "weight": weight, "compiled": compiled,
-	}
+func configure(cfg: Dictionary) -> void:
+	_cfg = cfg
 
 func _ready() -> void:
-	var p_hp: int = _cfg.get("hp", 40)
-	var p_mhp: int = _cfg.get("mhp", 40)
-	var e_hp: int = _cfg.get("ehp", 40)
-	var e_reg: int = _cfg.get("ereg", 6)
+	var p_hp: int = _cfg.get("player_hp", 40)
+	var p_mhp: int = _cfg.get("player_max_hp", 40)
 	var seed: int = _cfg.get("seed", 12345)
 	var menpai_id: StringName = _cfg.get("menpai", &"shaolin")
+	var known: Array = _cfg.get("known_moves", [])
+	if known.is_empty():
+		for m in Deck.basic_attacks(): known.append(m.id)   # standalone:全部基础招
 	var learned: Array = _cfg.get("learned", [])
 	if learned.is_empty():
 		learned = Menpai.starter_learned(menpai_id)
@@ -42,27 +39,53 @@ func _ready() -> void:
 	var evo: Dictionary = _cfg.get("evo", {})
 	_weight = _cfg.get("weight", {})
 	var compiled: Array = _cfg.get("compiled", [])
+	var weapon: int = _cfg.get("weapon_bonus", 0)
+	var enemy: Dictionary = _cfg.get("enemy", {})
+	var e_hp: int = enemy.get("hp", 40)
+	var e_reg: int = enemy.get("regen", 6)
+	var e_pool: Array = enemy.get("pool", [])
+	if e_pool.is_empty():
+		e_pool = [&"jab", &"hook", &"push_palm", &"snap_kick"]
+	_enemy_name = enemy.get("name", "对手")
 	_ai = AiPlanner.new(seed)
 	_state = CombatState.new()
 	_state.hp = [p_hp, e_hp]; _state.max_hp = [p_mhp, e_hp]
 	_state.sta_max = [10 + qi_bonus, 10]; _state.stamina = [10 + qi_bonus, 10]
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 15
-	_rules = Arts.build_rules(learned, evo)   # 连招规则 = 已领悟绝学(含进化)
-	_deck = Deck.starter()
+	_rules = Arts.build_rules(learned, evo)
 	_rng.seed = seed
-	# 抽牌池 = 基础攻击招(应用进化) + 已化境绝学单卡
+	# 玩家抽牌池 = 已学攻击招(进化/神兵) + 化境绝学单卡
 	_pool.clear()
-	for m in Menpai.pool(menpai_id):
-		_pool.append(Evolve.apply(m, evo.get(m.id, {})))
+	for id in known:
+		var m = Deck.by_id(id)
+		if m != null:
+			_pool.append(_finish_move(m, evo.get(id, {}), weapon))
 	for cid in compiled:
 		var res = Arts.recipe(cid).get("result", null)
 		if res != null:
-			_pool.append(Evolve.apply(res, evo.get(cid, {})))
+			_pool.append(_finish_move(res, evo.get(cid, {}), weapon))
+	# 敌人:专属招池 + 通用工具牌(步/挡/闪/拿)
+	_enemy_deck.clear()
+	for id in e_pool:
+		var em = Deck.by_id(id)
+		if em != null:
+			_enemy_deck.append(em)
+	_enemy_deck.append_array(Hand.utilities(Deck.starter()))
 	_plan_phase.plan_committed.connect(_on_player_plan)
 	_watch_phase.finished.connect(_on_watch_done)
 	$CodexButton.pressed.connect($Codex.toggle)
+	_watch_phase.get_node("P1Name").text = _enemy_name
 	_start_round()
+
+# 应用进化 + 神兵加伤(返回副本,不改原招)。
+func _finish_move(m: Move, e: Dictionary, weapon: int) -> Move:
+	var r: Move = Evolve.apply(m, e)
+	if weapon > 0 and r.kind == Move.Kind.ATTACK:
+		if r == m:
+			r = m.duplicate()
+		r.damage += weapon
+	return r
 
 func get_player_hp() -> int:
 	return _state.hp[0]
@@ -80,9 +103,9 @@ func _start_round() -> void:
 	_watch_phase.visible = true
 	_watch_phase.show_state(_state)
 	_plan_phase.visible = true
-	_pending_ai_plan = _rules.apply(_ai.plan(_deck, _state.stamina[1], _state.n_ticks, _state.distance))
+	_pending_ai_plan = _ai.plan(_enemy_deck, _state.stamina[1], _state.n_ticks, _state.distance)
 	# 本回合手牌:固定工具牌 + 有放回抽 6 张进攻牌(可重复、一次性消耗)
-	var hand: Array[Move] = Hand.utilities(_deck)
+	var hand: Array[Move] = Hand.utilities(Deck.starter())
 	hand.append_array(Hand.draw(_pool, 6, _rng, _weight))
 	_plan_phase.setup(hand, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
 
