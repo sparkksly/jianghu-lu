@@ -138,3 +138,44 @@ func test_move_existing_repositions():
 	assert_true(w.try_move_existing(0, 6 * 40.0))
 	assert_eq(w._model.units.size(), 1, "still exactly one move")
 	assert_true(w._model.units[0]["start"] >= 6, "move relocated later on the timeline")
+
+# ---- 抽卡手牌:消耗式进攻牌 ----
+func _m(id: String) -> Move:
+	for m in Deck.starter():
+		if m.id == StringName(id): return m
+	return null
+
+func _phase_with_hand(hand: Array[Move]):
+	var p = load("res://src/scenes/plan_phase.tscn").instantiate()
+	add_child_autofree(p)
+	await get_tree().process_frame
+	p.setup(hand, ComboLibrary.build(), 99, 99, 15, ["?"])
+	return p
+
+func test_attack_card_consumed_on_place_and_returned_on_remove():
+	var hand: Array[Move] = [_m("guard"), _m("snap_kick")]
+	var p = await _phase_with_hand(hand)
+	assert_eq(p.available_attack_count(&"snap_kick"), 1)
+	assert_eq(p._deck_row.get_child_count(), 2, "手牌区:格挡 + 弹腿")
+	assert_true(p.try_drop_new(_m("snap_kick"), 0.0))
+	assert_eq(p.available_attack_count(&"snap_kick"), 0, "排出后手牌减少")
+	assert_eq(p._deck_row.get_child_count(), 1, "只剩格挡(工具)")
+	p.remove_at(0)
+	assert_eq(p.available_attack_count(&"snap_kick"), 1, "移除后退回手牌")
+	assert_eq(p._deck_row.get_child_count(), 2)
+
+func test_utility_card_is_unlimited():
+	var hand: Array[Move] = [_m("guard")]
+	var p = await _phase_with_hand(hand)
+	assert_true(p.try_drop_new(_m("guard"), 0.0))
+	assert_true(p.try_drop_new(_m("guard"), 200.0))     # 同一工具牌可重复排
+	assert_eq(p._deck_row.get_child_count(), 1, "工具牌始终在手牌区")
+
+func test_duplicate_attack_cards_each_consumable():
+	var hand: Array[Move] = [_m("snap_kick"), _m("snap_kick")]
+	var p = await _phase_with_hand(hand)
+	assert_eq(p.available_attack_count(&"snap_kick"), 2)
+	assert_eq(p._deck_row.get_child_count(), 2)
+	assert_true(p.try_drop_new(_m("snap_kick"), 0.0))
+	assert_eq(p.available_attack_count(&"snap_kick"), 1, "消耗一张,另一张仍在")
+	assert_eq(p._deck_row.get_child_count(), 1)
