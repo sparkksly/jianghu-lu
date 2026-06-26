@@ -12,8 +12,8 @@ func test_ai_vs_ai_fights_terminate_and_deal_damage():
 		while s.hp[0] > 0 and s.hp[1] > 0 and rounds < 60:
 			if rounds > 0:
 				s.regen_round()
-			var pa := rules.apply(a.plan(Deck.starter(), s.stamina[0], s.n_ticks))
-			var pb := rules.apply(b.plan(Deck.starter(), s.stamina[1], s.n_ticks))
+			var pa := rules.apply(a.plan(Deck.starter(), s.stamina[0], s.n_ticks, 1))
+			var pb := rules.apply(b.plan(Deck.starter(), s.stamina[1], s.n_ticks, 1))
 			CombatSim.simulate(s, [pa, pb])
 			rounds += 1
 		assert_true(rounds < 60, "fight %d terminated under regen economy" % seed)

@@ -11,7 +11,7 @@ func test_codex_lists_moves_and_recipes():
 	var all_text := ""
 	for c in list.get_children():
 		all_text += c.text + "\n"
-	assert_string_contains(all_text, "扫腿")        # a base move
+	assert_string_contains(all_text, "扫堂腿")       # a base move
 	assert_string_contains(all_text, "连环踢")      # a combo result
 	assert_string_contains(all_text, "乾坤大挪移")  # a recipe result
 	assert_false(all_text.contains("low_kick"), "no English ids")

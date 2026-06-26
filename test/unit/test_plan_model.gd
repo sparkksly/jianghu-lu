@@ -11,7 +11,7 @@ func _model() -> PlanModel:
 
 func test_three_legs_offer_a_fuse_opportunity():
 	var m := _model()
-	var k = _find(&"low_kick")   # dur 2
+	var k = _find(&"snap_kick")   # dur 2
 	assert_true(m.place(k, 0)); assert_true(m.place(k, 2)); assert_true(m.place(k, 4))
 	var ops := m.fuse_opportunities()
 	assert_eq(ops.size(), 1, "a 连环踢 fuse hint is offered")
@@ -20,7 +20,7 @@ func test_three_legs_offer_a_fuse_opportunity():
 
 func test_fuse_compresses_and_frees_reusable_space():
 	var m := _model()
-	var k = _find(&"low_kick")
+	var k = _find(&"snap_kick")
 	m.place(k, 0); m.place(k, 2); m.place(k, 4)   # occupy ticks 0..6
 	assert_false(m.can_place(k, 4), "before fusing, tick 4 is occupied")
 	m.fuse(m.fuse_opportunities()[0]["indices"])
@@ -33,10 +33,10 @@ func test_fuse_compresses_and_frees_reusable_space():
 
 func test_remove_component_breaks_combo_and_pushes_later_units_right():
 	var m := _model()
-	var k = _find(&"low_kick")
+	var k = _find(&"snap_kick")
 	m.place(k, 0); m.place(k, 2); m.place(k, 4)
 	m.fuse(m.fuse_opportunities()[0]["indices"])   # combo at 0..3
-	var thr = _find(&"throw")                       # dur 2, distinguishable
+	var thr = _find(&"grab")                       # dur 2, distinguishable
 	m.place(thr, 3)                                 # in the freed space, 3..5
 	# break the combo (remove one component): 2 legs no longer fuse -> 0..4,
 	# which collides with the throw at 3 -> throw pushed right to 4
@@ -47,13 +47,13 @@ func test_remove_component_breaks_combo_and_pushes_later_units_right():
 	m.remove_component(combo_idx, 0)
 	var thr_start := -1
 	for u in m.units:
-		if u["moves"][0].id == &"throw":
+		if u["moves"][0].id == &"grab":
 			thr_start = u["start"]
 	assert_eq(thr_start, 4, "later unit pushed right to avoid overlap")
 
 func test_add_unit_appends_a_single():
 	var m := _model()
-	var k = _find(&"low_kick")
+	var k = _find(&"snap_kick")
 	var idx := m.add_unit(k, 5)
 	assert_eq(m.units.size(), 1)
 	assert_eq(m.units[idx]["start"], 5)
@@ -61,14 +61,14 @@ func test_add_unit_appends_a_single():
 
 func test_move_unit_relocates_single():
 	var m := _model()
-	var k = _find(&"low_kick")
+	var k = _find(&"snap_kick")
 	assert_true(m.place(k, 0))
 	assert_true(m.move_unit(0, 5), "a single can be dragged to a new tick")
 	assert_eq(m.units[0]["start"], 5)
 
 func test_move_unit_relocates_combo():
 	var m := _model()
-	var k = _find(&"low_kick")
+	var k = _find(&"snap_kick")
 	m.place(k, 0); m.place(k, 2); m.place(k, 4)
 	m.fuse(m.fuse_opportunities()[0]["indices"])
 	assert_eq(m.units.size(), 1)
@@ -77,7 +77,7 @@ func test_move_unit_relocates_combo():
 
 func test_preview_layout_reorders_and_pushes_others():
 	var m := _model()
-	var k = _find(&"low_kick")   # dur 2
+	var k = _find(&"snap_kick")   # dur 2
 	m.place(k, 0); m.place(k, 2)   # units[0]@0, units[1]@2
 	var layout := m.preview_layout(1, 0)   # drag unit 1 onto tick 0
 	var starts := {}
@@ -90,7 +90,7 @@ func test_preview_layout_reorders_and_pushes_others():
 
 func test_overflow_flagged_and_excluded_from_commit():
 	var m := _model()
-	var k = _find(&"low_kick")   # dur 2
+	var k = _find(&"snap_kick")   # dur 2
 	assert_true(m.place(k, 0))
 	assert_true(m.place(k, 11), "soft limit: start 11 (end 13) allowed")
 	var entries := m.entries()

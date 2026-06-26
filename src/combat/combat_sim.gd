@@ -34,6 +34,15 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 		# 1. start moves due this tick
 		for i in 2:
 			_try_start(state, actors[i], i, t, events)
+		# 1.5 STEP: resolve distance changes this tick (sum both, apply once)
+		var ddelta := 0
+		for i in 2:
+			var a: _Actor = actors[i]
+			if a.cur != null and a.cur.move.kind == Move.Kind.STEP and a.elapsed == a.cur.move.startup:
+				ddelta += a.cur.move.distance_delta
+		if ddelta != 0:
+			state.distance = clampi(state.distance + ddelta, 0, 2)
+			events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &""))
 		# 2. snapshot phases for symmetric resolution
 		var snap := []
 		for i in 2:
@@ -106,6 +115,8 @@ static func _maybe_hit(state: CombatState, actors: Array, snap: Array, attacker:
 	var a: Dictionary = snap[attacker]
 	if not a["hitting"]:
 		return
+	if (a["move"] as Move).kind == Move.Kind.STEP:
+		return  # 步法不打人
 	var defender := 1 - attacker
 	var d: Dictionary = snap[defender]
 	_resolve_hit(state, actors, attacker, a["move"], d, t, events)
@@ -127,6 +138,11 @@ static func _apply_damage(state: CombatState, actors: Array, defender: int, base
 	return dmg
 
 static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: Move, d: Dictionary, t: int, events) -> void:
+	if (atk.kind == Move.Kind.ATTACK or atk.kind == Move.Kind.THROW) and not atk.in_range(state.distance):
+		var pen := PENALTY_WHIFF_HEAVY if atk.is_heavy else PENALTY_WHIFF
+		_add_stamina(state, attacker, -pen, t, events)
+		events.append(CombatEvent.new(t, &"reach", attacker, 1 - attacker, 0, atk.id))
+		return
 	var defender := 1 - attacker
 	var def_phase: StringName = d["phase"]
 	var def_move: Move = d["move"]
@@ -161,6 +177,12 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	var hd := _apply_damage(state, actors, defender, atk.damage, t)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, hd, atk.id))
 	_add_stamina(state, attacker, REWARD_HIT, t, events)
+	if atk.knockback:
+		state.distance = mini(2, state.distance + 1)
+		events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &""))
+	if atk.stun > 0:
+		actors[defender].gasp_until = t + atk.stun
+		events.append(CombatEvent.new(t, &"stun", attacker, defender, atk.stun, atk.id))
 
 static func _whiff(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
 	events.append(CombatEvent.new(t, &"whiff", attacker, 1 - attacker, 0, atk.id))

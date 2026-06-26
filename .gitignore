@@ -12,3 +12,6 @@ Thumbs.db
 # Godot/editor temp files
 *.TMP
 *~RF*.TMP
+
+# SDD scratch
+/.superpowers/

@@ -37,3 +37,21 @@ func test_multi_hit_combo():
 	assert_true(m.is_hit_tick(2))
 	assert_true(m.is_hit_tick(3))
 	assert_false(m.is_hit_tick(4)) # recovery
+
+func test_step_kind_and_distance_fields():
+	var m := Move.new()
+	m.kind = Move.Kind.STEP
+	m.distance_delta = -1
+	assert_eq(m.kind, Move.Kind.STEP)
+	assert_eq(m.distance_delta, -1)
+
+func test_in_range_band():
+	var m := Move.new()
+	m.range_min = 0; m.range_max = 1   # 贴身~中
+	assert_true(m.in_range(0))
+	assert_true(m.in_range(1))
+	assert_false(m.in_range(2), "中~远 band excludes 远")
+
+func test_range_defaults_any():
+	var m := Move.new()
+	assert_true(m.in_range(0) and m.in_range(1) and m.in_range(2), "default band = 任意距离")
