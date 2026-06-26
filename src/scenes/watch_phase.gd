@@ -41,6 +41,11 @@ var _accum := 0.0
 var _playhead: ColorRect
 const STEP := 0.6     # seconds per tick (slower so the fight is readable)
 const RED_DRAIN := 6.0  # red bar units drained per second
+const HITSTOP := 0.06       # 普通命中顿帧(秒)
+const HITSTOP_BIG := 0.13   # 重击/打断/连招顿帧
+const SHAKE_DECAY := 26.0
+var _freeze := 0.0    # 顿帧:期间整台暂停推进
+var _shake := 0.0     # 屏幕震动幅度(像素,衰减)
 
 func _ready() -> void:
 	if not _log_button.pressed.is_connected(_toggle_log):
@@ -80,6 +85,7 @@ func play(state_before: CombatState, plans: Array, events: Array) -> void:
 	_update_labels()
 	_build_timeline()
 	_t = 0; _accum = 0.0; _max_t = 0
+	_freeze = 0.0; _shake = 0.0; _stage.position = Vector2.ZERO
 	for e in _events:
 		_max_t = max(_max_t, e.tick)
 	set_process(true)
@@ -110,6 +116,12 @@ func _update_labels() -> void:
 	_p1sl.text = "体力 %d/%d" % [int(_p1s.value), int(_p1s.max_value)]
 
 func _process(delta: float) -> void:
+	# 顿帧:命中瞬间冻结整台(时间不推进),只有屏幕震动继续 → 定格冲击
+	if _freeze > 0.0:
+		_freeze -= delta
+		_apply_shake(delta)
+		return
+	_apply_shake(delta)
 	# red bars drain toward the green value (chip-damage effect)
 	var pairs: Array = [[_p0hr, _p0h], [_p1hr, _p1h]]
 	for pair in pairs:
@@ -134,6 +146,13 @@ func _process(delta: float) -> void:
 		set_process(false)
 		finished.emit()
 
+func _apply_shake(delta: float) -> void:
+	if _shake > 0.05:
+		_shake = maxf(0.0, _shake - delta * SHAKE_DECAY)
+		_stage.position = Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake))
+	elif _stage.position != Vector2.ZERO:
+		_stage.position = Vector2.ZERO
+
 func _apply_event(e) -> void:
 	match e.type:
 		&"distance":
@@ -145,6 +164,10 @@ func _apply_event(e) -> void:
 			var gh: ProgressBar = _p0h if e.target == 0 else _p1h
 			gh.value = max(0, gh.value - e.amount)  # green drops instantly; red trails
 			_stage.flinch(e.target)
+			var big: bool = e.amount >= 12 or e.type == &"interrupt" or e.type == &"throw_break"
+			_freeze = maxf(_freeze, HITSTOP_BIG if big else HITSTOP)
+			_shake = maxf(_shake, 7.0 if big else 3.5)
+			_stage.freeze(HITSTOP_BIG if big else HITSTOP)
 		&"stamina":
 			var sb: ProgressBar = _p0s if e.actor == 0 else _p1s
 			sb.value = clampf(sb.value + e.amount, 0, sb.max_value)
