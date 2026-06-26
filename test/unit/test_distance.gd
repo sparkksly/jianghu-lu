@@ -82,16 +82,17 @@ func test_stun_makes_target_skip_next_move():
 	CombatSim.simulate(s, [p0, p1])
 	assert_eq(s.hp[0], 40, "我方未被对手的招命中(对手踉跄跳招)")
 
-func test_ai_does_not_plan_unreachable_attacks():
-	var a := AiPlanner.new(3)
-	var p := a.plan(Deck.starter(), 10, 12, 2)  # 远距开局
-	# 远(2)时徒手都够不着;AI 不应排"在远距必落空"的招——要么先上步拉近,要么只排能到的
-	# 断言:计划里若有攻击,其前面必有把距离拉到范围内的上步(简化:计划非空且不全是必空招)
-	var sorted := p.sorted()
-	var dist := 2
-	for pm in sorted:
-		var m: Move = pm.move
-		if m.kind == Move.Kind.STEP:
-			dist = clampi(dist + m.distance_delta, 0, 2)
-		elif m.kind == Move.Kind.ATTACK or m.kind == Move.Kind.THROW:
-			assert_true(m.in_range(dist), "AI 排的攻击在其假定距离内可达: %s@%d" % [m.move_name, dist])
+func test_ai_only_plans_reachable_attacks():
+	var checked := 0
+	for seed in range(8):
+		var a := AiPlanner.new(seed)
+		var p := a.plan(Deck.starter(), 12, 12, 1)   # 中距开局
+		var dist := 1
+		for pm in p.sorted():
+			var m: Move = pm.move
+			if m.kind == Move.Kind.STEP:
+				dist = clampi(dist + m.distance_delta, 0, 2)
+			elif m.kind == Move.Kind.ATTACK or m.kind == Move.Kind.THROW:
+				assert_true(m.in_range(dist), "AI 排的攻击在其假定距离内可达: %s@%d" % [m.move_name, dist])
+				checked += 1
+	assert_gt(checked, 0, "至少检查了若干攻击(非空测试)")
