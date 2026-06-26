@@ -13,13 +13,27 @@ func test_display_name():
 	assert_eq(Arts.display_name(&"prajna"), "般若神掌")
 
 func test_can_learn_basic_always():
-	assert_true(Arts.can_learn(&"luohan", {}))
-	assert_true(Arts.can_learn(&"jingang_fumo", {}))
+	assert_true(Arts.can_learn(&"luohan", [], {}))
+	assert_true(Arts.can_learn(&"jingang_fumo", [], {}))
 
 func test_can_learn_advanced_needs_prereq_mastery():
-	assert_false(Arts.can_learn(&"prajna", {}), "无熟练不能领悟高级")
-	assert_false(Arts.can_learn(&"prajna", {&"jingang_fumo": 2}), "熟练不足")
-	assert_true(Arts.can_learn(&"prajna", {&"jingang_fumo": 3}), "初级功夫熟练达标→可领悟")
+	assert_false(Arts.can_learn(&"prajna", [], {}), "无熟练不能领悟高级")
+	assert_false(Arts.can_learn(&"prajna", [], {&"jingang_fumo": 2}), "熟练不足")
+	assert_true(Arts.can_learn(&"prajna", [], {&"jingang_fumo": 3}), "初级功夫熟练达标→可领悟")
+
+func test_family_lookup():
+	assert_true(&"拳法" in Arts.family(&"luohan"))
+	assert_true(&"掌法" in Arts.family(&"prajna"))
+
+func test_recipe_candidates_disambiguates_clash():
+	# 般若神掌 与 大成云手 同配方(掌×3) → 两门都会时撞配方,返回两候选
+	var r := Arts.build_rules([&"prajna", &"da_yunshou"])
+	var cands := r.recipe_candidates([_m("push_palm"), _m("chop_palm"), _m("push_palm")])
+	assert_eq(cands.size(), 2, "撞配方→两门候选供玩家选")
+
+func test_def_is_artdef():
+	assert_eq(Arts.def(&"luohan").art_name, "罗汉拳")
+	assert_eq(Arts.def(&"prajna").tier, 2)
 
 func test_build_rules_luohan_from_three_fists():
 	var r := Arts.build_rules([&"luohan"])

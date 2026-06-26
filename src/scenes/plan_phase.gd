@@ -130,13 +130,16 @@ func _redraw_timeline() -> void:
 # A clickable hint floats above any contiguous run of singles that can fuse.
 func _draw_fuse_hints() -> void:
 	for op in _model.fuse_opportunities():
-		var hint := Button.new()
-		hint.text = "✦融合：%s" % op["result"].move_name
-		hint.modulate = Color(1, 0.9, 0.4)
-		hint.position = Vector2(op["start"] * TICK_W, -26)
-		hint.pressed.connect(_do_fuse.bind(op["indices"]))
-		_timeline.add_child(hint)
-		_hints.append(hint)
+		var x: float = op["start"] * TICK_W
+		for res in op["candidates"]:   # 撞配方时多门候选并排,点哪门合成哪门
+			var hint := Button.new()
+			hint.text = "✦%s" % res.move_name
+			hint.modulate = Color(1, 0.9, 0.4)
+			hint.position = Vector2(x, -26)
+			hint.pressed.connect(_do_fuse.bind(op["indices"], res))
+			_timeline.add_child(hint)
+			_hints.append(hint)
+			x += 100.0
 
 func _clear_hints() -> void:
 	for h in _hints:
@@ -236,8 +239,8 @@ func _finish_drag() -> void:
 		else:
 			remove_at(dragged)
 
-func _do_fuse(indices: Array) -> void:
-	_model.fuse(indices)
+func _do_fuse(indices: Array, result: Move = null) -> void:
+	_model.fuse(indices, result)
 	_refresh()
 
 func _refresh_labels() -> void:

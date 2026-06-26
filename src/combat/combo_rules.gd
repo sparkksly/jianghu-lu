@@ -93,6 +93,25 @@ func recipe_result(moves: Array) -> Move:
 			return _fuse_result(recipe.result, seq, 0, moves.size())
 	return null
 
+# 一个招式序列可能匹配「多门你会的功夫」(撞配方,如掌×3 → 般若/大成云手);
+# 返回全部匹配的融合结果,由 UI 让玩家选合成哪门。
+func recipe_candidates(moves: Array) -> Array:
+	var out: Array = []
+	for recipe in _recipes_by_len():
+		if recipe.slots.size() != moves.size():
+			continue
+		var ok := true
+		for k in moves.size():
+			if not _slot_matches(recipe.slots[k], moves[k]):
+				ok = false
+				break
+		if ok:
+			var seq: Array = []
+			for m in moves:
+				seq.append(PlacedMove.new(m, 0))
+			out.append(_fuse_result(recipe.result, seq, 0, moves.size()))
+	return out
+
 func _slot_desc(slot: Dictionary) -> String:
 	if slot.has("any"): return "任意"
 	if slot.has("id"): return Loc.move_name(slot["id"])

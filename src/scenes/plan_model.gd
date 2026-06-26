@@ -21,12 +21,13 @@ func _init(p_rules: ComboRules = null, p_n_ticks := 12) -> void:
 	n_ticks = p_n_ticks
 
 func footprint(u: Dictionary) -> int:
-	if u["fused"]:
-		return rules.recipe_result(u["moves"]).total_duration()
-	return (u["moves"][0] as Move).total_duration()
+	return display_move(u).total_duration()
 
 func display_move(u: Dictionary) -> Move:
-	return rules.recipe_result(u["moves"]) if u["fused"] else u["moves"][0]
+	if u["fused"]:
+		# fused unit 存了玩家选定的功夫(撞配方时);兼容旧 unit 回退到首个匹配
+		return u["result"] if (u.has("result") and u["result"] != null) else rules.recipe_result(u["moves"])
+	return u["moves"][0]
 
 func _sort() -> void:
 	units.sort_custom(func(a, b): return a["start"] < b["start"])
@@ -137,13 +138,13 @@ func fuse_opportunities() -> Array:
 				out.append({
 					"indices": run.slice(0, n),
 					"start": units[run[0]]["start"],
-					"result": rules.recipe_result(moves.slice(0, n)),
+					"candidates": rules.recipe_candidates(moves.slice(0, n)),
 				})
 				break
 		i = run[-1] + 1
 	return out
 
-func fuse(indices: Array) -> bool:
+func fuse(indices: Array, result: Move = null) -> bool:
 	if indices.size() < 2:
 		return false
 	var moves: Array = []
@@ -152,7 +153,9 @@ func fuse(indices: Array) -> bool:
 		if units[idx]["fused"]:
 			return false
 		moves.append(units[idx]["moves"][0])
-	if rules.recipe_result(moves) == null:
+	if result == null:   # 未指定(单候选/旧调用)→ 取首个匹配
+		result = rules.recipe_result(moves)
+	if result == null:
 		return false
 	# remove the consumed singles (descending so indices stay valid), add the combo
 	var sorted_idx := indices.duplicate()
@@ -160,7 +163,7 @@ func fuse(indices: Array) -> bool:
 	sorted_idx.reverse()
 	for idx in sorted_idx:
 		units.remove_at(idx)
-	units.append({"moves": moves, "fused": true, "start": start})
+	units.append({"moves": moves, "fused": true, "start": start, "result": result})
 	_sort()
 	# compression only frees space; no overlap can be created
 	return true
@@ -179,7 +182,7 @@ func remove_component(idx: int, comp_index: int) -> void:
 	var start: int = u["start"]
 	units.remove_at(idx)
 	if rest.size() >= 2 and rules.recipe_result(rest) != null:
-		units.append({"moves": rest, "fused": true, "start": start})
+		units.append({"moves": rest, "fused": true, "start": start, "result": rules.recipe_result(rest)})
 	else:
 		var t := start
 		for m in rest:
