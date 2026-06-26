@@ -97,3 +97,7 @@ func test_encounter_heal_full():
 	r.player_hp = 5
 	r.apply_encounter({"heal_full": true}, _rng(4))
 	assert_eq(r.player_hp, r.max_hp)
+
+func test_discovery_art_not_in_normal_pool():
+	var r := RunState.new(&"shaolin")
+	assert_false(&"wuying" in r.unlearned_arts(), "无影脚靠实战顿悟,不在磨练/奇遇领悟池")

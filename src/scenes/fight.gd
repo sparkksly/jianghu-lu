@@ -16,6 +16,7 @@ var _rng := RandomNumberGenerator.new()
 var _pool: Array[Move] = []
 var _weight: Dictionary = {}
 var _landed: Dictionary = {}   # 本场玩家命中过的招(去重)→ 战后加熟练
+var _stats: Dictionary = {"tag_hits": {}, "tag_two_combo": {}}   # 本场行为→实战顿悟
 
 # Optional run configuration (set by run.gd before _ready via configure()).
 # When empty, the scene runs standalone with default values (still playable on its own).
@@ -71,6 +72,8 @@ func _ready() -> void:
 	_watch_phase.finished.connect(_on_watch_done)
 	$CodexButton.pressed.connect($Codex.toggle)
 	_watch_phase.get_node("P1Name").text = _enemy_name
+	_stats = {"tag_hits": {}, "tag_two_combo": {}}
+	$Codex.set_learned(learned)
 	_start_round()
 
 # 应用进化 + 神兵加伤(返回副本,不改原招)。
@@ -88,6 +91,26 @@ func get_player_hp() -> int:
 # 本场玩家命中过的招(去重)→ run 战后加熟练。
 func moves_landed() -> Array:
 	return _landed.keys()
+
+func combat_stats() -> Dictionary:
+	return _stats
+
+# 统计本回合玩家施展的招(按 tag 计数 + 两连同 tag)→ 实战顿悟。
+func _tally(plan: Plan) -> void:
+	var th: Dictionary = _stats["tag_hits"]
+	var tc: Dictionary = _stats["tag_two_combo"]
+	var s := plan.sorted()
+	for i in s.size():
+		var mv: Move = s[i].move
+		for tag in mv.tags:
+			th[tag] = int(th.get(tag, 0)) + 1
+		if Loc.is_combo_result(mv.id):   # 连招本身算"两连"
+			for tag in mv.tags:
+				tc[tag] = true
+		if i > 0:                         # 相邻两招同 tag 也算两连
+			for tag in mv.tags:
+				if tag in (s[i - 1].move as Move).tags:
+					tc[tag] = true
 
 func _start_round() -> void:
 	_round += 1
@@ -112,6 +135,7 @@ func _on_player_plan(player_plan: Plan) -> void:
 	for e in events:   # 收集本场玩家命中的招 → 战后加熟练
 		if e.type == &"hit" and e.actor == 0 and e.move_id != &"":
 			_landed[e.move_id] = true
+	_tally(player_plan)
 	# Hide only the planning panel; the battle stage plays underneath.
 	_plan_phase.visible = false
 	_watch_phase.play(before, [player_plan, _pending_ai_plan], events)

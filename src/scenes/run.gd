@@ -70,8 +70,24 @@ func _on_fight_finished(player_won: bool) -> void:
 		return
 	_run.player_hp = _fight.get_player_hp()
 	_run.gain_mastery(_fight.moves_landed())   # 实战熟练
+	var got := _discover()                     # 实战顿悟(无影脚等)
 	_run.advance_node()
+	if got.size() > 0:
+		_show_banner("顿悟！\n习得 " + "、".join(got))
+		await get_tree().create_timer(1.8).timeout
+		_hide_banner()
 	_post_fight()
+
+# 实战顿悟:本场行为满足 discovery 条件 → 概率领悟(无影脚等)。
+func _discover() -> Array:
+	var stats: Dictionary = _fight.combat_stats()
+	var got: Array = []
+	for id in Menpai.learnable(_run.menpai_id):
+		if not _run.learned.has(id) and Arts.is_discovery(id):
+			if Discovery.check(Arts.def(id).discovery, stats, _rng):
+				_run.learn(id)
+				got.append(Arts.display_name(id))
+	return got
 
 # 战后:逐个招式进化 → 基础提升三选一 → 下一节点。
 func _post_fight() -> void:

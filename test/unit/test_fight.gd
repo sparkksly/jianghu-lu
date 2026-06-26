@@ -113,3 +113,16 @@ func test_enemy_name_shown():
 	add_child_autofree(w)
 	await get_tree().process_frame
 	assert_eq(w.get_node("WatchPhase/P1Name").text, "青鳞毒叟", "敌方名显示")
+
+func test_tally_counts_leg_tags_and_two_combo():
+	var w = load("res://src/scenes/fight.tscn").instantiate()
+	w.configure({"known_moves": [&"snap_kick"], "enemy": {"hp": 30, "regen": 5, "pool": [&"jab"], "name": "T"}})
+	add_child_autofree(w)
+	await get_tree().process_frame
+	var p := Plan.new()
+	p.add(PlacedMove.new(Deck.by_id(&"snap_kick"), 0))
+	p.add(PlacedMove.new(Deck.by_id(&"sweep_kick"), 2))
+	w._tally(p)
+	var s: Dictionary = w.combat_stats()
+	assert_eq(int(s["tag_hits"].get(&"腿法", 0)), 2, "两次腿法")
+	assert_true(bool(s["tag_two_combo"].get(&"腿法", false)), "相邻两腿法=两连")

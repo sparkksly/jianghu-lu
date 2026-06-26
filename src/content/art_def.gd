@@ -17,8 +17,11 @@ extends Resource
 @export var series: StringName = &""
 @export var series_index: int = 0
 @export var result: Move
+# 实战顿悟:{triggers:[Condition], chance:float}。有 discovery 的功夫不进普通领悟池,
+# 只能在战斗中满足行为条件后概率顿悟(如无影脚:腿法≥5+两连腿法→30%)。
+@export var discovery: Dictionary = {}
 
-static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array, p_slots: Array, p_result: Move, p_requires := [], p_series := &"", p_index := 0) -> ArtDef:
+static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array, p_slots: Array, p_result: Move, p_requires := [], p_series := &"", p_index := 0, p_discovery := {}) -> ArtDef:
 	var d := ArtDef.new()
 	d.id = p_id
 	d.art_name = p_name
@@ -31,4 +34,5 @@ static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array,
 	d.requires = p_requires
 	d.series = p_series
 	d.series_index = p_index
+	d.discovery = p_discovery
 	return d
