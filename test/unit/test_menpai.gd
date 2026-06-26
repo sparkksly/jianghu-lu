@@ -1,44 +1,49 @@
 extends GutTest
 
-func test_shaolin_pool_is_seven_attacks():
-	var pool := Menpai.pool(&"shaolin")
-	assert_eq(pool.size(), 7)
-	for m in pool:
-		assert_eq(m.kind, Move.Kind.ATTACK, "进攻池皆 ATTACK")
+func _m(id: String) -> Move:
+	return Deck.by_id(StringName(id))
 
-func test_wudang_pool_is_five():
-	assert_eq(Menpai.pool(&"wudang").size(), 5)
+# 门派进攻池 = 通用基础动作(两派相同)。差别在能合成的绝学。
+func test_both_menpai_draw_from_shared_base_pool():
+	var sh := Menpai.pool(&"shaolin")
+	var wu := Menpai.pool(&"wudang")
+	assert_eq(sh.size(), wu.size(), "两派抽牌池相同(都是基础动作)")
+	for m in sh:
+		assert_eq(m.kind, Move.Kind.ATTACK)
+	# 基础动作里没有门派专属基础招了
+	for m in sh:
+		assert_false(m.id in [&"beng_quan", &"weituo", &"mian_zhang", &"shaolin_gun"], "门派招不该是基础招")
 
-func test_unknown_menpai_defaults_to_shaolin():
-	assert_eq(Menpai.pool(&"???").size(), 7)
-
-func test_shaolin_gun_reaches_mid_far():
-	var gun := Deck.by_id(&"shaolin_gun")
-	assert_eq(gun.range_min, 1)
-	assert_eq(gun.range_max, 2)
-
-func test_luohan_recipe_from_three_fists():
+# 少林:拳法×3 → 罗汉拳(基础拳合成)
+func test_shaolin_luohan_from_three_base_fists():
 	var r := Menpai.rules(&"shaolin")
-	var res := r.recipe_result([Deck.by_id(&"jab"), Deck.by_id(&"hook"), Deck.by_id(&"beng_quan")])
-	assert_not_null(res, "拳法×3 应融合")
+	var res := r.recipe_result([_m("jab"), _m("hook"), _m("jab")])
+	assert_not_null(res, "三记基础拳应合成罗汉拳")
 	assert_eq(res.id, &"luohan")
 
-func test_jingang_fumo_grants_guard():
+# 少林:格挡 + 掌法 → 金刚伏魔(挂护体)
+func test_shaolin_jingang_fumo_grants_guard():
 	var r := Menpai.rules(&"shaolin")
-	var res := r.recipe_result([Deck.by_id(&"guard"), Deck.by_id(&"weituo")])
-	assert_not_null(res, "格挡+韦陀掌 应融合")
+	var res := r.recipe_result([_m("guard"), _m("push_palm")])
+	assert_not_null(res, "格挡+基础掌应合成金刚伏魔")
 	assert_eq(res.id, &"jingang_fumo")
-	assert_eq(res.grants_guard, 4, "金刚伏魔挂护体4拍")
+	assert_eq(res.grants_guard, 4)
 
-func test_yunshou_recipe_from_two_mian():
+# 武当:掌法×2 → 太极云手(走位)
+func test_wudang_yunshou_from_two_base_palms():
 	var r := Menpai.rules(&"wudang")
-	var res := r.recipe_result([Deck.by_id(&"mian_zhang"), Deck.by_id(&"mian_zhang")])
-	assert_not_null(res, "绵掌×2 应融合")
+	var res := r.recipe_result([_m("push_palm"), _m("chop_palm")])
+	assert_not_null(res, "两记基础掌应合成太极云手")
 	assert_eq(res.id, &"taiji_yunshou")
-	assert_eq(res.distance_delta, -1, "云手贴近一步")
+	assert_eq(res.distance_delta, -1)
 
-func test_base_rules_have_no_fist_combo():
-	# 通用 base 不含门派配方,现有 combo 测试不受影响
+# 通用 base 不含门派绝学配方(现有 combo 测试不受影响)
+func test_base_rules_have_no_menpai_combo():
 	var base := ComboLibrary.build()
-	var res := base.recipe_result([Deck.by_id(&"jab"), Deck.by_id(&"hook"), Deck.by_id(&"beng_quan")])
-	assert_null(res, "base 不出罗汉拳")
+	assert_null(base.recipe_result([_m("jab"), _m("hook"), _m("jab")]), "base 不出罗汉拳")
+	assert_null(base.recipe_result([_m("push_palm"), _m("chop_palm")]), "base 不出云手")
+
+# 武当不会合成少林绝学(门派区分)
+func test_wudang_cannot_make_shaolin_combo():
+	var r := Menpai.rules(&"wudang")
+	assert_null(r.recipe_result([_m("jab"), _m("hook"), _m("jab")]), "武当无罗汉拳")

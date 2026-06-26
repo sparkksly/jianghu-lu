@@ -46,38 +46,24 @@ static func starter() -> Array[Move]:
 		_m(&"guard", "格挡", Move.Kind.BLOCK, 0, 3, 1, 0, 2, {}),
 		_m(&"dodge", "闪身", Move.Kind.DODGE, 0, 2, 1, 0, 2, {"tags":[&"轻功"]}),
 		_m(&"grab", "擒拿", Move.Kind.THROW, 0, 1, 1, 5, 3, {"range":[0,0]}),
-		# 步法(进快退慢)
-		_m(&"step_in", "上步", Move.Kind.STEP, 0, 1, 0, 0, 1, {"tags":[&"身法"], "delta":-1}),
-		_m(&"step_back", "撤步", Move.Kind.STEP, 0, 1, 1, 0, 1, {"tags":[&"身法"], "delta":1}),
-	]
-
-# 门派招式(少林/武当);加入门派进攻池,不在通用 starter()。
-static func menpai_moves() -> Array[Move]:
-	return [
-		# 少林:刚猛贴身 + 棍补中距
-		_m(&"beng_quan", "崩拳", Move.Kind.ATTACK, 0, 1, 1, 7, 2, {"tags":[&"拳法"], "range":[0,1]}),
-		_m(&"weituo", "韦陀掌", Move.Kind.ATTACK, 1, 1, 1, 8, 3, {"tags":[&"掌法"], "range":[0,1], "armor":true}),
-		_m(&"jingang_zhi", "金刚指", Move.Kind.ATTACK, 0, 1, 1, 6, 2, {"tags":[&"指法"], "range":[0,1], "interrupt":true}),
-		_m(&"longzhua", "龙爪手", Move.Kind.ATTACK, 1, 1, 1, 7, 2, {"tags":[&"擒拿"], "range":[0,0]}),
-		_m(&"shaolin_gun", "少林棍", Move.Kind.ATTACK, 1, 1, 1, 7, 3, {"tags":[&"棍法"], "range":[1,2], "knockback":true}),
-		# 武当:柔掌中距
-		_m(&"mian_zhang", "绵掌", Move.Kind.ATTACK, 0, 1, 1, 5, 2, {"tags":[&"掌法"], "range":[1,1]}),
-		_m(&"wudang_changquan", "武当长拳", Move.Kind.ATTACK, 0, 1, 1, 6, 2, {"tags":[&"拳法"], "range":[0,1]}),
+		# 步法(进快退慢;走位不耗气,只花拍)
+		_m(&"step_in", "上步", Move.Kind.STEP, 0, 1, 0, 0, 0, {"tags":[&"身法"], "delta":-1}),
+		_m(&"step_back", "撤步", Move.Kind.STEP, 0, 1, 1, 0, 0, {"tags":[&"身法"], "delta":1}),
 	]
 
 static func by_id(id: StringName) -> Move:
 	for m in starter():
 		if m.id == id: return m
-	for m in menpai_moves():
-		if m.id == id: return m
 	return null
 
-# 门派连招模板(融合产生;伤害按 _fuse_result 重算,模板的 hits/range/delta/guard 保留)
-static func luohan() -> Move:
+# 门派功夫 = 基础动作合成的连招(绝学)。下面是融合结果模板:
+# 伤害按 _fuse_result 用组件重算,模板的 hits/range/delta/guard 保留。
+# 配方(用哪些基础动作合成)定义在 menpai.gd。
+static func luohan() -> Move:  # 少林:拳法×3 → 罗汉拳(刚猛三连)
 	return _m(&"luohan", "罗汉拳", Move.Kind.ATTACK, 0, 3, 1, 21, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1]})
-static func jingang_fumo() -> Move:
+static func jingang_fumo() -> Move:  # 少林:格挡+掌法 → 金刚伏魔(护体重掌)
 	return _m(&"jingang_fumo", "金刚伏魔", Move.Kind.ATTACK, 0, 1, 2, 10, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "armor":true, "guard":4})
-static func taiji_yunshou() -> Move:
+static func taiji_yunshou() -> Move:  # 武当:掌法×2 → 太极云手(柔掌走位)
 	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 12, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6})
 
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
