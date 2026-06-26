@@ -24,11 +24,13 @@ static func display_name(id: StringName) -> String:
 	var r := recipe(id)
 	return (r["result"] as Move).move_name if not r.is_empty() else str(id)
 
-# 用已领悟列表构建连招规则。
-static func build_rules(learned: Array) -> ComboRules:
+# 用已领悟列表构建连招规则。evo:绝学id→进化加成(迅捷/凝气对手拼连招生效;
+# 沉重伤害在融合时按组件重算,故主要在化境单卡上吃满)。
+static func build_rules(learned: Array, evo := {}) -> ComboRules:
 	var rules := ComboRules.new()
 	var reg := _registry()
 	for id in learned:
 		if reg.has(id):
-			rules.add_recipe(reg[id]["slots"], reg[id]["result"])
+			var res: Move = Evolve.apply(reg[id]["result"], evo.get(id, {}))
+			rules.add_recipe(reg[id]["slots"], res)
 	return rules

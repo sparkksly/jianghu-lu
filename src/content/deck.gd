@@ -60,16 +60,16 @@ static func by_id(id: StringName) -> Move:
 # 伤害按 _fuse_result 用组件重算,模板的 hits/range/delta/guard 保留。
 # 配方(用哪些基础动作合成)定义在 menpai.gd。
 static func luohan() -> Move:  # 少林:拳法×3 → 罗汉拳(刚猛三连)
-	return _m(&"luohan", "罗汉拳", Move.Kind.ATTACK, 0, 3, 1, 21, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1]})
+	return _m(&"luohan", "罗汉拳", Move.Kind.ATTACK, 0, 3, 1, 6, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1]})
 static func jingang_fumo() -> Move:  # 少林:格挡+掌法 → 金刚伏魔(护体重掌)
 	return _m(&"jingang_fumo", "金刚伏魔", Move.Kind.ATTACK, 0, 1, 2, 10, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "armor":true, "guard":4})
 static func taiji_yunshou() -> Move:  # 武当:掌法×2 → 太极云手(柔掌走位)
-	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 12, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6})
+	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6})
 
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
 static func chain_kick() -> Move:
-	return _m(&"chain_kick", "连环踢", Move.Kind.ATTACK, 0, 2, 1, 14, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1]})
+	return _m(&"chain_kick", "连环踢", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1]})
 static func wuying() -> Move:
 	return _m(&"wuying", "佛山无影脚", Move.Kind.ATTACK, 0, 3, 1, 22, 0, {"tags":[&"腿法"], "hits":[0,1,2], "armor":true, "range":[0,1]})
 static func qiankun() -> Move:
-	return _m(&"qiankun", "乾坤大挪移", Move.Kind.THROW, 0, 1, 1, 18, 0, {"range":[0,1]})
+	return _m(&"qiankun", "乾坤大挪移", Move.Kind.THROW, 0, 1, 1, 14, 0, {"range":[0,1]})

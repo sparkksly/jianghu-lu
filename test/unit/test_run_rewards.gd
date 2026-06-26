@@ -3,28 +3,38 @@ extends GutTest
 func _rng(s: int) -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new(); r.seed = s; return r
 
-func test_roll_returns_three():
-	var out := RunRewards.roll([&"luohan", &"qiankun", &"chain_kick"], _rng(1))
+func test_basic_three_options():
+	var out := RunRewards.roll_basic(_rng(1))
 	assert_eq(out.size(), 3)
+	var types: Array = []
+	for r in out: types.append(r["type"])
+	assert_true("hp" in types and "meditate" in types and "hone" in types)
 
-func test_combo_options_come_from_unlearned():
-	var out := RunRewards.roll([&"luohan"], _rng(2))
+func test_hone_targets_a_base_attack():
+	var out := RunRewards.roll_basic(_rng(2))
+	var ids := RunRewards.basic_attack_ids()
 	for r in out:
-		if r["type"] == "combo":
-			assert_eq(r["id"], &"luohan")
+		if r["type"] == "hone":
+			assert_true(r["id"] in ids)
 
-func test_deterministic_same_seed():
-	var a := RunRewards.roll([&"luohan", &"qiankun"], _rng(5))
-	var b := RunRewards.roll([&"luohan", &"qiankun"], _rng(5))
-	assert_eq(str(a), str(b))
-
-func test_empty_unlearned_all_attributes():
-	var out := RunRewards.roll([], _rng(9))
-	assert_eq(out.size(), 3)
+func test_evolution_first_time_no_compiled():
+	var out := RunRewards.roll_evolution(&"luohan", 0, true)
 	for r in out:
-		assert_ne(r["type"], "combo", "没绝学可领悟时全是属性")
+		assert_ne(r["choice"], "compiled", "首次进化不出单卡")
 
-func test_label_text():
-	assert_string_contains(RunRewards.label({"type": "combo", "id": &"luohan"}), "罗汉拳")
-	assert_string_contains(RunRewards.label({"type": "qi"}), "气")
-	assert_string_contains(RunRewards.label({"type": "hp"}), "气血")
+func test_evolution_second_time_art_offers_compiled():
+	var out := RunRewards.roll_evolution(&"luohan", 1, true)
+	var choices: Array = []
+	for r in out: choices.append(r["choice"])
+	assert_true("compiled" in choices, "绝学第2次进化可化境")
+
+func test_non_art_never_compiles():
+	var out := RunRewards.roll_evolution(&"jab", 1, false)
+	for r in out:
+		assert_ne(r["choice"], "compiled", "基础招不化境")
+
+func test_labels():
+	assert_string_contains(RunRewards.label({"type": "meditate"}), "打坐")
+	assert_string_contains(RunRewards.label({"type": "hone", "id": &"jab"}), "磨练")
+	assert_string_contains(RunRewards.label({"type": "evo", "id": &"jab", "choice": "spd"}), "迅捷")
+	assert_string_contains(RunRewards.label({"type": "evo", "id": &"luohan", "choice": "compiled"}), "化境")

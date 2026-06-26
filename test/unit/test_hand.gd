@@ -52,3 +52,12 @@ func test_draw_can_repeat_from_single_pool() -> void:
 	assert_eq(drawn.size(), 4)
 	for m in drawn:
 		assert_eq(m.id, &"jab")
+
+func test_weighted_draw_favors_high_weight():
+	var pool: Array[Move] = [_move("a", Move.Kind.ATTACK), _move("b", Move.Kind.ATTACK)]
+	var rng := RandomNumberGenerator.new(); rng.seed = 4
+	var drawn := Hand.draw(pool, 60, rng, {&"b": 100})
+	var bn := 0
+	for m in drawn:
+		if m.id == &"b": bn += 1
+	assert_gt(bn, 50, "高权重招更常被抽到")
