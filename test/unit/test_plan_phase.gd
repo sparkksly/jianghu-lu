@@ -7,7 +7,7 @@ func _load() -> Control:
 
 func _kick(deck) -> Move:
 	for m in deck:
-		if m.id == &"low_kick": return m
+		if m.id == &"snap_kick": return m
 	return null
 
 func _setup(w) -> void:

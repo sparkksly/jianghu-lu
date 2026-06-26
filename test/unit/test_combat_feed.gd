@@ -6,7 +6,7 @@ func _ev(type, actor, target, amount, move_id := &"") -> CombatEvent:
 # ---- floating numbers (shown at the character's position) ----
 
 func test_normal_hit_floats_red_minus_on_target():
-	var f := CombatFeed.float_number(_ev(&"hit", 0, 1, 6, &"low_kick"))
+	var f := CombatFeed.float_number(_ev(&"hit", 0, 1, 6, &"sweep_kick"))
 	assert_eq(f["side"], 1, "number floats over the one taking damage")
 	assert_eq(f["text"], "-6")
 	assert_eq(f["color"], CombatFeed.RED)
@@ -17,12 +17,12 @@ func test_combo_hit_is_big():
 	assert_true(f["big"], "大招 命中用更夸张字号")
 
 func test_heavy_hit_is_big_by_amount():
-	var f := CombatFeed.float_number(_ev(&"hit", 0, 1, 12, &"heavy_kick"))
+	var f := CombatFeed.float_number(_ev(&"hit", 0, 1, 12, &"side_kick"))
 	assert_true(f["big"], "12+ 伤害算重击, 用大字号")
 
 func test_interrupt_and_throwbreak_are_big_red():
-	assert_true(CombatFeed.float_number(_ev(&"interrupt", 0, 1, 5, &"jab_kick"))["big"])
-	assert_true(CombatFeed.float_number(_ev(&"throw_break", 0, 1, 9, &"throw"))["big"])
+	assert_true(CombatFeed.float_number(_ev(&"interrupt", 0, 1, 5, &"jab"))["big"])
+	assert_true(CombatFeed.float_number(_ev(&"throw_break", 0, 1, 9, &"grab"))["big"])
 
 func test_heal_floats_green_plus():
 	var f := CombatFeed.float_number(_ev(&"heal", 0, 0, 8))
@@ -42,9 +42,9 @@ func test_combo_marks_move_name_big_in_attacker_lane():
 	assert_eq(m["tone"], "big")
 
 func test_interrupt_marks_move_name_in_attacker_lane():
-	var m := CombatFeed.marker(_ev(&"interrupt", 0, 1, 5, &"jab_kick"))
+	var m := CombatFeed.marker(_ev(&"interrupt", 0, 1, 5, &"jab"))
 	assert_eq(m["lane"], 0)
-	assert_eq(m["text"], "轻踢")
+	assert_eq(m["text"], "直拳")
 
 func test_block_marks_defender_lane_good():
 	var m := CombatFeed.marker(_ev(&"block", 0, 1, 0, &"guard"))
@@ -53,13 +53,13 @@ func test_block_marks_defender_lane_good():
 	assert_eq(m["tone"], "good")
 
 func test_whiff_marks_dodger_lane():
-	var m := CombatFeed.marker(_ev(&"whiff", 0, 1, 0, &"heavy_kick"))
+	var m := CombatFeed.marker(_ev(&"whiff", 0, 1, 0, &"side_kick"))
 	assert_eq(m["lane"], 1, "the dodger is 1-actor")
 	assert_eq(m["text"], "闪避")
 
 func test_normal_hit_marks_move_name():
-	var m := CombatFeed.marker(_ev(&"hit", 0, 1, 5, &"low_kick"))
-	assert_eq(m["text"], "扫腿", "every landed move names itself on the timeline")
+	var m := CombatFeed.marker(_ev(&"hit", 0, 1, 5, &"sweep_kick"))
+	assert_eq(m["text"], "扫堂腿", "every landed move names itself on the timeline")
 	assert_eq(m["tone"], "hit")
 
 func test_stamina_has_no_marker():

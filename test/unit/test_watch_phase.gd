@@ -19,7 +19,7 @@ func test_nodes_wired():
 
 func test_hit_reduces_green_and_shows_number_at_character():
 	var w = _load(); await get_tree().process_frame
-	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"sweep_kick")])
 	w._process(1.0)
 	assert_eq(w.get_node("P1Health").value, 24.0)
 	assert_string_contains(w.get_node("P1HPLabel").text, "24")
@@ -28,7 +28,7 @@ func test_hit_reduces_green_and_shows_number_at_character():
 
 func test_tick_label_chinese():
 	var w = _load(); await get_tree().process_frame
-	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"sweep_kick")])
 	w._process(1.0)
 	assert_string_contains(w.get_node("TickLabel").text, "第")
 
@@ -36,7 +36,7 @@ func test_log_is_chinese_and_tucked_away():
 	var w = _load(); await get_tree().process_frame
 	# log panel hidden until the player opens it
 	assert_false(w.get_node("LogPanel").visible, "战报 starts collapsed")
-	w.play(_state(), [null, null], [CombatEvent.new(0, &"interrupt", 0, 1, 5, &"jab_kick")])
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"interrupt", 0, 1, 5, &"jab")])
 	w._process(1.0)
 	var log = w.get_node("LogPanel/Scroll/EventLog")
 	assert_true(log.get_child_count() >= 1)
@@ -51,7 +51,7 @@ func test_log_button_toggles_panel():
 func test_finished_emits():
 	var w = _load(); await get_tree().process_frame
 	watch_signals(w)
-	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"low_kick")])
+	w.play(_state(), [null, null], [CombatEvent.new(0, &"hit", 0, 1, 6, &"sweep_kick")])
 	for i in 6: w._process(1.0)
 	assert_signal_emitted(w, "finished")
 
