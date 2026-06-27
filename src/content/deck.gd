@@ -68,7 +68,7 @@ static func basic_attacks() -> Array[Move]:
 static func boss_moves() -> Array[Move]:
 	return [
 		# 青鳞毒叟(西毒/星宿):阴毒、霸体反震
-		_m(&"toad_power", "蛤蟆劲", Move.Kind.ATTACK, 2, 1, 2, 10, 3, {"range":[0,1], "armor":true, "heavy":true}),
+		_m(&"toad_power", "蛤蟆劲", Move.Kind.ATTACK, 2, 1, 2, 10, 3, {"range":[0,1], "armor":true, "heavy":true, "inflict":[&"neishang"]}),
 		_m(&"venom_palm", "毒砂掌", Move.Kind.ATTACK, 1, 1, 1, 11, 3, {"range":[0,1], "heavy":true, "inflict":[&"poison"]}),
 		_m(&"rot_claw", "腐骨爪", Move.Kind.ATTACK, 1, 1, 1, 7, 2, {"range":[0,0], "inflict":[&"sunder"]}),
 		# 血河老魔(血刀):凶猛重斩

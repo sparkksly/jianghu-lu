@@ -79,7 +79,7 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 			if int(sd["hp"]) != 0:
 				state.hp[i] = clampi(state.hp[i] + int(sd["hp"]), 0, state.max_hp[i])
 			if int(sd["qi"]) != 0:
-				state.stamina[i] = clampi(state.stamina[i] + int(sd["qi"]), 0, state.sta_max[i])
+				state.stamina[i] = clampi(state.stamina[i] + int(sd["qi"]), 0, state.eff_sta_max(i))
 		# 6. stop early if nothing left to do
 		if t >= state.n_ticks and _all_idle(actors):
 			break
@@ -140,7 +140,7 @@ static func _maybe_hit(state: CombatState, actors: Array, snap: Array, attacker:
 static func _add_stamina(state: CombatState, idx: int, delta: int, t: int, events) -> void:
 	if delta == 0:
 		return
-	state.stamina[idx] = clampi(state.stamina[idx] + delta, 0, state.sta_max[idx])
+	state.stamina[idx] = clampi(state.stamina[idx] + delta, 0, state.eff_sta_max(idx))
 	events.append(CombatEvent.new(t, &"stamina", idx, idx, delta, &""))
 
 static func _is_gasping(actors: Array, idx: int, t: int) -> bool:

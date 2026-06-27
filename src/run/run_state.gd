@@ -38,7 +38,7 @@ var hidden_weapons: Dictionary = {}   # 暗器 id→数量
 var inventory: Array = []
 var money: int = 0
 var reputation: int = 0               # 善恶侠名
-var conditions: Array = []            # 跨场持续状态(内伤/中毒…)
+var conditions: Array = []            # 预留:跨场持续状态(内伤=战斗内debuff,不在此;此处留给未来跨场效果)
 
 func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	menpai_id = menpai

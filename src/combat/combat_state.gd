@@ -17,7 +17,11 @@ var status: Array = [[], []]         # 每侧战斗内 buff/debuff(StatusEffect)
 
 func regen_round() -> void:
 	for i in stamina.size():
-		stamina[i] = min(sta_max[i], stamina[i] + regen[i])
+		stamina[i] = min(eff_sta_max(i), stamina[i] + regen[i])
+
+# 有效气力上限 = 基础 − 内伤等 max_qi debuff(扣气力上限)。
+func eff_sta_max(side: int) -> int:
+	return maxi(1, Stats.aggregate(sta_max[side], StatusEffect.mods_for(status[side], "max_qi"), "max_qi"))
 
 # 有效属性 = 基础 + 本侧 buff 修正(同类 modifier 求和)。
 func eff_attack(side: int) -> int:
