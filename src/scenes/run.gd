@@ -6,6 +6,7 @@ const FIGHT := preload("res://src/scenes/fight.tscn")
 const REWARD := preload("res://src/scenes/reward_select.tscn")
 const ENCOUNTER := preload("res://src/scenes/encounter.tscn")
 const SHOP := preload("res://src/scenes/shop.tscn")
+const MAP := preload("res://src/scenes/map.tscn")
 const EQUIP_PANEL := preload("res://src/scenes/equip_panel.tscn")
 const MENU_PATH := "res://src/scenes/main_menu.tscn"
 
@@ -13,6 +14,7 @@ const MENU_PATH := "res://src/scenes/main_menu.tscn"
 @onready var _banner_label: Label = $BannerLayer/Banner/Label
 @onready var _inv_btn: Button = $InvLayer/InvButton
 var _inv_panel: Node = null
+var _map: Node = null
 
 var _run: RunState
 var _fight: Node
@@ -43,10 +45,23 @@ func _next_node() -> void:
 	if _run.is_complete():
 		_end_run("通关! 华山论剑扬名立万\n气血余 %d" % _run.player_hp)
 		return
+	_show_map()
+
+# 节点地图:节点间的中枢。展示整局路径+进度,点亮当前节点 → 进入。
+func _show_map() -> void:
+	_inv_btn.show()
+	if _map:
+		_map.queue_free()
+	_map = MAP.instantiate()
+	add_child(_map)
+	_map.setup(_run)
+	_map.advance.connect(_enter_node)
+
+func _enter_node() -> void:
+	if _map:
+		_map.queue_free()
+		_map = null
 	var n := _run.current_node()
-	_show_banner(_run.chapter_title() + "\n" + _node_label(n))
-	await get_tree().create_timer(1.2).timeout
-	_hide_banner()
 	match n["type"]:
 		"encounter": _show_encounter()
 		"shop": _show_shop()
