@@ -79,3 +79,9 @@ func test_qi_ceiling_clamps_regen():
 
 func test_toad_power_inflicts_neishang():
 	assert_true(&"neishang" in Deck.by_id(&"toad_power").inflict, "蛤蟆劲震内伤")
+
+func test_loc_log_line_debuff():
+	var e := CombatEvent.new(3, &"debuff", 1, 0, 0, &"poison")
+	var line := Loc.log_line(e)
+	assert_string_contains(line, "中毒")
+	assert_string_contains(line, "你", "目标侧(0=你)")

@@ -32,6 +32,14 @@ const TL_H := 116.0
 # Damage/heal numbers float at where each fighter roughly stands.
 const CHAR_X := [300.0, 840.0]       # 我方 偏左 / 对手 偏右
 const CHAR_Y := 300.0
+# 减益主题色(飘字)
+const DEBUFF_COLORS := {
+	&"poison": Color(0.55, 0.85, 0.35),   # 毒·绿
+	&"bleed": Color(0.9, 0.2, 0.25),      # 血·红
+	&"weak": Color(0.72, 0.72, 0.78),     # 虚弱·灰
+	&"sunder": Color(0.95, 0.6, 0.2),     # 破甲·橙
+	&"neishang": Color(0.72, 0.45, 0.9),  # 内伤·紫
+}
 
 var _events: Array = []
 var _state: CombatState
@@ -181,6 +189,10 @@ func _apply_event(e) -> void:
 		&"stamina":
 			var sb: ProgressBar = _p0s if e.actor == 0 else _p1s
 			sb.value = clampf(sb.value + e.amount, 0, sb.max_value)
+		&"debuff":
+			# 减益飘字:中毒/流血/虚弱/破甲/内伤,主题色,飘在头顶(与伤害数字错开)
+			var col: Color = DEBUFF_COLORS.get(e.move_id, Color(0.7, 0.45, 0.9))
+			_spawn_number(e.target, "▼" + Debuffs.display_name(e.move_id), col, false, -70.0)
 	# floating number at the character's position (red dmg / green heal, crit bigger)
 	var num := CombatFeed.float_number(e)
 	if not num.is_empty():
@@ -196,13 +208,13 @@ func _apply_event(e) -> void:
 	if _log.get_child_count() > 40:
 		_log.get_child(0).queue_free()
 
-func _spawn_number(side: int, text: String, color: Color, big: bool) -> void:
+func _spawn_number(side: int, text: String, color: Color, big: bool, y_off: float = 0.0) -> void:
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.add_theme_color_override("font_color", color)
 	lbl.add_theme_font_size_override("font_size", 60 if big else 30)
 	var base_x: float = CHAR_X[side]
-	lbl.position = Vector2(base_x + randf_range(-18, 18), CHAR_Y + randf_range(-12, 12))
+	lbl.position = Vector2(base_x + randf_range(-18, 18), CHAR_Y + y_off + randf_range(-12, 12))
 	_float.add_child(lbl)
 	var tw := create_tween()
 	if big:
