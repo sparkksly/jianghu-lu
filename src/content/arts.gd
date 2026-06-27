@@ -55,6 +55,10 @@ static func _defs() -> Array:
 		ArtDef.make(&"sanfeng", "三丰遗剑", 3, [&"掌法"], [{"tag": &"掌法"}, {"kind": Move.Kind.DODGE}, {"tag": &"掌法"}, {"kind": Move.Kind.DODGE}], Deck.sanfeng(), [], &"", 0, [{"via": "encounter"}]),
 		ArtDef.make(&"qingshen", "两仪轻身", 1, [&"身法"], [{"kind": Move.Kind.DODGE}, {"tag": &"身法"}], Deck.qingshen()),
 		ArtDef.make(&"yunlong", "云龙腿", 1, [&"腿法"], [{"tag": &"腿法"}, {"tag": &"掌法"}], Deck.yunlong()),
+		# --- 高级·绝世神功(t4-5;门槛高,稀缺) ---
+		ArtDef.make(&"xianglong", "降龙十八掌", 5, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.xianglong(), [{"type": "arts_count", "family": &"掌法", "need": 3}], &"", 0, [{"via": "encounter"}]),
+		ArtDef.make(&"jingang_zhi", "大力金刚指", 4, [&"肘膝"], [{"tag": &"拳法"}, {"tag": &"拳法"}, {"tag": &"肘膝"}, {"tag": &"肘膝"}], Deck.jingang_zhi(), [{"type": "arts_count", "family": &"拳法", "need": 2}]),
+		ArtDef.make(&"liangyi_hua", "两仪化劲", 4, [&"掌法"], [{"tag": &"掌法"}, {"kind": Move.Kind.DODGE}, {"tag": &"掌法"}, {"tag": &"腿法"}], Deck.liangyi_hua(), [{"type": "arts_count", "family": &"掌法", "need": 2}]),
 	]
 
 static func def(id: StringName) -> ArtDef:
