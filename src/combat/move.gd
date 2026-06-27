@@ -27,6 +27,7 @@ enum Kind { ATTACK, BLOCK, DODGE, THROW, STEP }
 @export var knockback: bool = false  # 击退：命中后距离+1
 @export var stun: int = 0            # 踉跄：命中令对手跳 N 拍
 @export var grants_guard: int = 0    # 护体：干净命中后给自己挂 N 拍受伤减免
+@export var inflict: Array = []      # 命中附加的 debuff id 列表(查 Debuffs;中毒/流血/虚弱/破甲)
 @export var tier: int = 1            # 招式分级:1 初级(开局可选) / 2 高级(领悟/奇遇得)
 
 func active_count() -> int:

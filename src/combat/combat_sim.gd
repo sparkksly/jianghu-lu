@@ -212,6 +212,7 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		actors[defender].elapsed = 0
 		var dmg := _apply_damage(state, actors, defender, _outgoing(state, attacker, atk.damage, false), t)
 		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, dmg, atk.id))
+		_inflict(state, attacker, defender, atk, t, events)
 		_add_stamina(state, attacker, REWARD_INTERRUPT, t, events)
 		_add_stamina(state, defender, -PENALTY_STAGGER, t, events)
 		return
@@ -231,6 +232,16 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	if atk.stun > 0:
 		actors[defender].gasp_until = t + atk.stun
 		events.append(CombatEvent.new(t, &"stun", attacker, defender, atk.stun, atk.id))
+	_inflict(state, attacker, defender, atk, t, events)
+
+# 干净命中/打断后,把招式 inflict 的 debuff 加到防守方状态(中毒/流血/虚弱/破甲)。
+static func _inflict(state: CombatState, attacker: int, defender: int, atk: Move, t: int, events) -> void:
+	for did in atk.inflict:
+		var sp := Debuffs.spec(did)
+		if sp.is_empty():
+			continue
+		StatusEffect.add(state.status[defender], sp)
+		events.append(CombatEvent.new(t, &"debuff", attacker, defender, 0, did))
 
 static func _whiff(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
 	events.append(CombatEvent.new(t, &"whiff", attacker, 1 - attacker, 0, atk.id))
