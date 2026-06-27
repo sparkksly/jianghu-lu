@@ -67,7 +67,7 @@ func chapter_title() -> String:
 
 func current_enemy() -> Dictionary:
 	var n := current_node()
-	return Enemies.spawn(n["chapter"], n["type"])
+	return Enemies.spawn(n["chapter"], n["type"], node_index)   # node_index 选小怪/精英变体
 
 # --- 内功 ---
 func qi_bonus() -> int:
