@@ -84,3 +84,23 @@ func test_guard_expires():
 	var p1 := _plan([[foe_jab, 3]])   # t=3 > guard_until 2 → 全额
 	CombatSim.simulate(s, [p0, p1])
 	assert_eq(s.hp[0], 96, "护体已过期,P0 受全额 4")
+
+func test_attack_attribute_adds_damage():
+	var s := _state()
+	s.attack = [5, 0]
+	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
+	CombatSim.simulate(s, [_plan([[jab, 0]]), _plan([])])
+	assert_eq(s.hp[1], 100 - (4 + 5), "攻击力+5")
+
+func test_defense_attribute_reduces_damage():
+	var s := _state()
+	s.defense = [0, 3]
+	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
+	CombatSim.simulate(s, [_plan([[jab, 0]]), _plan([])])
+	assert_eq(s.hp[1], 100 - maxi(1, 4 - 3), "防御-3→受1")
+
+func test_status_tick_drains_hp():
+	var s := _state()
+	s.status[1] = [{"tick": {"hp": -2}, "duration": 3, "modifiers": []}]
+	CombatSim.simulate(s, [_plan([]), _plan([])])
+	assert_eq(s.hp[1], 100 - 6, "中毒3拍掉6血")

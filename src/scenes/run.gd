@@ -60,7 +60,8 @@ func _build_cfg() -> Dictionary:
 		"evo": _run.evo,
 		"weight": _run.weight,
 		"compiled": _run.compiled_arts(),
-		"weapon_bonus": _run.weapon_bonus,
+		"attack": _run.combat_attack(),
+		"defense": _run.combat_defense(),
 		"enemy": _run.current_enemy(),
 	}
 

@@ -70,6 +70,13 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 		# 5. advance
 		for i in 2:
 			_advance(actors[i])
+		# 5.5 战斗内状态:持续效果(中毒掉血等) + 计时到期
+		for i in 2:
+			var sd := StatusEffect.advance(state.status[i])
+			if int(sd["hp"]) != 0:
+				state.hp[i] = clampi(state.hp[i] + int(sd["hp"]), 0, state.max_hp[i])
+			if int(sd["qi"]) != 0:
+				state.stamina[i] = clampi(state.stamina[i] + int(sd["qi"]), 0, state.sta_max[i])
 		# 6. stop early if nothing left to do
 		if t >= state.n_ticks and _all_idle(actors):
 			break
@@ -142,6 +149,8 @@ static func _apply_damage(state: CombatState, actors: Array, defender: int, base
 		dmg += GASP_DAMAGE_BONUS
 	if t < actors[defender].guard_until and dmg > 0:   # 护体:受伤减半
 		dmg = int(ceil(dmg * (100 - GUARD_REDUCTION_PCT) / 100.0))
+	if dmg > 0:   # 防御力减伤(至少留 1)
+		dmg = maxi(1, dmg - state.eff_defense(defender))
 	state.hp[defender] = max(0, state.hp[defender] - dmg)
 	return dmg
 
@@ -191,6 +200,8 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		base = int(ceil(base * (100 + LEVERAGE_PCT) / 100.0))
 		actors[attacker].leverage_until = -1
 		events.append(CombatEvent.new(t, &"leverage", attacker, defender, base, atk.id))
+	if base > 0:
+		base += state.eff_attack(attacker)   # 攻击力加成
 	var hd := _apply_damage(state, actors, defender, base, t)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, hd, atk.id))
 	_add_stamina(state, attacker, REWARD_HIT, t, events)
