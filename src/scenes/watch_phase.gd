@@ -40,6 +40,13 @@ const DEBUFF_COLORS := {
 	&"sunder": Color(0.95, 0.6, 0.2),     # 破甲·橙
 	&"neishang": Color(0.72, 0.45, 0.9),  # 内伤·紫
 }
+# 增益主题色(飘字)
+const BUFF_COLORS := {
+	&"vigor": Color(1.0, 0.78, 0.25),     # 运劲·金
+	&"ironbody": Color(0.55, 0.7, 0.95),  # 铁布·钢蓝
+	&"focus": Color(0.45, 0.9, 0.85),     # 凝气·青
+	&"mend": Color(0.5, 0.95, 0.5),       # 疗息·绿
+}
 
 var _events: Array = []
 var _state: CombatState
@@ -193,6 +200,10 @@ func _apply_event(e) -> void:
 			# 减益飘字:中毒/流血/虚弱/破甲/内伤,主题色,飘在头顶(与伤害数字错开)
 			var col: Color = DEBUFF_COLORS.get(e.move_id, Color(0.7, 0.45, 0.9))
 			_spawn_number(e.target, "▼" + Debuffs.display_name(e.move_id), col, false, -70.0)
+		&"buff":
+			# 增益飘字:运劲/铁布/凝气/疗息,暖金色,飘在头顶
+			var bcol: Color = BUFF_COLORS.get(e.move_id, Color(1.0, 0.85, 0.35))
+			_spawn_number(e.actor, "▲" + Buffs.display_name(e.move_id), bcol, false, -70.0)
 	# floating number at the character's position (red dmg / green heal, crit bigger)
 	var num := CombatFeed.float_number(e)
 	if not num.is_empty():

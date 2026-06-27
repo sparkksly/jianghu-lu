@@ -33,6 +33,7 @@ static func power(a: ArtDef) -> int:
 		p += maxi(0, m.hit_offsets.size() - 1) * 2.0   # 多段节奏小加成
 		p += _affix_power(m)
 		p += _inflict_power(m)
+		p += _empower_power(m)
 		p -= m.total_duration() * COST_PER_TICK
 	# 条件加成:满额 power × 可控性系数(越可控折扣越少)
 	for c in a.conditional:
@@ -71,6 +72,21 @@ static func _inflict_power(m: Move) -> float:
 			p += absi(int(d["tick"].get("hp", 0))) * dur * DEBUFF_DELAY
 		for mod in d.get("modifiers", []):
 			p += absf(float(mod.get("value", 0))) * 0.3 * dur * 0.4
+	return p
+
+# 招式给自己加 buff 的 power(可控收益:tick 回血/气 + modifier 强化 × 时长)。
+const BUFF_FACTOR := 0.5
+static func _empower_power(m: Move) -> float:
+	var p := 0.0
+	for bid in m.empower:
+		var d: Dictionary = Buffs.DEFS.get(bid, {})
+		if d.is_empty():
+			continue
+		var dur := int(d.get("duration", 0))
+		if d.has("tick"):
+			var t: Dictionary = d["tick"]
+			p += (absi(int(t.get("hp", 0))) + absi(int(t.get("qi", 0))) * 0.8) * dur * 0.7
+		p += _mods_power(d.get("modifiers", [])) * dur * BUFF_FACTOR
 	return p
 
 # 一串 modifier(条件加成)的满额 power(增伤%/额外%/攻击/防御各折算)。

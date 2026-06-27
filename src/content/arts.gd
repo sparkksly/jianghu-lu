@@ -24,9 +24,9 @@ static func _defs() -> Array:
 		ArtDef.make(&"da_yunshou", "大成·云手", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.da_yunshou(), [M.call(&"taiji_yunshou", 3)]),
 		ArtDef.make(&"liangyi", "两仪连环", 2, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"拳法"}, {"tag": &"拳法"}], Deck.liangyi(), [M.call(&"wudang_changquan", 3)]),
 		# --- 少林扩充 ---
-		ArtDef.make(&"weituo", "韦陀掌", 1, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"肘膝"}], Deck.weituo(), [], &"weituo_line", 0),
+		ArtDef.make(&"weituo", "韦陀掌", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"肘膝"}], Deck.weituo(), [], &"weituo_line", 0),
 		ArtDef.make(&"heihu", "黑虎拳", 1, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"腿法"}], Deck.heihu()),
-		ArtDef.make(&"jinzhong", "金钟罩", 1, [&"护体"], [{"kind": Move.Kind.BLOCK}, {"kind": Move.Kind.BLOCK}], Deck.jinzhong()),
+		ArtDef.make(&"jinzhong", "金钟罩", 2, [&"护体"], [{"kind": Move.Kind.BLOCK}, {"kind": Move.Kind.BLOCK}], Deck.jinzhong()),
 		ArtDef.make(&"jingang_zhang", "大力金刚掌", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"肘膝"}], Deck.jingang_zhang(), [M.call(&"weituo", 3)], &"weituo_line", 1),  # 韦陀掌升级
 		ArtDef.make(&"damo_quan", "达摩伏魔拳", 2, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"肘膝"}, {"tag": &"拳法"}], Deck.damo_quan(), [], &"", 0, [{"via": "encounter"}]),  # 稀缺·仅奇遇
 		# --- 武当扩充 ---
