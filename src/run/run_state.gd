@@ -24,8 +24,9 @@ var weight: Dictionary = {}
 var evo: Dictionary = {}
 var weapon_bonus: int = 0           # 神兵:并入攻击力(+attack)
 var node_index: int = 0             # 当前层(0..11)
-var layers: Array = []              # 分支地图:每层候选 [{type}];boss 层单候选
-var choice_index: int = -1          # 当前层玩家选的候选下标(进战斗前由 select 设)
+var layers: Array = []              # 分支地图:每层节点 [{type, edges:[下层slot]}];boss 层单节点
+var choice_index: int = -1          # 当前层玩家选的 slot(进战斗前由 select 设)
+var prev_slot: int = -1             # 上一层所选 slot(决定本层可走哪些 → 连线约束)
 var player_hp: int = 40
 var max_hp: int = 40
 # 基础属性(攻/防默认0不改平衡;血气见 max_hp/base_max_qi)
@@ -47,7 +48,7 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	menpai_id = menpai
 	neigong_id = neigong if neigong != &"" else Neigong.starter(menpai)
 	learned = (arts.duplicate() if not arts.is_empty() else Menpai.starter_pool(menpai).slice(0, 2))
-	node_index = 0; choice_index = -1
+	node_index = 0; choice_index = -1; prev_slot = -1
 	_gen_map()
 	player_hp = 40; max_hp = 40
 	neigong_level = 0
@@ -64,6 +65,40 @@ func _gen_map() -> void:
 		for _l in (LAYERS_PER_CHAPTER - 1):
 			layers.append(_gen_choices(rng))
 		layers.append([{"type": "boss"}])   # 章末 boss
+	for layer in layers:                     # 初始化空出边
+		for node in layer:
+			node["edges"] = []
+	for i in range(layers.size() - 1):       # 相邻层连线
+		_link(layers[i], layers[i + 1], rng)
+
+# 连线规则(暂随机 + 基本约束):每个上层节点 1-2 条出边;每个下层节点 ≥1 入边(无死路/孤岛)。
+# 以后可加更多规则(不交叉/类型偏好/精英前置等)。
+func _link(upper: Array, lower: Array, rng: RandomNumberGenerator) -> void:
+	var bn := lower.size()
+	for u in upper:
+		var k := rng.randi_range(1, mini(2, bn))
+		u["edges"] = _pick_k(bn, k, rng)
+	# 保证下层每个节点都有入边(否则随机从上层补一条)
+	var incoming := {}
+	for u in upper:
+		for t in u["edges"]:
+			incoming[t] = true
+	for v in bn:
+		if not incoming.has(v):
+			var ui := rng.randi_range(0, upper.size() - 1)
+			if not (v in upper[ui]["edges"]):
+				upper[ui]["edges"].append(v)
+
+func _pick_k(n: int, k: int, rng: RandomNumberGenerator) -> Array:
+	var all: Array = []
+	for i in n:
+		all.append(i)
+	for i in range(all.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = all[i]; all[i] = all[j]; all[j] = tmp
+	var out := all.slice(0, k)
+	out.sort()
+	return out
 
 func _gen_choices(rng: RandomNumberGenerator) -> Array:
 	# 候选类型互异(择路才有意义);精英稀有(30% 顶替一个);保证至少一个战斗。
@@ -95,21 +130,67 @@ func current_layer() -> Array:
 func is_boss_layer() -> bool:
 	return current_layer().size() == 1
 
+# 本层可走的 slots:第0层全开;否则=上一层所选节点的出边(连线约束)。
+func available_slots() -> Array:
+	if node_index >= layers.size():
+		return []
+	if node_index == 0:
+		var out: Array = []
+		for i in layers[0].size():
+			out.append(i)
+		return out
+	var prev_layer: Array = layers[node_index - 1]
+	if prev_slot < 0 or prev_slot >= prev_layer.size():
+		var out2: Array = []        # 兜底:全开(不该发生)
+		for i in current_layer().size():
+			out2.append(i)
+		return out2
+	return (prev_layer[prev_slot]["edges"] as Array).duplicate()
+
 func current_type() -> String:
 	var layer := current_layer()
 	if layer.size() == 1:
 		return layer[0]["type"]
-	var ci := choice_index if (choice_index >= 0 and choice_index < layer.size()) else 0
-	return layer[ci]["type"]
+	var s := choice_index
+	if s < 0 or s >= layer.size():
+		var av := available_slots()
+		s = int(av[0]) if not av.is_empty() else 0
+	return layer[s]["type"]
 
-# 玩家在地图上选当前层第 idx 个候选。
-func select(idx: int) -> void:
-	choice_index = idx
+# 玩家在地图上选当前层 slot。
+func select(slot: int) -> void:
+	choice_index = slot
+
+# 地图本程:可走候选 [{slot, type, edges}](edges 用于画连线)。
+func map_choices() -> Array:
+	var out: Array = []
+	var layer := current_layer()
+	for s in available_slots():
+		out.append({"slot": s, "type": layer[s]["type"], "edges": (layer[s]["edges"] as Array).duplicate()})
+	return out
+
+# 地图下程:本程可走节点经出边能到达的下一层节点 [{slot, type}](看不到再之后)。
+func map_next_nodes() -> Array:
+	var nxt := node_index + 1
+	if nxt >= layers.size():
+		return []
+	var layer := current_layer()
+	var reach := {}
+	for s in available_slots():
+		for e in layer[s]["edges"]:
+			reach[e] = true
+	var slots := reach.keys()
+	slots.sort()
+	var out: Array = []
+	for e in slots:
+		out.append({"slot": e, "type": layers[nxt][e]["type"]})
+	return out
 
 func current_node() -> Dictionary:
 	return {"chapter": current_chapter(), "type": current_type(), "layer": node_index}
 
 func advance_node() -> void:
+	prev_slot = choice_index   # 记下本层所选 → 下层据此连线
 	node_index += 1
 	choice_index = -1
 
