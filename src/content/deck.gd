@@ -25,6 +25,7 @@ static func _m(id, name, kind, su, act, rec, dmg, cost, opts := {}) -> Move:
 	m.stun = opts.get("stun", 0)
 	m.distance_delta = opts.get("delta", 0)
 	m.grants_guard = opts.get("guard", 0)
+	m.inflict = opts.get("inflict", [])
 	m.tier = opts.get("tier", 1)
 	return m
 
@@ -68,11 +69,11 @@ static func boss_moves() -> Array[Move]:
 	return [
 		# 青鳞毒叟(西毒/星宿):阴毒、霸体反震
 		_m(&"toad_power", "蛤蟆劲", Move.Kind.ATTACK, 2, 1, 2, 10, 3, {"range":[0,1], "armor":true, "heavy":true}),
-		_m(&"venom_palm", "毒砂掌", Move.Kind.ATTACK, 1, 1, 1, 11, 3, {"range":[0,1], "heavy":true}),
-		_m(&"rot_claw", "腐骨爪", Move.Kind.ATTACK, 1, 1, 1, 7, 2, {"range":[0,0], "stun":2}),
+		_m(&"venom_palm", "毒砂掌", Move.Kind.ATTACK, 1, 1, 1, 11, 3, {"range":[0,1], "heavy":true, "inflict":[&"poison"]}),
+		_m(&"rot_claw", "腐骨爪", Move.Kind.ATTACK, 1, 1, 1, 7, 2, {"range":[0,0], "inflict":[&"sunder"]}),
 		# 血河老魔(血刀):凶猛重斩
-		_m(&"blood_blade", "血河刀", Move.Kind.ATTACK, 1, 1, 1, 12, 3, {"range":[0,1], "heavy":true, "knockback":true}),
-		_m(&"soul_reap", "噬魂斩", Move.Kind.ATTACK, 2, 1, 1, 13, 3, {"range":[0,1], "heavy":true, "interrupt":true}),
+		_m(&"blood_blade", "血河刀", Move.Kind.ATTACK, 1, 1, 1, 12, 3, {"range":[0,1], "heavy":true, "knockback":true, "inflict":[&"bleed"]}),
+		_m(&"soul_reap", "噬魂斩", Move.Kind.ATTACK, 2, 1, 1, 13, 3, {"range":[0,1], "heavy":true, "interrupt":true, "inflict":[&"weak"]}),
 		_m(&"massacre", "狂屠", Move.Kind.ATTACK, 0, 3, 1, 6, 3, {"range":[0,1], "hits":[0,1,2]}),
 		# 无影魔君(东方不败):极快瞬身
 		_m(&"phantom_needle", "千幻针", Move.Kind.ATTACK, 0, 2, 0, 5, 2, {"range":[0,1], "hits":[0,1], "priority":7}),
@@ -153,8 +154,8 @@ static func weituo_xiang() -> Move:  # 掌+肘+掌 → 韦陀降魔
 	return _m(&"weituo_xiang", "韦陀降魔", Move.Kind.ATTACK, 1, 1, 2, 14, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "interrupt":true})
 static func jingang_bu() -> Move:  # 格挡×2+掌 → 金刚不坏(强护体)
 	return _m(&"jingang_bu", "金刚不坏", Move.Kind.ATTACK, 0, 1, 1, 5, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":7})
-static func yingzhua() -> Move:  # 拳+擒 → 大力鹰爪
-	return _m(&"yingzhua", "大力鹰爪", Move.Kind.ATTACK, 1, 1, 1, 8, 0, {"tags":[&"擒拿"], "hits":[0], "range":[0,0], "stun":2})
+static func yingzhua() -> Move:  # 拳+擒 → 大力鹰爪(爪伤流血)
+	return _m(&"yingzhua", "大力鹰爪", Move.Kind.ATTACK, 1, 1, 1, 8, 0, {"tags":[&"擒拿"], "hits":[0], "range":[0,0], "inflict":[&"bleed"]})
 static func shibaluohan() -> Move:  # 拳+掌+肘+腿 → 十八罗汉手
 	return _m(&"shibaluohan", "十八罗汉手", Move.Kind.ATTACK, 0, 3, 1, 13, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true, "interrupt":true})
 static func damo_jian() -> Move:  # 掌+掌+拳 → 达摩剑指(稀缺)

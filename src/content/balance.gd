@@ -32,6 +32,7 @@ static func power(a: ArtDef) -> int:
 	if m != null:
 		p += maxi(0, m.hit_offsets.size() - 1) * 2.0   # 多段节奏小加成
 		p += _affix_power(m)
+		p += _inflict_power(m)
 		p -= m.total_duration() * COST_PER_TICK
 	# 条件加成:满额 power × 可控性系数(越可控折扣越少)
 	for c in a.conditional:
@@ -55,6 +56,21 @@ static func _affix_power(m: Move) -> float:
 	p += m.grants_guard * AFFIX["guard_per"]
 	p += absi(m.distance_delta) * AFFIX["delta_per"]
 	p += m.priority * AFFIX["priority_per"]
+	return p
+
+# 招式附加 debuff 的 power(持续伤害×延迟折扣;属性削弱×单价×时长×折扣)。
+const DEBUFF_DELAY := 0.7   # 持续伤害延迟折扣(不即时,可被治疗/击杀打断)
+static func _inflict_power(m: Move) -> float:
+	var p := 0.0
+	for did in m.inflict:
+		var d: Dictionary = Debuffs.DEFS.get(did, {})
+		if d.is_empty():
+			continue
+		var dur := int(d.get("duration", 0))
+		if d.has("tick"):
+			p += absi(int(d["tick"].get("hp", 0))) * dur * DEBUFF_DELAY
+		for mod in d.get("modifiers", []):
+			p += absf(float(mod.get("value", 0))) * 0.3 * dur * 0.4
 	return p
 
 # 一串 modifier(条件加成)的满额 power(增伤%/额外%/攻击/防御各折算)。
