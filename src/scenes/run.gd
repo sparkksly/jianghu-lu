@@ -5,10 +5,13 @@ extends Node
 const FIGHT := preload("res://src/scenes/fight.tscn")
 const REWARD := preload("res://src/scenes/reward_select.tscn")
 const ENCOUNTER := preload("res://src/scenes/encounter.tscn")
+const EQUIP_PANEL := preload("res://src/scenes/equip_panel.tscn")
 const MENU_PATH := "res://src/scenes/main_menu.tscn"
 
 @onready var _banner: Control = $BannerLayer/Banner
 @onready var _banner_label: Label = $BannerLayer/Banner/Label
+@onready var _inv_btn: Button = $InvLayer/InvButton
+var _inv_panel: Node = null
 
 var _run: RunState
 var _fight: Node
@@ -18,7 +21,22 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_run = RunState.new(RunState.pending_menpai, RunState.pending_neigong, RunState.pending_arts)
 	_rng.seed = 2024
+	_inv_btn.pressed.connect(_open_inventory)
 	_next_node()
+
+# 行囊面板:战斗中/已结束不开;打开时暂存为覆盖层,继续即关。
+func _open_inventory() -> void:
+	if _ended or _inv_panel != null:
+		return
+	_inv_panel = EQUIP_PANEL.instantiate()
+	add_child(_inv_panel)
+	_inv_panel.set_run(_run)
+	_inv_panel.done.connect(_close_inventory)
+
+func _close_inventory() -> void:
+	if _inv_panel:
+		_inv_panel.queue_free()
+		_inv_panel = null
 
 func _next_node() -> void:
 	if _run.is_complete():
@@ -42,6 +60,7 @@ func _node_label(n: Dictionary) -> String:
 
 # --- 战斗 ---
 func _start_fight() -> void:
+	_inv_btn.hide()   # 战斗盖屏,藏起行囊入口
 	if _fight:
 		_fight.queue_free()
 	_fight = FIGHT.instantiate()
@@ -71,6 +90,7 @@ func _on_fight_finished(player_won: bool) -> void:
 	if not player_won:
 		_end_run("败北... 江湖路断")
 		return
+	_inv_btn.show()
 	_run.player_hp = _fight.get_player_hp()
 	_run.gain_mastery(_fight.moves_landed())   # 实战熟练
 	var got := _discover()                     # 实战顿悟(无影脚等)
@@ -142,6 +162,7 @@ func _show_encounter() -> void:
 # --- 结束 ---
 func _end_run(text: String) -> void:
 	_ended = true
+	_inv_btn.hide()
 	_show_banner(text + "\n\n按任意键返回主菜单")
 
 func _unhandled_input(event: InputEvent) -> void:
