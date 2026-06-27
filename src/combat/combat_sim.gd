@@ -12,8 +12,11 @@ const THROW_BREAK_BONUS := 4
 const GASP_DAMAGE_BONUS := 3
 # 状态系统(回合内)
 const LEVERAGE_WINDOW := 3      # 借力:成功格挡/闪避后的窗口拍数
-const LEVERAGE_PCT := 60        # 借力:窗口内下一击增伤 %
+const LEVERAGE_PCT := 60        # 借力:窗口内下一击增伤 %(作临时增伤)
 const GUARD_REDUCTION_PCT := 50 # 护体:受伤减免 %
+const ARMOR_K := 100           # 防御递减:减伤% = armor/(armor+K)
+const ARMOR_CAP := 0.85        # 减伤硬上限(防无敌)
+const ATTACK_REF := 10         # 攻击力基准(默认攻击10 → 招式 damage 即默认伤害,不改现有平衡)
 
 class _Actor:
 	var queue: Array[PlacedMove]
@@ -143,16 +146,33 @@ static func _add_stamina(state: CombatState, idx: int, delta: int, t: int, event
 static func _is_gasping(actors: Array, idx: int, t: int) -> bool:
 	return t < actors[idx].gasp_until
 
-static func _apply_damage(state: CombatState, actors: Array, defender: int, base: int, t: int) -> int:
-	var dmg := base
-	if _is_gasping(actors, defender, t) and base > 0:
+# 攻击侧 outgoing:基础攻击力 × 招式% × (1+基础增伤%) × (1+额外增伤%),含借力。
+# move_dmg = 招式 damage(基准攻击10 时即默认伤害)。
+static func _outgoing(state: CombatState, attacker: int, move_dmg: int, leverage: bool) -> float:
+	if move_dmg <= 0:
+		return 0.0
+	var r := float(move_dmg) * float(state.eff_attack(attacker)) / float(ATTACK_REF)
+	r *= 1.0 + state.eff_dmg_inc(attacker) / 100.0
+	r *= 1.0 + state.eff_extra(attacker) / 100.0
+	if leverage:
+		r *= 1.0 + float(LEVERAGE_PCT) / 100.0
+	return r
+
+# 防守侧:气力不继加成 → 防御递减减伤 → 护体减半。raw 来自 _outgoing。
+static func _apply_damage(state: CombatState, actors: Array, defender: int, raw: float, t: int) -> int:
+	var dmg := raw
+	if _is_gasping(actors, defender, t) and raw > 0:
 		dmg += GASP_DAMAGE_BONUS
+	var arm := state.eff_armor(defender)
+	var mit := minf(ARMOR_CAP, float(arm) / float(arm + ARMOR_K))
+	dmg *= 1.0 - mit
 	if t < actors[defender].guard_until and dmg > 0:   # 护体:受伤减半
-		dmg = int(ceil(dmg * (100 - GUARD_REDUCTION_PCT) / 100.0))
-	if dmg > 0:   # 防御力减伤(至少留 1)
-		dmg = maxi(1, dmg - state.eff_defense(defender))
-	state.hp[defender] = max(0, state.hp[defender] - dmg)
-	return dmg
+		dmg *= float(100 - GUARD_REDUCTION_PCT) / 100.0
+	var dealt := 0
+	if raw > 0:
+		dealt = maxi(1, int(round(dmg)))
+	state.hp[defender] = max(0, state.hp[defender] - dealt)
+	return dealt
 
 static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: Move, d: Dictionary, t: int, events) -> void:
 	if (atk.kind == Move.Kind.ATTACK or atk.kind == Move.Kind.THROW) and not atk.in_range(state.distance):
@@ -174,7 +194,7 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 
 	if atk.kind == Move.Kind.THROW:
 		if def_active_defense and def_move.kind == Move.Kind.BLOCK:
-			var dmg := _apply_damage(state, actors, defender, atk.damage + THROW_BREAK_BONUS, t)
+			var dmg := _apply_damage(state, actors, defender, _outgoing(state, attacker, atk.damage + THROW_BREAK_BONUS, false), t)
 			events.append(CombatEvent.new(t, &"throw_break", attacker, defender, dmg, atk.id))
 			_add_stamina(state, attacker, REWARD_HIT, t, events)
 		else:
@@ -190,19 +210,16 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 	if def_phase == &"startup" and atk.can_interrupt and def_move != null and not def_move.super_armor:
 		actors[defender].cur = null
 		actors[defender].elapsed = 0
-		var dmg := _apply_damage(state, actors, defender, atk.damage, t)
+		var dmg := _apply_damage(state, actors, defender, _outgoing(state, attacker, atk.damage, false), t)
 		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, dmg, atk.id))
 		_add_stamina(state, attacker, REWARD_INTERRUPT, t, events)
 		_add_stamina(state, defender, -PENALTY_STAGGER, t, events)
 		return
-	var base := atk.damage
-	if t <= actors[attacker].leverage_until and base > 0:   # 借力:反打增伤,消耗窗口
-		base = int(ceil(base * (100 + LEVERAGE_PCT) / 100.0))
+	var lev: bool = t <= actors[attacker].leverage_until and atk.damage > 0
+	if lev:   # 借力:反打增伤,消耗窗口
 		actors[attacker].leverage_until = -1
-		events.append(CombatEvent.new(t, &"leverage", attacker, defender, base, atk.id))
-	if base > 0:
-		base += state.eff_attack(attacker)   # 攻击力加成
-	var hd := _apply_damage(state, actors, defender, base, t)
+		events.append(CombatEvent.new(t, &"leverage", attacker, defender, atk.damage, atk.id))
+	var hd := _apply_damage(state, actors, defender, _outgoing(state, attacker, atk.damage, lev), t)
 	events.append(CombatEvent.new(t, &"hit", attacker, defender, hd, atk.id))
 	_add_stamina(state, attacker, REWARD_HIT, t, events)
 	if atk.grants_guard > 0:                                # 护体:命中给自己挂减伤

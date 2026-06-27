@@ -40,7 +40,7 @@ func test_leverage_after_successful_block_boosts_next_hit():
 	var p1 := _plan([[foe_jab, 2]])
 	var ev := CombatSim.simulate(s, [p0, p1])
 	assert_true(_has_event(ev, &"leverage"), "格挡成功开借力窗口")
-	assert_eq(s.hp[1], 93, "借力反击 4→7,对手 100-7")
+	assert_eq(s.hp[1], 94, "借力 4×1.6=6.4→round6,对手 100-6")
 
 # 闪避成功 → 借力。
 func test_leverage_after_successful_dodge_boosts_next_hit():
@@ -51,7 +51,7 @@ func test_leverage_after_successful_dodge_boosts_next_hit():
 	var p0 := _plan([[dodge, 0], [jab, 4]])
 	var p1 := _plan([[foe_jab, 2]])
 	CombatSim.simulate(s, [p0, p1])
-	assert_eq(s.hp[1], 93, "闪避后借力反击 100-7")
+	assert_eq(s.hp[1], 94, "闪避后借力反击 100-6")
 
 # 没有成功防守 → 不增伤(基线 4)。
 func test_no_leverage_without_defense():
@@ -85,19 +85,40 @@ func test_guard_expires():
 	CombatSim.simulate(s, [p0, p1])
 	assert_eq(s.hp[0], 96, "护体已过期,P0 受全额 4")
 
-func test_attack_attribute_adds_damage():
+func test_attack_scales_damage():
 	var s := _state()
-	s.attack = [5, 0]
+	s.attack = [20, 10]   # 攻击力翻倍(基准10→20)
 	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
 	CombatSim.simulate(s, [_plan([[jab, 0]]), _plan([])])
-	assert_eq(s.hp[1], 100 - (4 + 5), "攻击力+5")
+	assert_eq(s.hp[1], 100 - 8, "攻20/基准10 → ×2 = 8")
 
-func test_defense_attribute_reduces_damage():
+func test_dmg_inc_percent():
 	var s := _state()
-	s.defense = [0, 3]
+	s.dmg_inc = [50, 0]   # +50% 基础增伤
 	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
 	CombatSim.simulate(s, [_plan([[jab, 0]]), _plan([])])
-	assert_eq(s.hp[1], 100 - maxi(1, 4 - 3), "防御-3→受1")
+	assert_eq(s.hp[1], 100 - 6, "4×1.5=6")
+
+func test_extra_dmg_is_separate_multiplier():
+	var s := _state()
+	s.dmg_inc = [100, 0]; s.extra_dmg = [100, 0]   # ×2 × ×2 = ×4(独立乘区)
+	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
+	CombatSim.simulate(s, [_plan([[jab, 0]]), _plan([])])
+	assert_eq(s.hp[1], 100 - 16, "4×(1+1)×(1+1)=16,额外是独立乘区")
+
+func test_armor_diminishing_mitigation():
+	var s := _state()
+	s.armor = [0, 100]   # 100/(100+100)=50%减伤
+	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
+	CombatSim.simulate(s, [_plan([[jab, 0]]), _plan([])])
+	assert_eq(s.hp[1], 100 - 2, "armor100→50%,4→2")
+
+func test_armor_caps_at_85():
+	var s := _state()
+	s.armor = [0, 100000]   # 极高 → 封顶85%
+	var heavy := _move("heavy", Move.Kind.ATTACK, 0, 1, 1, 40)
+	CombatSim.simulate(s, [_plan([[heavy, 0]]), _plan([])])
+	assert_eq(s.hp[1], 100 - 6, "封顶85%:40×0.15=6")
 
 func test_status_tick_drains_hp():
 	var s := _state()
