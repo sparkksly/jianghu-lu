@@ -21,10 +21,21 @@ var learned: Array = []             # 已领悟功夫(绝学)id;开局=选的 2 
 var mastery: Dictionary = {}
 var weight: Dictionary = {}
 var evo: Dictionary = {}
-var weapon_bonus: int = 0           # 神兵:全攻击招 +伤
+var weapon_bonus: int = 0           # 神兵:并入攻击力(+attack)
 var node_index: int = 0
 var player_hp: int = 40
 var max_hp: int = 40
+# 基础属性(攻/防默认0不改平衡;血气见 max_hp/base_max_qi)
+var base_attack: int = 0
+var base_defense: int = 0
+var base_max_qi: int = 10
+# 预留字段(机制后续):装备/暗器/物品/银两/声望/持续debuff
+var equipment: Dictionary = {}
+var hidden_weapons: Dictionary = {}   # 暗器 id→数量
+var inventory: Array = []
+var money: int = 0
+var reputation: int = 0               # 善恶侠名
+var conditions: Array = []            # 跨场持续状态(内伤/中毒…)
 
 func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	menpai_id = menpai
@@ -34,6 +45,8 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	player_hp = 40; max_hp = 40
 	neigong_level = 0
 	mastery = {}; weight = {}; evo = {}; weapon_bonus = 0
+	base_attack = 0; base_defense = 0; base_max_qi = 10
+	equipment = {}; hidden_weapons = {}; inventory = []; money = 0; reputation = 0; conditions = []
 
 # --- 节点 / 章节 ---
 func current_node() -> Dictionary:
@@ -56,6 +69,16 @@ func current_enemy() -> Dictionary:
 # --- 内功 ---
 func qi_bonus() -> int:
 	return neigong_level * Neigong.qi_per_level(neigong_id)
+
+# 进战斗时的有效属性(基础 + 内功/装备/永久加成)。攻防默认0;神兵并入攻击。
+func combat_attack() -> int:
+	return base_attack + weapon_bonus
+func combat_defense() -> int:
+	return base_defense
+func combat_max_hp() -> int:
+	return max_hp
+func combat_max_qi() -> int:
+	return base_max_qi + qi_bonus()
 
 # --- 基础提升三选一 ---
 func apply_reward(r: Dictionary) -> void:

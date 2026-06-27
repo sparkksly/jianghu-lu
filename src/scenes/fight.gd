@@ -37,7 +37,8 @@ func _ready() -> void:
 	var evo: Dictionary = _cfg.get("evo", {})
 	_weight = _cfg.get("weight", {})
 	var compiled: Array = _cfg.get("compiled", [])
-	var weapon: int = _cfg.get("weapon_bonus", 0)
+	var attack: int = _cfg.get("attack", 0)
+	var defense: int = _cfg.get("defense", 0)
 	var enemy: Dictionary = _cfg.get("enemy", {})
 	var e_hp: int = enemy.get("hp", 40)
 	var e_reg: int = enemy.get("regen", 6)
@@ -51,16 +52,17 @@ func _ready() -> void:
 	_state.sta_max = [10 + qi_bonus, 10]; _state.stamina = [10 + qi_bonus, 10]
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 15
+	_state.attack = [attack, 0]; _state.defense = [defense, 0]   # 玩家攻防(敌人默认0)
 	_rules = Arts.build_rules(learned, evo)
 	_rng.seed = seed
-	# 玩家抽牌池 = 全部 9 门基础招(应用进化/神兵) + 化境绝学单卡
+	# 玩家抽牌池 = 全部 9 门基础招(应用进化) + 化境绝学单卡;攻击力走 state.attack
 	_pool.clear()
 	for m in Deck.basic_attacks():
-		_pool.append(_finish_move(m, evo.get(m.id, {}), weapon))
+		_pool.append(Evolve.apply(m, evo.get(m.id, {})))
 	for cid in compiled:
 		var res = Arts.recipe(cid).get("result", null)
 		if res != null:
-			_pool.append(_finish_move(res, evo.get(cid, {}), weapon))
+			_pool.append(Evolve.apply(res, evo.get(cid, {})))
 	# 敌人:专属招池 + 通用工具牌(步/挡/闪/拿)
 	_enemy_deck.clear()
 	for id in e_pool:
@@ -75,15 +77,6 @@ func _ready() -> void:
 	_stats = {"tag_hits": {}, "tag_two_combo": {}}
 	$Codex.set_learned(learned)
 	_start_round()
-
-# 应用进化 + 神兵加伤(返回副本,不改原招)。
-func _finish_move(m: Move, e: Dictionary, weapon: int) -> Move:
-	var r: Move = Evolve.apply(m, e)
-	if weapon > 0 and r.kind == Move.Kind.ATTACK:
-		if r == m:
-			r = m.duplicate()
-		r.damage += weapon
-	return r
 
 func get_player_hp() -> int:
 	return _state.hp[0]

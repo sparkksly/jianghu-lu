@@ -112,3 +112,10 @@ func test_wuying_needs_chain_kick_first():
 	assert_false(&"wuying" in r.unlearned_arts(), "没会连环踢→无影脚学不了")
 	r.learn(&"chain_kick")
 	assert_true(&"wuying" in r.unlearned_arts(), "会连环踢后无影脚可由奇遇学")
+
+func test_combat_attributes_aggregate():
+	var r := RunState.new(&"shaolin")
+	assert_eq(r.combat_attack(), 0, "默认攻击0(不改平衡)")
+	assert_eq(r.combat_max_qi(), 10, "默认气10")
+	r.weapon_bonus = 2
+	assert_eq(r.combat_attack(), 2, "神兵并入攻击力")
