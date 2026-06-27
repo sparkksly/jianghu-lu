@@ -18,6 +18,7 @@ static var pending_arts: Array = [&"luohan", &"chain_kick"]   # 开局选的 2 �
 var menpai_id: StringName
 var neigong_id: StringName
 var neigong_level: int = 0
+var qinggong: Array = []            # 习得的轻功 id(category=轻功 的被动,习得即生效,可叠)
 var learned: Array = []             # 已领悟功夫(绝学)id;开局=选的 2 门初级
 var mastery: Dictionary = {}
 var weight: Dictionary = {}
@@ -49,6 +50,7 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	neigong_id = neigong if neigong != &"" else Neigong.starter(menpai)
 	learned = (arts.duplicate() if not arts.is_empty() else Menpai.starter_pool(menpai).slice(0, 2))
 	node_index = 0; choice_index = -1; prev_slot = -1
+	qinggong = []
 	_gen_map()
 	player_hp = 40; max_hp = 40
 	neigong_level = 0
@@ -267,19 +269,34 @@ func _equip_stat(stat: String) -> int:
 			sum += int(m.get("value", 0))
 	return sum
 
-# 进战斗时的有效属性(基础 + 内功 + 装备 + 永久加成)。攻防默认0;神兵并入攻击。
+# 习得轻功(category=轻功被动)汇总的某属性加成。
+func learn_qinggong(id: StringName) -> void:
+	if not qinggong.has(id):
+		qinggong.append(id)
+
+func _qinggong_stat(stat: String) -> int:
+	var held := {}
+	for id in qinggong:
+		held[id] = 1
+	var sum := 0
+	for m in Passives.modifiers_for(held):
+		if m.get("stat", "") == stat:
+			sum += int(m.get("value", 0))
+	return sum
+
+# 进战斗时的有效属性(基础 + 内功 + 轻功 + 装备 + 永久加成)。攻防默认0;神兵并入攻击。
 func combat_attack() -> int:
-	return base_attack + weapon_bonus + _equip_stat("attack")
+	return base_attack + weapon_bonus + _equip_stat("attack") + _qinggong_stat("attack")
 func combat_dmg_inc() -> int:
-	return base_dmg_inc + _equip_stat("dmg_inc")
+	return base_dmg_inc + _equip_stat("dmg_inc") + _qinggong_stat("dmg_inc")
 func combat_extra() -> int:
-	return base_extra_dmg + _equip_stat("extra_dmg")
+	return base_extra_dmg + _equip_stat("extra_dmg") + _qinggong_stat("extra_dmg")
 func combat_armor() -> int:
-	return base_armor + _equip_stat("armor")
+	return base_armor + _equip_stat("armor") + _qinggong_stat("armor")
 func combat_max_hp() -> int:
-	return max_hp + _equip_stat("max_hp")
+	return max_hp + _equip_stat("max_hp") + _qinggong_stat("max_hp")
 func combat_max_qi() -> int:
-	return base_max_qi + qi_bonus() + _equip_stat("max_qi")
+	return base_max_qi + qi_bonus() + _equip_stat("max_qi") + _qinggong_stat("max_qi")
 
 # --- 基础提升三选一 ---
 func apply_reward(r: Dictionary) -> void:
@@ -333,6 +350,13 @@ func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
 		weapon_bonus += int(effect["weapon_dmg"])
 	if effect.has("equip"):
 		obtain_equipment(StringName(effect["equip"]))
+	if effect.has("qinggong"):
+		var pool: Array = []
+		for id in Passives.by_category(&"轻功"):
+			if not qinggong.has(id):
+				pool.append(id)
+		if pool.size() > 0:
+			learn_qinggong(pool[rng.randi_range(0, pool.size() - 1)])
 	if effect.has("money"):
 		add_money(int(effect["money"]))
 	if effect.has("reputation"):

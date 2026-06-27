@@ -53,6 +53,11 @@ text = "── 行囊 ──"
 [node name="BagBox" type="VBoxContainer" parent="Panel/Margin/VBox"]
 theme_override_constants/separation = 6
 
+[node name="QinggongLabel" type="Label" parent="Panel/Margin/VBox"]
+theme_override_font_sizes/font_size = 16
+modulate = Color(0.6, 0.85, 0.95, 1)
+text = "轻功: 无"
+
 [node name="DoneButton" type="Button" parent="Panel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 44)
 text = "继续"

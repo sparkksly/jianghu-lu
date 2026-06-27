@@ -7,6 +7,9 @@ extends RefCounted
 static func _stat(stat: String, v: int) -> Dictionary:
 	return {"kind": "stat", "stat": stat, "op": "add", "value": v, "per_level": true}
 
+static func _flat(stat: String, v: int) -> Dictionary:
+	return {"kind": "stat", "stat": stat, "op": "add", "value": v, "per_level": false}
+
 static func _defs() -> Array:
 	return [
 		PassiveDef.make(&"yijinjing", "易筋经", &"内功", [_stat("max_hp", 3), _stat("max_qi", 1)]),
@@ -19,6 +22,10 @@ static func _defs() -> Array:
 		PassiveDef.make(&"chunyang", "纯阳功", &"内功", [_stat("max_hp", 2), _stat("max_qi", 3)]),
 		PassiveDef.make(&"xuanpin", "玄牝功", &"内功", [_stat("max_hp", 1), _stat("max_qi", 3)]),
 		PassiveDef.make(&"taiji_xin", "太极心法", &"内功", [_stat("max_hp", 1), _stat("max_qi", 1)]),
+		# 轻功(category=轻功):身法被动,偏气海/飘忽(armor=难中等效减伤);习得即生效,可叠。
+		PassiveDef.make(&"caoshang", "草上飞", &"轻功", [_flat("max_qi", 3)]),
+		PassiveDef.make(&"lingbo", "凌波微步", &"轻功", [_flat("max_qi", 2), _flat("armor", 10)]),
+		PassiveDef.make(&"yanzi", "燕子三抄水", &"轻功", [_flat("armor", 15)]),
 	]
 
 static func def(id: StringName) -> PassiveDef:
@@ -26,6 +33,10 @@ static func def(id: StringName) -> PassiveDef:
 		if d.id == id:
 			return d
 	return null
+
+static func display_name(id: StringName) -> String:
+	var d := def(id)
+	return d.passive_name if d != null else String(id)
 
 static func by_category(cat: StringName) -> Array:
 	var out: Array = []
