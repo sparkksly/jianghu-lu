@@ -13,29 +13,54 @@ func test_init_from_choices():
 func test_default_neigong_follows_menpai():
 	assert_eq(RunState.new(&"shaolin").neigong_id, &"yijinjing")
 
-# --- 节点 / 章节 ---
-func test_node_sequence_and_chapters():
+# --- 分支地图 / 章节 ---
+func test_map_has_layers_and_chapter_bosses():
 	var r := RunState.new(&"shaolin")
-	assert_eq(r.current_node()["type"], "grunt")
+	assert_eq(r.layers.size(), 12, "3章 × 4层")
 	assert_string_contains(r.chapter_title(), "毒蛛潭")
-	r.advance_node(); assert_eq(r.current_node()["type"], "encounter")
-	r.advance_node(); assert_eq(r.current_node()["type"], "shop")
-	r.advance_node(); assert_eq(r.current_node()["type"], "elite")
-	r.advance_node(); assert_eq(r.current_node()["type"], "boss")
+	# 每章最后一层是单候选 boss
+	for boss_layer in [3, 7, 11]:
+		assert_eq(r.layers[boss_layer].size(), 1, "boss 层单候选")
+		assert_eq(r.layers[boss_layer][0]["type"], "boss")
+
+func test_choice_layers_have_2to3_with_combat():
+	var r := RunState.new(&"shaolin")
+	for i in [0, 1, 2]:
+		var layer: Array = r.layers[i]
+		assert_between(layer.size(), 2, 3, "选择层 2-3 候选")
+		var has_combat := false
+		for c in layer:
+			if c["type"] in ["grunt", "elite"]:
+				has_combat = true
+		assert_true(has_combat, "每选择层至少一个战斗")
+
+func test_select_sets_current_type():
+	var r := RunState.new(&"shaolin")
+	r.select(0)
+	assert_eq(r.current_type(), r.layers[0][0]["type"], "选第0候选 → 当前类型")
+
+func test_advance_resets_choice_and_completes():
+	var r := RunState.new(&"shaolin")
+	r.select(0)
 	r.advance_node()
-	assert_string_contains(r.chapter_title(), "断魂崖", "第6节点进第二章")
+	assert_eq(r.choice_index, -1, "进层重置选择")
+	for i in 11: r.advance_node()
+	assert_true(r.is_complete(), "12 层走完通关")
 
-func test_run_completes_after_all_nodes():
+func test_boss_layer_auto_and_named():
 	var r := RunState.new(&"shaolin")
-	for i in 15: r.advance_node()   # 3章 × 5节点
-	assert_true(r.is_complete())
-
-func test_current_enemy_boss_is_named():
-	var r := RunState.new(&"shaolin")
-	for i in 4: r.advance_node()   # 到 boss(grunt/奇遇/商店/精英/boss)
+	for i in 3: r.advance_node()   # 第 3 层 = 第一章 boss
+	assert_true(r.is_boss_layer())
+	assert_eq(r.current_type(), "boss", "boss 层无需 select")
 	var e := r.current_enemy()
 	assert_eq(e["name"], "青鳞毒叟")
 	assert_true(e["is_boss"])
+
+func test_chapter_advances_by_layer():
+	var r := RunState.new(&"shaolin")
+	assert_string_contains(r.chapter_title(), "毒蛛潭")
+	for i in 4: r.advance_node()   # 第 4 层 → 第二章
+	assert_string_contains(r.chapter_title(), "断魂崖")
 
 # --- 基础提升 ---
 func test_meditate_levels_neigong():
