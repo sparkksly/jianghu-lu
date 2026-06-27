@@ -66,6 +66,7 @@ static func _mods_power(mods: Array) -> float:
 			"attack": p += float(mod.get("value", 0))
 			"armor": p += float(mod.get("value", 0)) * 0.2
 			"max_hp": p += float(mod.get("value", 0)) * 0.3
+			"max_qi": p += float(mod.get("value", 0)) * 0.3
 	return p
 
 static func _cond_kind(when: Dictionary) -> String:
@@ -78,4 +79,18 @@ static func budget(tier: int) -> int:
 static func in_tolerance(a: ArtDef) -> bool:
 	var b := budget(a.tier)
 	var p := power(a)
+	return absf(float(p - b)) <= float(b) * TOLERANCE
+
+# --- 装备审查(同一套 _mods_power 折算属性) ---
+const EQUIP_BUDGET := {1: 5, 2: 9, 3: 14}
+
+static func equip_power(e: EquipDef) -> int:
+	return maxi(0, int(round(_mods_power(e.modifiers))))
+
+static func equip_budget(tier: int) -> int:
+	return int(EQUIP_BUDGET.get(tier, 5))
+
+static func equip_in_tolerance(e: EquipDef) -> bool:
+	var b := equip_budget(e.tier)
+	var p := equip_power(e)
 	return absf(float(p - b)) <= float(b) * TOLERANCE
