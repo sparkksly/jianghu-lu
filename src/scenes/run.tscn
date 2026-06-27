@@ -10,10 +10,12 @@ script = ExtResource("1_run")
 [node name="Banner" type="Control" parent="BannerLayer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 
 [node name="Dim" type="ColorRect" parent="BannerLayer/Banner"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 color = Color(0, 0, 0, 0.65)
 
 [node name="Label" type="Label" parent="BannerLayer/Banner"]
