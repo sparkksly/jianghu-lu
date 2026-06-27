@@ -49,6 +49,7 @@ func _next_node() -> void:
 
 # 分支地图:节点间的中枢。显示本程候选(择路)+下程预览;选一个 → 进入。
 func _show_map() -> void:
+	_hide_banner()   # 关键:藏开场遮罩,否则全屏 Dim 盖在地图上吃掉点击
 	_inv_btn.show()
 	if _map:
 		_map.queue_free()
