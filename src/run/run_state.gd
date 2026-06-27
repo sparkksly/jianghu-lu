@@ -32,7 +32,8 @@ var base_extra_dmg: int = 0      # 额外伤害增加%(稀有,独立乘区)
 var base_armor: int = 0          # 防御数值(递减减伤)
 var base_max_qi: int = 10
 # 预留字段(机制后续):装备/暗器/物品/银两/声望/持续debuff
-var equipment: Dictionary = {}
+var equipment: Dictionary = {}        # 已穿戴 slot→id
+var owned_equipment: Array = []       # 拥有的全部装备 id(含未穿戴)
 var hidden_weapons: Dictionary = {}   # 暗器 id→数量
 var inventory: Array = []
 var money: int = 0
@@ -48,7 +49,7 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	neigong_level = 0
 	mastery = {}; weight = {}; evo = {}; weapon_bonus = 0
 	base_attack = 10; base_dmg_inc = 0; base_extra_dmg = 0; base_armor = 0; base_max_qi = 10
-	equipment = {}; hidden_weapons = {}; inventory = []; money = 0; reputation = 0; conditions = []
+	equipment = {}; owned_equipment = []; hidden_weapons = {}; inventory = []; money = 0; reputation = 0; conditions = []
 
 # --- 节点 / 章节 ---
 func current_node() -> Dictionary:
@@ -73,10 +74,23 @@ func qi_bonus() -> int:
 	return neigong_level * Neigong.qi_per_level(neigong_id)
 
 # --- 装备(武器/防具/饰品,各槽一件;属性走 modifier 聚合) ---
+# 获得装备:进行囊;若该槽空,自动穿上。
+func obtain_equipment(id: StringName) -> void:
+	var d := Equips.def(id)
+	if d == null:
+		return
+	if not owned_equipment.has(id):
+		owned_equipment.append(id)
+	if not equipment.has(d.slot):
+		equip(id)
+
+# 穿上(同槽替换;旧的退回行囊不丢)。
 func equip(id: StringName) -> void:
 	var d := Equips.def(id)
 	if d == null:
 		return
+	if not owned_equipment.has(id):
+		owned_equipment.append(id)
 	equipment[d.slot] = id   # 同槽替换
 	for art in d.grants:      # 武器解锁专属功夫
 		learn(art)
@@ -86,6 +100,20 @@ func unequip(slot: StringName) -> void:
 
 func equipped(slot: StringName) -> StringName:
 	return equipment.get(slot, &"")
+
+func _is_equipped(id: StringName) -> bool:
+	for slot in equipment:
+		if equipment[slot] == id:
+			return true
+	return false
+
+# 行囊里没穿的装备(UI 背包列表)。
+func owned_unequipped() -> Array:
+	var out: Array = []
+	for id in owned_equipment:
+		if not _is_equipped(id):
+			out.append(id)
+	return out
 
 # 已装备汇总的某属性加成(走 Equips.modifiers_for → Stats 同乘区)。
 func _equip_stat(stat: String) -> int:
@@ -160,7 +188,7 @@ func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
 	if effect.has("weapon_dmg"):
 		weapon_bonus += int(effect["weapon_dmg"])
 	if effect.has("equip"):
-		equip(StringName(effect["equip"]))
+		obtain_equipment(StringName(effect["equip"]))
 	if effect.has("hp"):
 		max_hp += int(effect["hp"]); player_hp += int(effect["hp"])
 	if effect.has("neigong"):

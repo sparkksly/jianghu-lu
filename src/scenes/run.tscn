@@ -23,3 +23,12 @@ theme_override_font_sizes/font_size = 40
 horizontal_alignment = 1
 vertical_alignment = 1
 text = ""
+
+[node name="InvLayer" type="CanvasLayer" parent="."]
+
+[node name="InvButton" type="Button" parent="InvLayer"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 110.0
+offset_bottom = 60.0
+text = "行囊"
