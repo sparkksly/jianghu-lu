@@ -30,8 +30,10 @@ theme_override_constants/separation = 16
 theme_override_font_sizes/font_size = 20
 text = "内功 (三选一)"
 
-[node name="NeigongRow" type="HBoxContainer" parent="VBox"]
-theme_override_constants/separation = 16
+[node name="NeigongRow" type="GridContainer" parent="VBox"]
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 8
+columns = 5
 
 [node name="Sub3" type="Label" parent="VBox"]
 theme_override_font_sizes/font_size = 20
