@@ -20,10 +20,12 @@ static func learnable(id: StringName) -> Array:
 	match id:
 		WUDANG: return [&"taiji_yunshou", &"wudang_changquan", &"mianli", &"rouyun", &"qiankun", &"da_yunshou", &"liangyi", &"lanque", &"tuishou", &"tiyun", &"sixiang", &"taixu",
 			&"saotang", &"shuangfeng", &"jiequan", &"bajiquan", &"paiyun",
-			&"liangyi_jian", &"wuji", &"taiji_quan", &"sanfeng", &"qingshen", &"yunlong"]
+			&"liangyi_jian", &"wuji", &"taiji_quan", &"sanfeng", &"qingshen", &"yunlong",
+			&"xianglong", &"liangyi_hua"]
 		_: return [&"luohan", &"chain_kick", &"jingang_fumo", &"fuhu", &"qiankun", &"prajna", &"wuying", &"weituo", &"heihu", &"jinzhong", &"jingang_zhang", &"damo_quan",
 			&"saotang", &"shuangfeng", &"jiequan", &"bajiquan", &"paiyun",
-			&"luohan_da", &"weituo_xiang", &"jingang_bu", &"yingzhua", &"shibaluohan", &"damo_jian"]
+			&"luohan_da", &"weituo_xiang", &"jingang_bu", &"yingzhua", &"shibaluohan", &"damo_jian",
+			&"xianglong", &"jingang_zhi"]
 
 static func display_name(id: StringName) -> String:
 	match id:

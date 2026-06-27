@@ -32,3 +32,11 @@ func test_conditional_adds_discounted_power():
 	var base := Balance.power(a)
 	a.conditional = [{"when": {"type": "hp_below"}, "bonus": [{"stat": "dmg_inc", "value": 100}]}]
 	assert_gt(Balance.power(a), base, "条件加成进 power(打折后)")
+
+func test_advanced_arts_tiers():
+	# t4-5 高级功夫存在且落预算
+	assert_eq(Arts.tier(&"xianglong"), 5, "降龙十八掌 = t5 绝世")
+	assert_eq(Arts.tier(&"jingang_zhi"), 4)
+	assert_eq(Arts.tier(&"liangyi_hua"), 4)
+	for id in [&"xianglong", &"jingang_zhi", &"liangyi_hua"]:
+		assert_true(Balance.in_tolerance(Arts.def(id)), "%s 落 tier 预算" % id)

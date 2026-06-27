@@ -7,7 +7,8 @@ const _COMBO_RESULTS := [&"chain_kick", &"wuying", &"qiankun", &"luohan", &"jing
 	&"lanque", &"tuishou", &"tiyun", &"sixiang", &"taixu",
 	&"saotang", &"shuangfeng", &"jiequan", &"bajiquan", &"paiyun",
 	&"luohan_da", &"weituo_xiang", &"jingang_bu", &"yingzhua", &"shibaluohan", &"damo_jian",
-	&"liangyi_jian", &"wuji", &"taiji_quan", &"sanfeng", &"qingshen", &"yunlong"]
+	&"liangyi_jian", &"wuji", &"taiji_quan", &"sanfeng", &"qingshen", &"yunlong",
+	&"xianglong", &"jingang_zhi", &"liangyi_hua"]
 
 static func kind_name(kind: int) -> String:
 	match kind:
@@ -29,7 +30,8 @@ static func _name_table() -> Dictionary:
 			Deck.lanque(), Deck.tuishou(), Deck.tiyun(), Deck.sixiang(), Deck.taixu(),
 			Deck.saotang(), Deck.shuangfeng(), Deck.jiequan(), Deck.bajiquan(), Deck.paiyun(),
 			Deck.luohan_da(), Deck.weituo_xiang(), Deck.jingang_bu(), Deck.yingzhua(), Deck.shibaluohan(), Deck.damo_jian(),
-			Deck.liangyi_jian(), Deck.wuji(), Deck.taiji_quan(), Deck.sanfeng(), Deck.qingshen(), Deck.yunlong()]:
+			Deck.liangyi_jian(), Deck.wuji(), Deck.taiji_quan(), Deck.sanfeng(), Deck.qingshen(), Deck.yunlong(),
+			Deck.xianglong(), Deck.jingang_zhi(), Deck.liangyi_hua()]:
 		t[m.id] = m.move_name
 	return t
 

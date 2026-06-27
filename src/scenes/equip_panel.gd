@@ -25,6 +25,16 @@ func _attr_text(id: StringName) -> String:
 func _refresh() -> void:
 	if _run == null:
 		return
+	# 轻功 / 天赋(只读):习得的被动
+	var qnames: Array = []
+	for id in _run.qinggong:
+		qnames.append(Passives.display_name(id))
+	var tnames: Array = []
+	for id in _run.talents:
+		tnames.append(Passives.display_name(id))
+	var line := "轻功: " + ("无" if qnames.is_empty() else "、".join(qnames))
+	line += "    天赋: " + ("无" if tnames.is_empty() else "、".join(tnames))
+	$Panel/Margin/VBox/QinggongLabel.text = line
 	var slots := $Panel/Margin/VBox/SlotsBox
 	var bag := $Panel/Margin/VBox/BagBox
 	_clear(slots)

@@ -71,11 +71,21 @@ static func all() -> Array:
 			"body": "破庙残碑之后,藏着半卷被虫蛀的武学秘要,字迹依稀可辨。",
 			"options": [{"label": "参研残卷   ( 领悟一门绝学 )", "effect": {"learn_art": true}}],
 		},
+		{
+			"id": &"swift", "title": "悬崖踏雪",
+			"body": "雪夜悬崖,一道白影飘然掠过涧谷如履平地。那高人见你有缘,愿授一门身法。",
+			"options": [{"label": "学此身法   ( 习得一门轻功 )", "effect": {"qinggong": true}}],
+		},
+		{
+			"id": &"epiphany", "title": "古寺禅机",
+			"body": "破败古寺,一盏孤灯。你枯坐参禅,夜半忽有所悟,武学心境更进一层。",
+			"options": [{"label": "顺势顿悟   ( 习得一门天赋 )", "effect": {"talent": true}}],
+		},
 	]
 
 # 按章给不同奇遇;用 rng 在该章候选池里选(每章 4 候选,跨类型)。
 static func for_chapter(chapter: int, rng: RandomNumberGenerator) -> Dictionary:
 	var pool := all()
-	var buckets := [[0, 1, 5, 7], [2, 3, 6, 8], [4, 9, 6, 7]]
+	var buckets := [[0, 1, 5, 11], [2, 3, 6, 10], [4, 9, 10, 11]]
 	var idxs: Array = buckets[clampi(chapter, 0, 2)]
 	return pool[idxs[rng.randi_range(0, idxs.size() - 1)]]

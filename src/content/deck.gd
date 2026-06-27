@@ -176,6 +176,14 @@ static func qingshen() -> Move:  # 闪+身法 → 两仪轻身
 static func yunlong() -> Move:  # 腿+掌 → 云龙腿
 	return _m(&"yunlong", "云龙腿", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1], "delta":-1})
 
+# --- 高级·绝世神功(t4-5;配方长,门槛高) ---
+static func xianglong() -> Move:  # 掌×5 → 降龙十八掌(t5 绝世)
+	return _m(&"xianglong", "降龙十八掌", Move.Kind.ATTACK, 1, 1, 2, 22, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "armor":true, "interrupt":true, "knockback":true, "inflict":[&"neishang"]})
+static func jingang_zhi() -> Move:  # 拳拳肘肘 → 大力金刚指(t4 少林)
+	return _m(&"jingang_zhi", "大力金刚指", Move.Kind.ATTACK, 1, 1, 1, 16, 0, {"tags":[&"肘膝"], "hits":[0], "range":[0,0], "heavy":true, "interrupt":true, "stun":2})
+static func liangyi_hua() -> Move:  # 掌闪掌腿 → 两仪化劲(t4 武当,卸力反制→敌虚弱)
+	return _m(&"liangyi_hua", "两仪化劲", Move.Kind.ATTACK, 0, 2, 1, 12, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":8, "empower":[&"vigor"], "inflict":[&"weak"]})
+
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
 static func chain_kick() -> Move:
 	return _m(&"chain_kick", "连环踢", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1]})
