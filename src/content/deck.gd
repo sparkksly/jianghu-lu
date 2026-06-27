@@ -116,7 +116,7 @@ static func weituo() -> Move:  # 掌+肘 → 韦陀掌(重掌破霸体)
 static func heihu() -> Move:  # 拳+腿 → 黑虎拳
 	return _m(&"heihu", "黑虎拳", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
 static func jinzhong() -> Move:  # 格挡×2 → 金钟罩(强护体)
-	return _m(&"jinzhong", "金钟罩", Move.Kind.ATTACK, 0, 1, 1, 4, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":6, "armor":true})
+	return _m(&"jinzhong", "金钟罩", Move.Kind.ATTACK, 0, 1, 1, 4, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":6})
 static func jingang_zhang() -> Move:  # 掌+掌+肘 → 大力金刚掌(破防)
 	return _m(&"jingang_zhang", "大力金刚掌", Move.Kind.ATTACK, 1, 1, 2, 13, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "interrupt":true})
 static func damo_quan() -> Move:  # 拳+肘+拳 → 达摩伏魔拳(绝世·稀缺)

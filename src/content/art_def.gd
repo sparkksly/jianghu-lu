@@ -22,6 +22,9 @@ extends Resource
 # 独立组合即各种规则:只 [encounter]=稀缺仅奇遇; [encounter,insight]=可奇遇可顿悟但不可磨练;
 # 默认 [encounter,practice]。加新途径(boss奖励/购买…)只加个 via,不动核心。
 @export var sources: Array = []
+# 条件加成:[{when:Condition, bonus:[modifier]}]。满足 when 则得 bonus(combat 用);
+# Balance 按可控性系数折算 power。现在留接口,以后填借力/中毒/残血斩之类条件卡。
+@export var conditional: Array = []
 
 static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array, p_slots: Array, p_result: Move, p_requires := [], p_series := &"", p_index := 0, p_sources = null) -> ArtDef:
 	var d := ArtDef.new()
@@ -37,4 +40,5 @@ static func make(p_id: StringName, p_name: String, p_tier: int, p_family: Array,
 	d.series = p_series
 	d.series_index = p_index
 	d.sources = p_sources if p_sources != null else [{"via": "encounter"}, {"via": "practice"}]
+	d.conditional = []
 	return d

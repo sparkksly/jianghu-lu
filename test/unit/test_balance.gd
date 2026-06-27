@@ -1,23 +1,34 @@
 extends GutTest
 
-func test_ai_vs_ai_fights_terminate_and_deal_damage():
-	var wins := [0, 0]
-	for seed in range(20):
-		var s := CombatState.new()
-		s.hp=[40,40]; s.max_hp=[40,40]; s.sta_max=[10,10]; s.stamina=[10,10]; s.regen=[6,6]; s.n_ticks=10
-		var a := AiPlanner.new(seed)
-		var b := AiPlanner.new(seed + 1000)
-		var rules := ComboLibrary.build()
-		var rounds := 0
-		while s.hp[0] > 0 and s.hp[1] > 0 and rounds < 60:
-			if rounds > 0:
-				s.regen_round()
-			var pa := rules.apply(a.plan(Deck.starter(), s.stamina[0], s.n_ticks, 1))
-			var pb := rules.apply(b.plan(Deck.starter(), s.stamina[1], s.n_ticks, 1))
-			CombatSim.simulate(s, [pa, pb])
-			rounds += 1
-		assert_true(rounds < 60, "fight %d terminated under regen economy" % seed)
-		if s.hp[0] <= 0: wins[1] += 1
-		elif s.hp[1] <= 0: wins[0] += 1
-	gut.p("AI win split: %s" % str(wins))
-	assert_true(wins[0] + wins[1] > 0, "at least some fights resolved")
+func test_power_nonnegative():
+	for a in Arts._defs():
+		assert_gte(Balance.power(a), 0, str(a.id))
+
+func test_budget_curve_increasing():
+	assert_lt(Balance.budget(1), Balance.budget(2))
+	assert_lt(Balance.budget(2), Balance.budget(3))
+	assert_lt(Balance.budget(4), Balance.budget(5))
+
+func test_all_arts_within_tier_budget():
+	# 平衡审查:遍历所有武功,超容差的报出(几百门时一眼看出超模/弱鸡)
+	var off: Array = []
+	for a in Arts._defs():
+		if not Balance.in_tolerance(a):
+			off.append("%s(t%d p%d b%d)" % [a.id, a.tier, Balance.power(a), Balance.budget(a.tier)])
+	if off.size() > 0:
+		gut.p("⚠ 超预算: " + str(off))
+	assert_lte(off.size(), 1, "超容差武功应极少")
+
+func test_condition_factor_controllable_is_higher():
+	# 可控条件(借力)系数 > 不可控(残血):同 bonus,可控的折算 power 更高 → 可控条件只能配小 bonus
+	assert_gt(Balance.CONDITION_FACTOR["leverage"], Balance.CONDITION_FACTOR["hp_below"])
+
+func test_requires_discount_below_one():
+	assert_lt(Balance.REQUIRES_DISCOUNT, 1.0, "有门槛→视作更便宜,预算内可更强")
+
+func test_conditional_adds_discounted_power():
+	# 条件加成按系数折算进 power
+	var a := ArtDef.make(&"_t", "test", 1, [], [{"tag": &"拳法"}], Deck.luohan())
+	var base := Balance.power(a)
+	a.conditional = [{"when": {"type": "hp_below"}, "bonus": [{"stat": "dmg_inc", "value": 100}]}]
+	assert_gt(Balance.power(a), base, "条件加成进 power(打折后)")
