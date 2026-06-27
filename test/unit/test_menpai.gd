@@ -16,3 +16,8 @@ func test_learnable_own_advanced_not_others():
 func test_display_name():
 	assert_eq(Menpai.display_name(&"shaolin"), "少林")
 	assert_eq(Menpai.display_name(&"wudang"), "武当")
+
+func test_learnable_has_filled_arts():
+	assert_true(&"weituo" in Menpai.learnable(&"shaolin") and &"jingang_zhang" in Menpai.learnable(&"shaolin"))
+	assert_true(&"tiyun" in Menpai.learnable(&"wudang") and &"taixu" in Menpai.learnable(&"wudang"))
+	assert_false(&"weituo" in Menpai.learnable(&"wudang"), "门派各学各的")

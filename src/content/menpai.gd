@@ -18,8 +18,8 @@ static func starter_pool(id: StringName) -> Array:
 # 本派能领悟的全部功夫(初级 + 通用乾坤 + 高级)。
 static func learnable(id: StringName) -> Array:
 	match id:
-		WUDANG: return [&"taiji_yunshou", &"wudang_changquan", &"mianli", &"rouyun", &"qiankun", &"da_yunshou", &"liangyi"]
-		_: return [&"luohan", &"chain_kick", &"jingang_fumo", &"fuhu", &"qiankun", &"prajna", &"wuying"]
+		WUDANG: return [&"taiji_yunshou", &"wudang_changquan", &"mianli", &"rouyun", &"qiankun", &"da_yunshou", &"liangyi", &"lanque", &"tuishou", &"tiyun", &"sixiang", &"taixu"]
+		_: return [&"luohan", &"chain_kick", &"jingang_fumo", &"fuhu", &"qiankun", &"prajna", &"wuying", &"weituo", &"heihu", &"jinzhong", &"jingang_zhang", &"damo_quan"]
 
 static func display_name(id: StringName) -> String:
 	match id:

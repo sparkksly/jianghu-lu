@@ -110,6 +110,30 @@ static func da_yunshou() -> Move:  # 武当:掌×3 → 大成云手
 static func liangyi() -> Move:  # 武当:拳×3 → 两仪连环
 	return _m(&"liangyi", "两仪连环", Move.Kind.ATTACK, 0, 3, 1, 8, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true})
 
+# --- 少林扩充 ---
+static func weituo() -> Move:  # 掌+肘 → 韦陀掌(重掌破霸体)
+	return _m(&"weituo", "韦陀掌", Move.Kind.ATTACK, 0, 1, 2, 9, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "armor":true})
+static func heihu() -> Move:  # 拳+腿 → 黑虎拳
+	return _m(&"heihu", "黑虎拳", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
+static func jinzhong() -> Move:  # 格挡×2 → 金钟罩(强护体)
+	return _m(&"jinzhong", "金钟罩", Move.Kind.ATTACK, 0, 1, 1, 4, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":6, "armor":true})
+static func jingang_zhang() -> Move:  # 掌+掌+肘 → 大力金刚掌(破防)
+	return _m(&"jingang_zhang", "大力金刚掌", Move.Kind.ATTACK, 1, 1, 2, 13, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "interrupt":true})
+static func damo_quan() -> Move:  # 拳+肘+拳 → 达摩伏魔拳(绝世·稀缺)
+	return _m(&"damo_quan", "达摩伏魔拳", Move.Kind.ATTACK, 0, 3, 1, 10, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true})
+
+# --- 武当扩充 ---
+static func lanque() -> Move:  # 闪+腿 → 揽雀尾(化劲走位)
+	return _m(&"lanque", "揽雀尾", Move.Kind.ATTACK, 0, 1, 1, 6, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "delta":-1})
+static func tuishou() -> Move:  # 格挡+掌 → 太极推手(借力)
+	return _m(&"tuishou", "太极推手", Move.Kind.ATTACK, 0, 1, 1, 6, 0, {"tags":[&"掌法"], "hits":[0], "range":[1,1]})
+static func tiyun() -> Move:  # 闪×2 → 梯云纵(轻功走位)
+	return _m(&"tiyun", "梯云纵", Move.Kind.ATTACK, 0, 1, 0, 4, 0, {"tags":[&"身法"], "hits":[0], "range":[0,2], "delta":-1, "priority":8})
+static func sixiang() -> Move:  # 掌+掌+腿 → 四象掌
+	return _m(&"sixiang", "四象掌", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1})
+static func taixu() -> Move:  # 掌+闪+掌 → 太虚剑意(绝世·稀缺)
+	return _m(&"taixu", "太虚剑意", Move.Kind.ATTACK, 0, 2, 1, 11, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "priority":9, "armor":true})
+
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
 static func chain_kick() -> Move:
 	return _m(&"chain_kick", "连环踢", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1]})
