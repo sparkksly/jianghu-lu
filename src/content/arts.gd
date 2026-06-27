@@ -35,6 +35,26 @@ static func _defs() -> Array:
 		ArtDef.make(&"tiyun", "梯云纵", 1, [&"身法"], [{"kind": Move.Kind.DODGE}, {"kind": Move.Kind.DODGE}], Deck.tiyun(), [], &"", 0, [{"via": "encounter"}, {"via": "insight", "triggers": [{"type": "tag_hits", "tag": &"身法", "need": 5}], "chance": 0.3}]),  # 走位多→实战顿悟轻功
 		ArtDef.make(&"sixiang", "四象掌", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"腿法"}], Deck.sixiang(), [M.call(&"rouyun", 3)]),
 		ArtDef.make(&"taixu", "太虚剑意", 2, [&"掌法"], [{"tag": &"掌法"}, {"kind": Move.Kind.DODGE}, {"tag": &"掌法"}], Deck.taixu(), [], &"", 0, [{"via": "encounter"}]),  # 稀缺·仅奇遇
+		# --- 通用绝学(铺量) ---
+		ArtDef.make(&"saotang", "扫膛腿", 1, [&"腿法"], [{"tag": &"腿法"}, {"tag": &"腿法"}], Deck.saotang()),
+		ArtDef.make(&"shuangfeng", "双风贯耳", 1, [&"肘膝"], [{"tag": &"肘膝"}, {"tag": &"肘膝"}], Deck.shuangfeng()),
+		ArtDef.make(&"jiequan", "截拳", 1, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"掌法"}], Deck.jiequan()),
+		ArtDef.make(&"bajiquan", "八极崩", 2, [&"肘膝"], [{"tag": &"拳法"}, {"tag": &"肘膝"}, {"tag": &"肘膝"}], Deck.bajiquan()),
+		ArtDef.make(&"paiyun", "排云双掌", 3, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.paiyun()),
+		# --- 少林铺量 ---
+		ArtDef.make(&"luohan_da", "罗汉伏魔神拳", 2, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"拳法"}, {"tag": &"拳法"}, {"tag": &"拳法"}], Deck.luohan_da(), [{"type": "art_known", "art": &"luohan"}], &"luohan_line", 1),
+		ArtDef.make(&"weituo_xiang", "韦陀降魔", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"肘膝"}, {"tag": &"掌法"}], Deck.weituo_xiang()),
+		ArtDef.make(&"jingang_bu", "金刚不坏", 2, [&"护体"], [{"kind": Move.Kind.BLOCK}, {"kind": Move.Kind.BLOCK}, {"tag": &"掌法"}], Deck.jingang_bu()),
+		ArtDef.make(&"yingzhua", "大力鹰爪", 1, [&"擒拿"], [{"tag": &"拳法"}, {"kind": Move.Kind.THROW}], Deck.yingzhua()),
+		ArtDef.make(&"shibaluohan", "十八罗汉手", 3, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"掌法"}, {"tag": &"肘膝"}, {"tag": &"腿法"}], Deck.shibaluohan()),
+		ArtDef.make(&"damo_jian", "达摩剑指", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"拳法"}], Deck.damo_jian(), [], &"", 0, [{"via": "encounter"}]),
+		# --- 武当铺量 ---
+		ArtDef.make(&"liangyi_jian", "两仪剑法", 3, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"腿法"}], Deck.liangyi_jian()),
+		ArtDef.make(&"wuji", "无极玄功", 2, [&"掌法"], [{"kind": Move.Kind.DODGE}, {"kind": Move.Kind.DODGE}, {"tag": &"掌法"}], Deck.wuji()),
+		ArtDef.make(&"taiji_quan", "太极拳", 2, [&"掌法"], [{"tag": &"拳法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.taiji_quan()),
+		ArtDef.make(&"sanfeng", "三丰遗剑", 3, [&"掌法"], [{"tag": &"掌法"}, {"kind": Move.Kind.DODGE}, {"tag": &"掌法"}, {"kind": Move.Kind.DODGE}], Deck.sanfeng(), [], &"", 0, [{"via": "encounter"}]),
+		ArtDef.make(&"qingshen", "两仪轻身", 1, [&"身法"], [{"kind": Move.Kind.DODGE}, {"tag": &"身法"}], Deck.qingshen()),
+		ArtDef.make(&"yunlong", "云龙腿", 1, [&"腿法"], [{"tag": &"腿法"}, {"tag": &"掌法"}], Deck.yunlong()),
 	]
 
 static func def(id: StringName) -> ArtDef:

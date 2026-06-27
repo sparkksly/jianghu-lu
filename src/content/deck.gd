@@ -134,6 +134,46 @@ static func sixiang() -> Move:  # 掌+掌+腿 → 四象掌
 static func taixu() -> Move:  # 掌+闪+掌 → 太虚剑意(绝世·稀缺)
 	return _m(&"taixu", "太虚剑意", Move.Kind.ATTACK, 0, 2, 1, 11, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "priority":9, "armor":true})
 
+# --- 通用绝学(铺量) ---
+static func saotang() -> Move:  # 腿×2 → 扫膛腿
+	return _m(&"saotang", "扫膛腿", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1], "knockback":true})
+static func shuangfeng() -> Move:  # 肘×2 → 双风贯耳
+	return _m(&"shuangfeng", "双风贯耳", Move.Kind.ATTACK, 0, 1, 1, 8, 0, {"tags":[&"肘膝"], "hits":[0], "range":[0,0], "stun":1})
+static func jiequan() -> Move:  # 拳+掌 → 截拳
+	return _m(&"jiequan", "截拳", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1], "interrupt":true})
+static func bajiquan() -> Move:  # 拳+肘+肘 → 八极崩
+	return _m(&"bajiquan", "八极崩", Move.Kind.ATTACK, 1, 1, 1, 13, 0, {"tags":[&"肘膝"], "hits":[0], "range":[0,0], "heavy":true, "knockback":true})
+static func paiyun() -> Move:  # 掌×4 → 排云双掌
+	return _m(&"paiyun", "排云双掌", Move.Kind.ATTACK, 0, 3, 1, 11, 0, {"tags":[&"掌法"], "hits":[0,1,2], "range":[0,1], "armor":true})
+
+# --- 少林铺量 ---
+static func luohan_da() -> Move:  # 拳×4 → 罗汉伏魔神拳(罗汉拳升级)
+	return _m(&"luohan_da", "罗汉伏魔神拳", Move.Kind.ATTACK, 0, 3, 1, 9, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true})
+static func weituo_xiang() -> Move:  # 掌+肘+掌 → 韦陀降魔
+	return _m(&"weituo_xiang", "韦陀降魔", Move.Kind.ATTACK, 1, 1, 2, 14, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "interrupt":true})
+static func jingang_bu() -> Move:  # 格挡×2+掌 → 金刚不坏(强护体)
+	return _m(&"jingang_bu", "金刚不坏", Move.Kind.ATTACK, 0, 1, 1, 5, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":7})
+static func yingzhua() -> Move:  # 拳+擒 → 大力鹰爪
+	return _m(&"yingzhua", "大力鹰爪", Move.Kind.ATTACK, 1, 1, 1, 8, 0, {"tags":[&"擒拿"], "hits":[0], "range":[0,0], "stun":2})
+static func shibaluohan() -> Move:  # 拳+掌+肘+腿 → 十八罗汉手
+	return _m(&"shibaluohan", "十八罗汉手", Move.Kind.ATTACK, 0, 3, 1, 13, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true, "interrupt":true})
+static func damo_jian() -> Move:  # 掌+掌+拳 → 达摩剑指(稀缺)
+	return _m(&"damo_jian", "达摩剑指", Move.Kind.ATTACK, 0, 1, 1, 10, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "interrupt":true, "priority":6})
+
+# --- 武当铺量 ---
+static func liangyi_jian() -> Move:  # 掌×3+腿 → 两仪剑法
+	return _m(&"liangyi_jian", "两仪剑法", Move.Kind.ATTACK, 0, 3, 1, 12, 0, {"tags":[&"掌法"], "hits":[0,1,2], "range":[0,2], "delta":-1, "priority":7})
+static func wuji() -> Move:  # 闪+闪+掌 → 无极玄功
+	return _m(&"wuji", "无极玄功", Move.Kind.ATTACK, 0, 1, 1, 8, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "delta":-1})
+static func taiji_quan() -> Move:  # 拳+掌+掌 → 太极拳
+	return _m(&"taiji_quan", "太极拳", Move.Kind.ATTACK, 0, 2, 1, 8, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,1], "delta":-1})
+static func sanfeng() -> Move:  # 掌+闪+掌+闪 → 三丰遗剑(绝世·稀缺)
+	return _m(&"sanfeng", "三丰遗剑", Move.Kind.ATTACK, 0, 3, 1, 14, 0, {"tags":[&"掌法"], "hits":[0,1,2], "range":[0,2], "priority":9, "armor":true})
+static func qingshen() -> Move:  # 闪+身法 → 两仪轻身
+	return _m(&"qingshen", "两仪轻身", Move.Kind.ATTACK, 0, 1, 0, 4, 0, {"tags":[&"身法"], "hits":[0], "range":[0,2], "delta":-1, "priority":8})
+static func yunlong() -> Move:  # 腿+掌 → 云龙腿
+	return _m(&"yunlong", "云龙腿", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1], "delta":-1})
+
 # combo result moves (not in hand; produced by fusion) — fast flurries, no 前摇
 static func chain_kick() -> Move:
 	return _m(&"chain_kick", "连环踢", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1]})

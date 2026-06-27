@@ -4,7 +4,10 @@ extends RefCounted
 const _COMBO_RESULTS := [&"chain_kick", &"wuying", &"qiankun", &"luohan", &"jingang_fumo", &"taiji_yunshou",
 	&"fuhu", &"wudang_changquan", &"mianli", &"rouyun", &"prajna", &"da_yunshou", &"liangyi",
 	&"weituo", &"heihu", &"jinzhong", &"jingang_zhang", &"damo_quan",
-	&"lanque", &"tuishou", &"tiyun", &"sixiang", &"taixu"]
+	&"lanque", &"tuishou", &"tiyun", &"sixiang", &"taixu",
+	&"saotang", &"shuangfeng", &"jiequan", &"bajiquan", &"paiyun",
+	&"luohan_da", &"weituo_xiang", &"jingang_bu", &"yingzhua", &"shibaluohan", &"damo_jian",
+	&"liangyi_jian", &"wuji", &"taiji_quan", &"sanfeng", &"qingshen", &"yunlong"]
 
 static func kind_name(kind: int) -> String:
 	match kind:
@@ -23,7 +26,10 @@ static func _name_table() -> Dictionary:
 	for m in [Deck.chain_kick(), Deck.wuying(), Deck.qiankun(), Deck.luohan(), Deck.jingang_fumo(), Deck.taiji_yunshou(),
 			Deck.fuhu(), Deck.wudang_changquan(), Deck.mianli(), Deck.rouyun(), Deck.prajna(), Deck.da_yunshou(), Deck.liangyi(),
 			Deck.weituo(), Deck.heihu(), Deck.jinzhong(), Deck.jingang_zhang(), Deck.damo_quan(),
-			Deck.lanque(), Deck.tuishou(), Deck.tiyun(), Deck.sixiang(), Deck.taixu()]:
+			Deck.lanque(), Deck.tuishou(), Deck.tiyun(), Deck.sixiang(), Deck.taixu(),
+			Deck.saotang(), Deck.shuangfeng(), Deck.jiequan(), Deck.bajiquan(), Deck.paiyun(),
+			Deck.luohan_da(), Deck.weituo_xiang(), Deck.jingang_bu(), Deck.yingzhua(), Deck.shibaluohan(), Deck.damo_jian(),
+			Deck.liangyi_jian(), Deck.wuji(), Deck.taiji_quan(), Deck.sanfeng(), Deck.qingshen(), Deck.yunlong()]:
 		t[m.id] = m.move_name
 	return t
 

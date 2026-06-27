@@ -25,12 +25,11 @@ func _build_menpai() -> void:
 
 func _build_neigong() -> void:
 	var grp := ButtonGroup.new()
-	var desc := {&"yijinjing": "易筋经·壮血", &"liangyi": "两仪心法·养气", &"luohanqi": "罗汉伏气·均衡"}
 	for id in Neigong.all():
 		var b := Button.new()
 		b.toggle_mode = true; b.button_group = grp
-		b.custom_minimum_size = Vector2(180, 48)
-		b.text = desc[id]
+		b.custom_minimum_size = Vector2(150, 46)
+		b.text = "%s\n%d血 %d气" % [Neigong.display_name(id), Neigong.hp_per_level(id), Neigong.qi_per_level(id)]
 		b.toggled.connect(func(on): if on: _neigong = id)
 		if id == _neigong: b.button_pressed = true
 		$VBox/NeigongRow.add_child(b)
