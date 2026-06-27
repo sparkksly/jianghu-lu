@@ -33,7 +33,7 @@ func _ready() -> void:
 	var learned: Array = _cfg.get("learned", [])
 	if learned.is_empty():
 		learned = Menpai.starter_pool(menpai_id).slice(0, 2)
-	var qi_bonus: int = _cfg.get("qi_bonus", 0)
+	var max_qi: int = _cfg.get("max_qi", 10)
 	var evo: Dictionary = _cfg.get("evo", {})
 	_weight = _cfg.get("weight", {})
 	var compiled: Array = _cfg.get("compiled", [])
@@ -51,7 +51,8 @@ func _ready() -> void:
 	_ai = AiPlanner.new(seed)
 	_state = CombatState.new()
 	_state.hp = [p_hp, e_hp]; _state.max_hp = [p_mhp, e_hp]
-	_state.sta_max = [10 + qi_bonus, 10]; _state.stamina = [10 + qi_bonus, 10]
+	_state.sta_max = [max_qi, 10]; _state.stamina = [max_qi, 10]
+	_state.triggers = [_cfg.get("triggers", []), []]
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 15
 	_state.attack = [attack, int(enemy.get("attack", 10))]

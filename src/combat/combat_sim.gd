@@ -38,6 +38,11 @@ static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 		for pm in (plans[i] as Plan).sorted():
 			tail = max(tail, (pm as PlacedMove).end_tick())
 	var max_tick: int = max(state.n_ticks, tail) + 2
+	# 开战触发被动(先发制人等):战斗开始即响应
+	for side in 2:
+		for trig in state.triggers[side]:
+			if trig.get("when", "") == "fight_start":
+				_fire_trigger(state, side, trig, 0, events)
 	var t := 0
 	while t < max_tick:
 		# 1. start moves due this tick
@@ -206,6 +211,9 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		_add_stamina(state, defender, REWARD_BLOCK, t, events)
 		actors[defender].leverage_until = t + LEVERAGE_WINDOW   # 格挡成功 → 借力窗口
 		events.append(CombatEvent.new(t, &"leverage", defender, attacker, LEVERAGE_WINDOW, atk.id))
+		for trig in state.triggers[defender]:   # 格挡触发被动(坚壁等)
+			if trig.get("when", "") == "block":
+				_fire_trigger(state, defender, trig, t, events)
 		return
 	if def_phase == &"startup" and atk.can_interrupt and def_move != null and not def_move.super_armor:
 		actors[defender].cur = null
@@ -243,6 +251,18 @@ static func _inflict(state: CombatState, attacker: int, defender: int, atk: Move
 			continue
 		StatusEffect.add(state.status[defender], sp)
 		events.append(CombatEvent.new(t, &"debuff", attacker, defender, 0, did))
+
+# 触发型被动响应:执行 trigger 的 do(挂 buff / 回气)。
+static func _fire_trigger(state: CombatState, side: int, trig: Dictionary, t: int, events) -> void:
+	var do: Dictionary = trig.get("do", {})
+	if do.has("buff"):
+		var sp := Buffs.spec(do["buff"])
+		if not sp.is_empty():
+			StatusEffect.add(state.status[side], sp)
+			events.append(CombatEvent.new(t, &"buff", side, side, 0, do["buff"]))
+	if do.has("qi"):
+		state.stamina[side] = clampi(state.stamina[side] + int(do["qi"]), 0, state.eff_sta_max(side))
+		events.append(CombatEvent.new(t, &"stamina", side, side, int(do["qi"]), &""))
 
 # 干净命中后,把招式 empower 的 buff 加到「自己」(运劲/铁布/凝气/疗息)。
 static func _empower(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:

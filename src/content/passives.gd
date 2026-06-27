@@ -26,6 +26,9 @@ static func _defs() -> Array:
 		PassiveDef.make(&"caoshang", "草上飞", &"轻功", [_flat("max_qi", 3)]),
 		PassiveDef.make(&"lingbo", "凌波微步", &"轻功", [_flat("max_qi", 2), _flat("armor", 10)]),
 		PassiveDef.make(&"yanzi", "燕子三抄水", &"轻功", [_flat("armor", 15)]),
+		# 触发型被动(category=天赋):特定时机响应,effects kind=trigger {when, do}。
+		PassiveDef.make(&"xianfa", "先发制人", &"天赋", [{"kind": "trigger", "when": "fight_start", "do": {"buff": &"vigor"}}]),
+		PassiveDef.make(&"jianbi", "坚壁", &"天赋", [{"kind": "trigger", "when": "block", "do": {"qi": 3}}]),
 	]
 
 static func def(id: StringName) -> PassiveDef:

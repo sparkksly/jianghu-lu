@@ -19,6 +19,7 @@ var menpai_id: StringName
 var neigong_id: StringName
 var neigong_level: int = 0
 var qinggong: Array = []            # 习得的轻功 id(category=轻功 的被动,习得即生效,可叠)
+var talents: Array = []             # 习得的触发型被动 id(category=天赋,combat 时机响应)
 var learned: Array = []             # 已领悟功夫(绝学)id;开局=选的 2 门初级
 var mastery: Dictionary = {}
 var weight: Dictionary = {}
@@ -50,7 +51,7 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	neigong_id = neigong if neigong != &"" else Neigong.starter(menpai)
 	learned = (arts.duplicate() if not arts.is_empty() else Menpai.starter_pool(menpai).slice(0, 2))
 	node_index = 0; choice_index = -1; prev_slot = -1
-	qinggong = []
+	qinggong = []; talents = []
 	_gen_map()
 	player_hp = 40; max_hp = 40
 	neigong_level = 0
@@ -284,6 +285,22 @@ func _qinggong_stat(stat: String) -> int:
 			sum += int(m.get("value", 0))
 	return sum
 
+# 触发型被动:习得天赋的 trigger effects [{when, do}],战斗时传入 combat_state.triggers[0]。
+func learn_talent(id: StringName) -> void:
+	if not talents.has(id):
+		talents.append(id)
+
+func combat_triggers() -> Array:
+	var out: Array = []
+	for id in talents:
+		var d := Passives.def(id)
+		if d == null:
+			continue
+		for e in d.effects:
+			if e.get("kind", "") == "trigger":
+				out.append(e)
+	return out
+
 # 进战斗时的有效属性(基础 + 内功 + 轻功 + 装备 + 永久加成)。攻防默认0;神兵并入攻击。
 func combat_attack() -> int:
 	return base_attack + weapon_bonus + _equip_stat("attack") + _qinggong_stat("attack")
@@ -357,6 +374,13 @@ func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
 				pool.append(id)
 		if pool.size() > 0:
 			learn_qinggong(pool[rng.randi_range(0, pool.size() - 1)])
+	if effect.has("talent"):
+		var tpool: Array = []
+		for id in Passives.by_category(&"天赋"):
+			if not talents.has(id):
+				tpool.append(id)
+		if tpool.size() > 0:
+			learn_talent(tpool[rng.randi_range(0, tpool.size() - 1)])
 	if effect.has("money"):
 		add_money(int(effect["money"]))
 	if effect.has("reputation"):

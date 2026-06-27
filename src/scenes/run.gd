@@ -92,11 +92,12 @@ func _start_fight() -> void:
 func _build_cfg() -> Dictionary:
 	return {
 		"player_hp": _run.player_hp,
-		"player_max_hp": _run.max_hp,
+		"player_max_hp": _run.combat_max_hp(),
 		"seed": 1000 + _run.node_index,
 		"menpai": _run.menpai_id,
 		"learned": _run.learned,
-		"qi_bonus": _run.qi_bonus(),
+		"max_qi": _run.combat_max_qi(),
+		"triggers": _run.combat_triggers(),
 		"evo": _run.evo,
 		"weight": _run.weight,
 		"compiled": _run.compiled_arts(),
