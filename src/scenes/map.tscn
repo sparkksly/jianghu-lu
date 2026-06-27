@@ -14,29 +14,41 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.05, 0.05, 0.08, 0.92)
 
-[node name="VBox" type="VBoxContainer" parent="."]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -380.0
-offset_top = -180.0
-offset_right = 380.0
-offset_bottom = 180.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 14
-
-[node name="Title" type="Label" parent="VBox"]
+[node name="Title" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 70.0
+offset_right = 1152.0
+offset_bottom = 110.0
 theme_override_font_sizes/font_size = 30
 horizontal_alignment = 1
 text = "江湖路"
 
-[node name="Rows" type="VBoxContainer" parent="VBox"]
-theme_override_constants/separation = 10
-
-[node name="Hint" type="Label" parent="VBox"]
+[node name="NearLabel" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 150.0
+offset_right = 1152.0
+offset_bottom = 172.0
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
-modulate = Color(1, 1, 1, 0.6)
-text = "点亮处 · 前往下一程"
+modulate = Color(1, 1, 1, 0.55)
+text = "本程 · 择路"
+
+[node name="FarLabel" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 330.0
+offset_right = 1152.0
+offset_bottom = 352.0
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0.55)
+text = "下程 · 隐约可见"
+
+[node name="Hint" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 470.0
+offset_right = 1152.0
+offset_bottom = 492.0
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0.5)
+text = "择本程之路 · 连线示去向"

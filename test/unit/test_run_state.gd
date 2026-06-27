@@ -62,6 +62,35 @@ func test_chapter_advances_by_layer():
 	for i in 4: r.advance_node()   # 第 4 层 → 第二章
 	assert_string_contains(r.chapter_title(), "断魂崖")
 
+# --- 连线拓扑 ---
+func test_edges_no_dead_ends_or_islands():
+	var r := RunState.new(&"shaolin")
+	for i in range(r.layers.size() - 1):
+		var lower_incoming := {}
+		for node in r.layers[i]:
+			assert_gt(node["edges"].size(), 0, "层%d 每节点≥1出边(无死路)" % i)
+			for e in node["edges"]:
+				assert_between(e, 0, r.layers[i + 1].size() - 1, "出边指向合法 slot")
+				lower_incoming[e] = true
+		for v in r.layers[i + 1].size():
+			assert_true(lower_incoming.has(v), "层%d slot%d 有入边(无孤岛)" % [i + 1, v])
+
+func test_available_slots_follow_chosen_edges():
+	var r := RunState.new(&"shaolin")
+	assert_eq(r.available_slots().size(), r.layers[0].size(), "第0层全开")
+	r.select(0)
+	r.advance_node()   # 进第1层
+	assert_eq(r.available_slots(), r.layers[0][0]["edges"], "本程受上层所选连线约束")
+
+func test_map_choices_and_preview():
+	var r := RunState.new(&"shaolin")
+	var choices := r.map_choices()
+	assert_gt(choices.size(), 0, "本程有候选")
+	assert_true(choices[0].has("slot") and choices[0].has("type") and choices[0].has("edges"))
+	var nxt := r.map_next_nodes()
+	assert_gt(nxt.size(), 0, "下程有可达节点")
+	assert_true(nxt[0].has("slot") and nxt[0].has("type"))
+
 # --- 基础提升 ---
 func test_meditate_levels_neigong():
 	var r := RunState.new(&"shaolin")   # 易筋经 +3血+1气
