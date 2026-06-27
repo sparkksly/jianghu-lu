@@ -72,19 +72,42 @@ func current_enemy() -> Dictionary:
 func qi_bonus() -> int:
 	return neigong_level * Neigong.qi_per_level(neigong_id)
 
-# 进战斗时的有效属性(基础 + 内功/装备/永久加成)。攻防默认0;神兵并入攻击。
+# --- 装备(武器/防具/饰品,各槽一件;属性走 modifier 聚合) ---
+func equip(id: StringName) -> void:
+	var d := Equips.def(id)
+	if d == null:
+		return
+	equipment[d.slot] = id   # 同槽替换
+	for art in d.grants:      # 武器解锁专属功夫
+		learn(art)
+
+func unequip(slot: StringName) -> void:
+	equipment.erase(slot)
+
+func equipped(slot: StringName) -> StringName:
+	return equipment.get(slot, &"")
+
+# 已装备汇总的某属性加成(走 Equips.modifiers_for → Stats 同乘区)。
+func _equip_stat(stat: String) -> int:
+	var sum := 0
+	for m in Equips.modifiers_for(equipment):
+		if m.get("stat", "") == stat:
+			sum += int(m.get("value", 0))
+	return sum
+
+# 进战斗时的有效属性(基础 + 内功 + 装备 + 永久加成)。攻防默认0;神兵并入攻击。
 func combat_attack() -> int:
-	return base_attack + weapon_bonus   # 神兵并入攻击力
+	return base_attack + weapon_bonus + _equip_stat("attack")
 func combat_dmg_inc() -> int:
-	return base_dmg_inc
+	return base_dmg_inc + _equip_stat("dmg_inc")
 func combat_extra() -> int:
-	return base_extra_dmg
+	return base_extra_dmg + _equip_stat("extra_dmg")
 func combat_armor() -> int:
-	return base_armor
+	return base_armor + _equip_stat("armor")
 func combat_max_hp() -> int:
-	return max_hp
+	return max_hp + _equip_stat("max_hp")
 func combat_max_qi() -> int:
-	return base_max_qi + qi_bonus()
+	return base_max_qi + qi_bonus() + _equip_stat("max_qi")
 
 # --- 基础提升三选一 ---
 func apply_reward(r: Dictionary) -> void:
@@ -136,6 +159,8 @@ func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
 		mastery[mid] = int(mastery.get(mid, 0)) + 5   # 一门功夫大进
 	if effect.has("weapon_dmg"):
 		weapon_bonus += int(effect["weapon_dmg"])
+	if effect.has("equip"):
+		equip(StringName(effect["equip"]))
 	if effect.has("hp"):
 		max_hp += int(effect["hp"]); player_hp += int(effect["hp"])
 	if effect.has("neigong"):

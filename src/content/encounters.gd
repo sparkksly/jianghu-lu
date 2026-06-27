@@ -22,7 +22,10 @@ static func all() -> Array:
 		{
 			"id": &"weapon", "title": "古冢神兵",
 			"body": "荒冢崩裂,一柄寒光凛冽的古剑斜插在石中,剑气逼人。",
-			"options": [{"label": "拔取神兵   ( 全攻击 +2 伤 )", "effect": {"weapon_dmg": 2}}],
+			"options": [
+				{"label": "拔取重刀   ( 装备·攻击 +6 伤害 +10% )", "effect": {"equip": &"xuantie_dao"}},
+				{"label": "取那软剑   ( 装备·伤害 +16% )", "effect": {"equip": &"hanyue"}},
+			],
 		},
 		{
 			"id": &"fruit", "title": "空谷灵果",
