@@ -5,6 +5,7 @@ extends Node
 const FIGHT := preload("res://src/scenes/fight.tscn")
 const REWARD := preload("res://src/scenes/reward_select.tscn")
 const ENCOUNTER := preload("res://src/scenes/encounter.tscn")
+const SHOP := preload("res://src/scenes/shop.tscn")
 const EQUIP_PANEL := preload("res://src/scenes/equip_panel.tscn")
 const MENU_PATH := "res://src/scenes/main_menu.tscn"
 
@@ -46,14 +47,15 @@ func _next_node() -> void:
 	_show_banner(_run.chapter_title() + "\n" + _node_label(n))
 	await get_tree().create_timer(1.2).timeout
 	_hide_banner()
-	if n["type"] == "encounter":
-		_show_encounter()
-	else:
-		_start_fight()
+	match n["type"]:
+		"encounter": _show_encounter()
+		"shop": _show_shop()
+		_: _start_fight()
 
 func _node_label(n: Dictionary) -> String:
 	match n["type"]:
 		"encounter": return "※ 江湖奇遇"
+		"shop": return "✦ 江湖集市"
 		"elite": return "⚔ 精英"
 		"boss": return "☠  B O S S"
 		_: return "· 寻常对手"
@@ -92,6 +94,7 @@ func _on_fight_finished(player_won: bool) -> void:
 		return
 	_inv_btn.show()
 	_run.player_hp = _fight.get_player_hp()
+	_run.add_money(_bounty(_run.current_node()))   # 战利银两
 	_run.gain_mastery(_fight.moves_landed())   # 实战熟练
 	var got := _discover()                     # 实战顿悟(无影脚等)
 	_run.advance_node()
@@ -147,6 +150,26 @@ func _apply_basic(r: Dictionary) -> void:
 		var un := _run.self_learnable_arts()
 		if un.size() > 0:
 			_run.learn(un[_rng.randi_range(0, un.size() - 1)])
+
+# 战斗银两:按节点类型 + 章节缩放。
+func _bounty(n: Dictionary) -> int:
+	var ch: int = n["chapter"]
+	match n["type"]:
+		"boss": return 60 + ch * 15
+		"elite": return 30 + ch * 8
+		_: return 15 + ch * 5
+
+# --- 商店 ---
+func _show_shop() -> void:
+	_inv_btn.hide()   # 商店盖屏
+	var s := SHOP.instantiate()
+	add_child(s)
+	s.setup(_run, _run.current_node()["chapter"], _rng)
+	s.done.connect(func():
+		s.queue_free()
+		_inv_btn.show()
+		_run.advance_node()
+		_next_node())
 
 # --- 奇遇 ---
 func _show_encounter() -> void:

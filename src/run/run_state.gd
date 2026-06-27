@@ -5,7 +5,7 @@ extends RefCounted
 
 const MEDITATE_HEAL := 12
 const EVOLVE_AT := [3, 6]
-const NODE_SEQ := ["grunt", "encounter", "elite", "boss"]
+const NODE_SEQ := ["grunt", "encounter", "shop", "elite", "boss"]
 const CHAPTERS := 3
 const CHAPTER_TITLES := ["第一章 · 毒蛛潭", "第二章 · 断魂崖", "第三章 · 华山之巅"]
 
@@ -98,6 +98,16 @@ func equip(id: StringName) -> void:
 func unequip(slot: StringName) -> void:
 	equipment.erase(slot)
 
+# --- 银两 ---
+func add_money(n: int) -> void:
+	money = maxi(0, money + n)
+
+func spend_money(n: int) -> bool:
+	if money < n:
+		return false
+	money -= n
+	return true
+
 func equipped(slot: StringName) -> StringName:
 	return equipment.get(slot, &"")
 
@@ -189,6 +199,17 @@ func apply_encounter(effect: Dictionary, rng: RandomNumberGenerator) -> void:
 		weapon_bonus += int(effect["weapon_dmg"])
 	if effect.has("equip"):
 		obtain_equipment(StringName(effect["equip"]))
+	if effect.has("money"):
+		add_money(int(effect["money"]))
+	if effect.has("reputation"):
+		reputation += int(effect["reputation"])
+	if effect.has("heal"):
+		player_hp = clampi(player_hp + int(effect["heal"]), 1, max_hp)   # 负数=受创,留 1 血保命
+	if effect.has("risk"):
+		# 赌一把:按 chance 命中 win,否则 lose,递归应用。
+		var rk: Dictionary = effect["risk"]
+		var won := rng.randf() < float(rk.get("chance", 0.5))
+		apply_encounter(rk["win"] if won else rk["lose"], rng)
 	if effect.has("hp"):
 		max_hp += int(effect["hp"]); player_hp += int(effect["hp"])
 	if effect.has("neigong"):
