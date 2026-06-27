@@ -77,3 +77,20 @@ func test_qiankun_only_encounter():
 func test_wuying_requires_chain_kick():
 	assert_false(Arts.can_learn(&"wuying", [], {}), "没会连环踢不能领悟无影脚")
 	assert_true(Arts.can_learn(&"wuying", [&"chain_kick"], {}), "会连环踢→可领悟其升级版")
+
+func test_filled_weituo_recipe():
+	var r := Arts.build_rules([&"weituo"])
+	assert_not_null(r.recipe_result([Deck.by_id(&"push_palm"), Deck.by_id(&"elbow_strike")]), "掌+肘→韦陀掌")
+
+func test_weituo_series_upgrade_to_jingang_zhang():
+	assert_eq(Arts.def(&"jingang_zhang").series, &"weituo_line", "大力金刚掌=韦陀掌系")
+	assert_false(Arts.can_learn(&"jingang_zhang", [], {}), "需韦陀熟练")
+	assert_true(Arts.can_learn(&"jingang_zhang", [], {&"weituo": 3}))
+
+func test_tiyun_insight_not_practice():
+	assert_true(Arts.has_source(&"tiyun", "insight"), "梯云纵可实战顿悟")
+	assert_false(Arts.has_source(&"tiyun", "practice"), "不可磨练")
+
+func test_damo_and_taixu_exotic():
+	assert_false(Arts.has_source(&"damo_quan", "practice"), "达摩拳稀缺仅奇遇")
+	assert_false(Arts.has_source(&"taixu", "practice"), "太虚剑意稀缺仅奇遇")

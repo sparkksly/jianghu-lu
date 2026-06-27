@@ -23,6 +23,18 @@ static func _defs() -> Array:
 		ArtDef.make(&"wuying", "佛山无影脚", 2, [&"腿法"], [{"tag": &"腿法"}, {"tag": &"腿法"}, {"tag": &"腿法"}, {"tag": &"腿法"}], Deck.wuying(), [{"type": "art_known", "art": &"chain_kick"}], &"wuying_line", 1, [{"via": "encounter"}, {"via": "insight", "triggers": [{"type": "tag_hits", "tag": &"腿法", "need": 5}, {"type": "tag_two_combo", "tag": &"腿法"}], "chance": 0.3}]),  # 连环踢升级版:奇遇可学/实战可顿悟,需先会连环踢
 		ArtDef.make(&"da_yunshou", "大成·云手", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"掌法"}], Deck.da_yunshou(), [M.call(&"taiji_yunshou", 3)]),
 		ArtDef.make(&"liangyi", "两仪连环", 2, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"拳法"}, {"tag": &"拳法"}], Deck.liangyi(), [M.call(&"wudang_changquan", 3)]),
+		# --- 少林扩充 ---
+		ArtDef.make(&"weituo", "韦陀掌", 1, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"肘膝"}], Deck.weituo(), [], &"weituo_line", 0),
+		ArtDef.make(&"heihu", "黑虎拳", 1, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"腿法"}], Deck.heihu()),
+		ArtDef.make(&"jinzhong", "金钟罩", 1, [&"护体"], [{"kind": Move.Kind.BLOCK}, {"kind": Move.Kind.BLOCK}], Deck.jinzhong()),
+		ArtDef.make(&"jingang_zhang", "大力金刚掌", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"肘膝"}], Deck.jingang_zhang(), [M.call(&"weituo", 3)], &"weituo_line", 1),  # 韦陀掌升级
+		ArtDef.make(&"damo_quan", "达摩伏魔拳", 2, [&"拳法"], [{"tag": &"拳法"}, {"tag": &"肘膝"}, {"tag": &"拳法"}], Deck.damo_quan(), [], &"", 0, [{"via": "encounter"}]),  # 稀缺·仅奇遇
+		# --- 武当扩充 ---
+		ArtDef.make(&"lanque", "揽雀尾", 1, [&"掌法"], [{"kind": Move.Kind.DODGE}, {"tag": &"腿法"}], Deck.lanque()),
+		ArtDef.make(&"tuishou", "太极推手", 1, [&"掌法"], [{"kind": Move.Kind.BLOCK}, {"tag": &"掌法"}], Deck.tuishou()),
+		ArtDef.make(&"tiyun", "梯云纵", 1, [&"身法"], [{"kind": Move.Kind.DODGE}, {"kind": Move.Kind.DODGE}], Deck.tiyun(), [], &"", 0, [{"via": "encounter"}, {"via": "insight", "triggers": [{"type": "tag_hits", "tag": &"身法", "need": 5}], "chance": 0.3}]),  # 走位多→实战顿悟轻功
+		ArtDef.make(&"sixiang", "四象掌", 2, [&"掌法"], [{"tag": &"掌法"}, {"tag": &"掌法"}, {"tag": &"腿法"}], Deck.sixiang(), [M.call(&"rouyun", 3)]),
+		ArtDef.make(&"taixu", "太虚剑意", 2, [&"掌法"], [{"tag": &"掌法"}, {"kind": Move.Kind.DODGE}, {"tag": &"掌法"}], Deck.taixu(), [], &"", 0, [{"via": "encounter"}]),  # 稀缺·仅奇遇
 	]
 
 static func def(id: StringName) -> ArtDef:
