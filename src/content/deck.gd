@@ -26,6 +26,7 @@ static func _m(id, name, kind, su, act, rec, dmg, cost, opts := {}) -> Move:
 	m.distance_delta = opts.get("delta", 0)
 	m.grants_guard = opts.get("guard", 0)
 	m.inflict = opts.get("inflict", [])
+	m.empower = opts.get("empower", [])
 	m.tier = opts.get("tier", 1)
 	return m
 
@@ -89,11 +90,11 @@ static func luohan() -> Move:  # 少林:拳法×3 → 罗汉拳(刚猛三连)
 static func jingang_fumo() -> Move:  # 少林:格挡+掌法 → 金刚伏魔(护体重掌)
 	return _m(&"jingang_fumo", "金刚伏魔", Move.Kind.ATTACK, 0, 1, 2, 10, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "armor":true, "guard":4})
 static func taiji_yunshou() -> Move:  # 武当:掌法×2 → 太极云手(柔掌走位)
-	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6})
+	return _m(&"taiji_yunshou", "太极云手", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"掌法"], "hits":[0,1], "range":[0,2], "delta":-1, "priority":6, "empower":[&"focus"]})
 
 # --- 初级功夫(补足每派 4 门) ---
 static func fuhu() -> Move:  # 少林:拳+肘 → 伏虎拳
-	return _m(&"fuhu", "伏虎拳", Move.Kind.ATTACK, 0, 2, 1, 8, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
+	return _m(&"fuhu", "伏虎拳", Move.Kind.ATTACK, 0, 2, 1, 8, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1], "empower":[&"vigor"]})
 static func wudang_changquan() -> Move:  # 武当:拳×2 → 武当长拳
 	return _m(&"wudang_changquan", "武当长拳", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
 static func mianli() -> Move:  # 武当:闪身+掌 → 绵里藏针(借力柔掌)
@@ -112,12 +113,12 @@ static func liangyi() -> Move:  # 武当:拳×3 → 两仪连环
 	return _m(&"liangyi", "两仪连环", Move.Kind.ATTACK, 0, 3, 1, 8, 0, {"tags":[&"拳法"], "hits":[0,1,2], "range":[0,1], "armor":true})
 
 # --- 少林扩充 ---
-static func weituo() -> Move:  # 掌+肘 → 韦陀掌(重掌破霸体)
-	return _m(&"weituo", "韦陀掌", Move.Kind.ATTACK, 0, 1, 2, 9, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "armor":true})
+static func weituo() -> Move:  # 掌+肘 → 韦陀掌(重掌破霸体 + 铁布)
+	return _m(&"weituo", "韦陀掌", Move.Kind.ATTACK, 0, 1, 2, 9, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "armor":true, "empower":[&"ironbody"]})
 static func heihu() -> Move:  # 拳+腿 → 黑虎拳
 	return _m(&"heihu", "黑虎拳", Move.Kind.ATTACK, 0, 2, 1, 6, 0, {"tags":[&"拳法"], "hits":[0,1], "range":[0,1]})
-static func jinzhong() -> Move:  # 格挡×2 → 金钟罩(强护体)
-	return _m(&"jinzhong", "金钟罩", Move.Kind.ATTACK, 0, 1, 1, 4, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":6})
+static func jinzhong() -> Move:  # 格挡×2 → 金钟罩(强护体 + 疗息)
+	return _m(&"jinzhong", "金钟罩", Move.Kind.ATTACK, 0, 1, 1, 4, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "guard":6, "empower":[&"mend"]})
 static func jingang_zhang() -> Move:  # 掌+掌+肘 → 大力金刚掌(破防)
 	return _m(&"jingang_zhang", "大力金刚掌", Move.Kind.ATTACK, 1, 1, 2, 13, 0, {"tags":[&"掌法"], "hits":[0], "range":[0,1], "heavy":true, "interrupt":true})
 static func damo_quan() -> Move:  # 拳+肘+拳 → 达摩伏魔拳(绝世·稀缺)

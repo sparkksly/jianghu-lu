@@ -80,6 +80,9 @@ static func log_line(e) -> String:
 	if e.type == &"debuff":
 		var vic := "你" if e.target == 0 else "敌"
 		return "第%d拍 %s中了「%s」" % [e.tick, vic, Debuffs.display_name(e.move_id)]
+	if e.type == &"buff":
+		var who2 := "你" if e.actor == 0 else "敌"
+		return "第%d拍 %s运起「%s」" % [e.tick, who2, Buffs.display_name(e.move_id)]
 	var who := "你" if e.actor == 0 else "敌"
 	var mv := ""
 	if e.move_id != &"":

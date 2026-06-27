@@ -233,6 +233,7 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		actors[defender].gasp_until = t + atk.stun
 		events.append(CombatEvent.new(t, &"stun", attacker, defender, atk.stun, atk.id))
 	_inflict(state, attacker, defender, atk, t, events)
+	_empower(state, attacker, atk, t, events)
 
 # 干净命中/打断后,把招式 inflict 的 debuff 加到防守方状态(中毒/流血/虚弱/破甲)。
 static func _inflict(state: CombatState, attacker: int, defender: int, atk: Move, t: int, events) -> void:
@@ -242,6 +243,15 @@ static func _inflict(state: CombatState, attacker: int, defender: int, atk: Move
 			continue
 		StatusEffect.add(state.status[defender], sp)
 		events.append(CombatEvent.new(t, &"debuff", attacker, defender, 0, did))
+
+# 干净命中后,把招式 empower 的 buff 加到「自己」(运劲/铁布/凝气/疗息)。
+static func _empower(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
+	for bid in atk.empower:
+		var sp := Buffs.spec(bid)
+		if sp.is_empty():
+			continue
+		StatusEffect.add(state.status[attacker], sp)
+		events.append(CombatEvent.new(t, &"buff", attacker, attacker, 0, bid))
 
 static func _whiff(state: CombatState, attacker: int, atk: Move, t: int, events) -> void:
 	events.append(CombatEvent.new(t, &"whiff", attacker, 1 - attacker, 0, atk.id))
