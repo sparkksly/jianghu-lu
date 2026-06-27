@@ -61,7 +61,9 @@ func _build_cfg() -> Dictionary:
 		"weight": _run.weight,
 		"compiled": _run.compiled_arts(),
 		"attack": _run.combat_attack(),
-		"defense": _run.combat_defense(),
+		"dmg_inc": _run.combat_dmg_inc(),
+		"extra_dmg": _run.combat_extra(),
+		"armor": _run.combat_armor(),
 		"enemy": _run.current_enemy(),
 	}
 

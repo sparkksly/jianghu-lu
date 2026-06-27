@@ -37,8 +37,10 @@ func _ready() -> void:
 	var evo: Dictionary = _cfg.get("evo", {})
 	_weight = _cfg.get("weight", {})
 	var compiled: Array = _cfg.get("compiled", [])
-	var attack: int = _cfg.get("attack", 0)
-	var defense: int = _cfg.get("defense", 0)
+	var attack: int = _cfg.get("attack", 10)
+	var dmg_inc: int = _cfg.get("dmg_inc", 0)
+	var extra: int = _cfg.get("extra_dmg", 0)
+	var armor: int = _cfg.get("armor", 0)
 	var enemy: Dictionary = _cfg.get("enemy", {})
 	var e_hp: int = enemy.get("hp", 40)
 	var e_reg: int = enemy.get("regen", 6)
@@ -52,7 +54,10 @@ func _ready() -> void:
 	_state.sta_max = [10 + qi_bonus, 10]; _state.stamina = [10 + qi_bonus, 10]
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 15
-	_state.attack = [attack, 0]; _state.defense = [defense, 0]   # 玩家攻防(敌人默认0)
+	_state.attack = [attack, int(enemy.get("attack", 10))]
+	_state.dmg_inc = [dmg_inc, 0]
+	_state.extra_dmg = [extra, 0]
+	_state.armor = [armor, int(enemy.get("armor", 0))]
 	_rules = Arts.build_rules(learned, evo)
 	_rng.seed = seed
 	# 玩家抽牌池 = 全部 9 门基础招(应用进化) + 化境绝学单卡;攻击力走 state.attack
