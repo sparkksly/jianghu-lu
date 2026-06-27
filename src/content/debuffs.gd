@@ -11,6 +11,8 @@ const DEFS := {
 	&"bleed": {"name": "流血", "tick": {"hp": -3}, "duration": 4},
 	&"weak": {"name": "虚弱", "modifiers": [{"stat": "dmg_inc", "op": "add", "value": -30}], "duration": 6},
 	&"sunder": {"name": "破甲", "modifiers": [{"stat": "armor", "op": "add", "value": -20}], "duration": 6},
+	# 内伤 = 虚弱(降伤害) + 临时扣气力上限(出招更吃紧),持续更久。不是单独系统,就是个组合 debuff。
+	&"neishang": {"name": "内伤", "modifiers": [{"stat": "dmg_inc", "op": "add", "value": -25}, {"stat": "max_qi", "op": "add", "value": -3}], "duration": 8},
 }
 
 const _LABEL := {"dmg_inc": "伤害", "extra_dmg": "额外伤害", "attack": "攻击力", "armor": "防御"}

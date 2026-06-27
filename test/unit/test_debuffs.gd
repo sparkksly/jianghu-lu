@@ -54,3 +54,28 @@ func test_combat_applies_debuff_on_hit():
 	StatusEffect.add(status, Debuffs.spec(&"poison"))
 	assert_eq(status.size(), 1)
 	assert_eq(status[0]["name"], "中毒")
+
+func test_neishang_is_weak_plus_qi_drain():
+	# 内伤 = 虚弱(降伤害%) + 扣气力上限
+	var list: Array = []
+	StatusEffect.add(list, Debuffs.spec(&"neishang"))
+	assert_eq(StatusEffect.mods_for(list, "dmg_inc")[0]["value"], -25, "内伤含虚弱(降伤害)")
+	assert_eq(StatusEffect.mods_for(list, "max_qi")[0]["value"], -3, "内伤含扣气力上限")
+	assert_string_contains(Debuffs.describe(&"neishang"), "内伤")
+
+func test_eff_sta_max_drops_with_qi_debuff():
+	var s := CombatState.new()
+	s.sta_max = [10, 10]
+	assert_eq(s.eff_sta_max(0), 10, "无 debuff 满上限")
+	StatusEffect.add(s.status[0], Debuffs.spec(&"neishang"))
+	assert_eq(s.eff_sta_max(0), 7, "内伤后气力上限 −3")
+
+func test_qi_ceiling_clamps_regen():
+	var s := CombatState.new()
+	s.sta_max = [10, 10]; s.stamina = [10, 10]; s.regen = [6, 6]
+	StatusEffect.add(s.status[0], Debuffs.spec(&"neishang"))
+	s.regen_round()
+	assert_lte(s.stamina[0], 7, "回气受内伤后的上限压制")
+
+func test_toad_power_inflicts_neishang():
+	assert_true(&"neishang" in Deck.by_id(&"toad_power").inflict, "蛤蟆劲震内伤")
