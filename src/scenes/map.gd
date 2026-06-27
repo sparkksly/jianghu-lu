@@ -1,9 +1,9 @@
 extends Control
 
-# 节点地图:整局路径可视化(3章×5节点)。当前节点高亮可点→advance;已过打勾,未到淡显。
-# 线性路径(无分支);点亮处=当前,点击进入该节点。
+# 分支节点地图。视野受限:只显示「本程」(当前层候选,可点择路)与「下程」(下一层候选,预览淡显)。
+# 再之后是迷雾,看不到。点本程某候选 → choose(idx) → 进入该节点。
 
-signal advance
+signal choose(idx)
 
 const ICON := {"grunt": "⚔", "encounter": "※", "shop": "✦", "elite": "❖", "boss": "☠"}
 const NAME := {"grunt": "小怪", "encounter": "奇遇", "shop": "集市", "elite": "精英", "boss": "首领"}
@@ -20,24 +20,42 @@ func _build() -> void:
 	for c in rows.get_children():
 		rows.remove_child(c)
 		c.queue_free()
-	var per: int = RunState.NODE_SEQ.size()
-	for ch in RunState.CHAPTERS:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		for i in per:
-			row.add_child(_cell(ch * per + i, RunState.NODE_SEQ[i]))
-		rows.add_child(row)
 
-func _cell(idx: int, typ: String) -> Button:
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(132, 64)
-	var done: bool = idx < _run.node_index
-	var here: bool = idx == _run.node_index
-	b.text = "%s%s %s" % ["✓ " if done else "", ICON.get(typ, "·"), NAME.get(typ, typ)]
-	if here:
-		b.modulate = Color(1.0, 0.95, 0.5)   # 高亮当前
-		b.pressed.connect(func(): advance.emit())
+	rows.add_child(_label("本程 · 择路"))
+	rows.add_child(_row(_run.current_layer(), true))
+
+	var ni: int = _run.node_index
+	if ni + 1 < _run.layers.size():
+		rows.add_child(_label("下程 · 隐约可见"))
+		rows.add_child(_row(_run.layers[ni + 1], false))
 	else:
-		b.disabled = true
-		b.modulate = Color(1, 1, 1, 0.8 if done else 0.4)
-	return b
+		rows.add_child(_label("下程 · 重雾锁路，前路未明"))
+
+func _label(text: String) -> Label:
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", 16)
+	l.modulate = Color(1, 1, 1, 0.55)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.text = text
+	return l
+
+func _row(cands: Array, clickable: bool) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	for i in cands.size():
+		var typ: String = cands[i]["type"]
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(150, 70)
+		b.text = "%s %s" % [ICON.get(typ, "·"), NAME.get(typ, typ)]
+		if clickable:
+			b.modulate = Color(1.0, 0.95, 0.5)
+			b.pressed.connect(_on_pick.bind(i))
+		else:
+			b.disabled = true
+			b.modulate = Color(1, 1, 1, 0.35)   # 下程:隐约
+		row.add_child(b)
+	return row
+
+func _on_pick(idx: int) -> void:
+	choose.emit(idx)

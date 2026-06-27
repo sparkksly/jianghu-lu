@@ -1,11 +1,12 @@
 class_name RunState
 extends RefCounted
 
-# 一局 run:三章,每章节点序列 小怪→奇遇→精英→boss。成长跨节点累积。
+# 一局 run:三章,分层分支地图。每章 3 选择层(2-3候选,玩家择路)+ 章末 boss 层。
+# 视野受限:地图只显示本层与下一层(再之后是迷雾)。node_index = 当前层(已过节点数)。
 
 const MEDITATE_HEAL := 12
 const EVOLVE_AT := [3, 6]
-const NODE_SEQ := ["grunt", "encounter", "shop", "elite", "boss"]
+const LAYERS_PER_CHAPTER := 4   # 每章 3 选择层 + 1 boss 层
 const CHAPTERS := 3
 const CHAPTER_TITLES := ["第一章 · 毒蛛潭", "第二章 · 断魂崖", "第三章 · 华山之巅"]
 
@@ -22,7 +23,9 @@ var mastery: Dictionary = {}
 var weight: Dictionary = {}
 var evo: Dictionary = {}
 var weapon_bonus: int = 0           # 神兵:并入攻击力(+attack)
-var node_index: int = 0
+var node_index: int = 0             # 当前层(0..11)
+var layers: Array = []              # 分支地图:每层候选 [{type}];boss 层单候选
+var choice_index: int = -1          # 当前层玩家选的候选下标(进战斗前由 select 设)
 var player_hp: int = 40
 var max_hp: int = 40
 # 基础属性(攻/防默认0不改平衡;血气见 max_hp/base_max_qi)
@@ -44,30 +47,80 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	menpai_id = menpai
 	neigong_id = neigong if neigong != &"" else Neigong.starter(menpai)
 	learned = (arts.duplicate() if not arts.is_empty() else Menpai.starter_pool(menpai).slice(0, 2))
-	node_index = 0
+	node_index = 0; choice_index = -1
+	_gen_map()
 	player_hp = 40; max_hp = 40
 	neigong_level = 0
 	mastery = {}; weight = {}; evo = {}; weapon_bonus = 0
 	base_attack = 10; base_dmg_inc = 0; base_extra_dmg = 0; base_armor = 0; base_max_qi = 10
 	equipment = {}; owned_equipment = []; hidden_weapons = {}; inventory = []; money = 0; reputation = 0; conditions = []
 
+# --- 分支地图生成 ---
+func _gen_map() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	layers = []
+	for _ch in CHAPTERS:
+		for _l in (LAYERS_PER_CHAPTER - 1):
+			layers.append(_gen_choices(rng))
+		layers.append([{"type": "boss"}])   # 章末 boss
+
+func _gen_choices(rng: RandomNumberGenerator) -> Array:
+	# 候选类型互异(择路才有意义);精英稀有(30% 顶替一个);保证至少一个战斗。
+	var base := ["grunt", "encounter", "shop"]
+	for i in range(base.size() - 1, 0, -1):   # 洗牌 base
+		var j := rng.randi_range(0, i)
+		var tmp = base[i]; base[i] = base[j]; base[j] = tmp
+	var n := rng.randi_range(2, 3)
+	var picks: Array = []
+	for i in n:
+		picks.append({"type": base[i % base.size()]})
+	if rng.randf() < 0.3:   # 精英稀有
+		picks[rng.randi_range(0, picks.size() - 1)] = {"type": "elite"}
+	var has_combat := false
+	for c in picks:
+		if c["type"] in ["grunt", "elite"]:
+			has_combat = true
+	if not has_combat:
+		picks[0] = {"type": "grunt"}
+	return picks
+
 # --- 节点 / 章节 ---
+func current_chapter() -> int:
+	return clampi(node_index / LAYERS_PER_CHAPTER, 0, CHAPTERS - 1)
+
+func current_layer() -> Array:
+	return layers[node_index] if node_index < layers.size() else [{"type": "boss"}]
+
+func is_boss_layer() -> bool:
+	return current_layer().size() == 1
+
+func current_type() -> String:
+	var layer := current_layer()
+	if layer.size() == 1:
+		return layer[0]["type"]
+	var ci := choice_index if (choice_index >= 0 and choice_index < layer.size()) else 0
+	return layer[ci]["type"]
+
+# 玩家在地图上选当前层第 idx 个候选。
+func select(idx: int) -> void:
+	choice_index = idx
+
 func current_node() -> Dictionary:
-	var per := NODE_SEQ.size()
-	return {"chapter": node_index / per, "type": NODE_SEQ[node_index % per], "in_chapter": node_index % per}
+	return {"chapter": current_chapter(), "type": current_type(), "layer": node_index}
 
 func advance_node() -> void:
 	node_index += 1
+	choice_index = -1
 
 func is_complete() -> bool:
-	return node_index >= CHAPTERS * NODE_SEQ.size()
+	return node_index >= layers.size()
 
 func chapter_title() -> String:
-	return CHAPTER_TITLES[clampi(current_node()["chapter"], 0, 2)]
+	return CHAPTER_TITLES[clampi(current_chapter(), 0, 2)]
 
 func current_enemy() -> Dictionary:
-	var n := current_node()
-	return Enemies.spawn(n["chapter"], n["type"], node_index)   # node_index 选小怪/精英变体
+	return Enemies.spawn(current_chapter(), current_type(), node_index + maxi(0, choice_index))
 
 # --- 内功 ---
 func qi_bonus() -> int:

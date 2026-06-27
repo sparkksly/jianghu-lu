@@ -47,7 +47,7 @@ func _next_node() -> void:
 		return
 	_show_map()
 
-# 节点地图:节点间的中枢。展示整局路径+进度,点亮当前节点 → 进入。
+# 分支地图:节点间的中枢。显示本程候选(择路)+下程预览;选一个 → 进入。
 func _show_map() -> void:
 	_inv_btn.show()
 	if _map:
@@ -55,12 +55,16 @@ func _show_map() -> void:
 	_map = MAP.instantiate()
 	add_child(_map)
 	_map.setup(_run)
-	_map.advance.connect(_enter_node)
+	_map.choose.connect(_on_map_choose)
 
-func _enter_node() -> void:
+func _on_map_choose(idx: int) -> void:
+	_run.select(idx)
 	if _map:
 		_map.queue_free()
 		_map = null
+	_enter_node()
+
+func _enter_node() -> void:
 	var n := _run.current_node()
 	match n["type"]:
 		"encounter": _show_encounter()
