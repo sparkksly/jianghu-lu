@@ -19,19 +19,20 @@ func test_node_sequence_and_chapters():
 	assert_eq(r.current_node()["type"], "grunt")
 	assert_string_contains(r.chapter_title(), "毒蛛潭")
 	r.advance_node(); assert_eq(r.current_node()["type"], "encounter")
+	r.advance_node(); assert_eq(r.current_node()["type"], "shop")
 	r.advance_node(); assert_eq(r.current_node()["type"], "elite")
 	r.advance_node(); assert_eq(r.current_node()["type"], "boss")
 	r.advance_node()
-	assert_string_contains(r.chapter_title(), "断魂崖", "第5节点进第二章")
+	assert_string_contains(r.chapter_title(), "断魂崖", "第6节点进第二章")
 
-func test_run_completes_after_twelve_nodes():
+func test_run_completes_after_all_nodes():
 	var r := RunState.new(&"shaolin")
-	for i in 12: r.advance_node()
+	for i in 15: r.advance_node()   # 3章 × 5节点
 	assert_true(r.is_complete())
 
 func test_current_enemy_boss_is_named():
 	var r := RunState.new(&"shaolin")
-	for i in 3: r.advance_node()   # 到 boss
+	for i in 4: r.advance_node()   # 到 boss(grunt/奇遇/商店/精英/boss)
 	var e := r.current_enemy()
 	assert_eq(e["name"], "青鳞毒叟")
 	assert_true(e["is_boss"])
