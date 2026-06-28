@@ -5,7 +5,7 @@ func test_setup_select_builds_choices():
 	add_child_autofree(s)
 	await get_tree().process_frame
 	assert_eq(s.get_node("VBox/MenpaiRow").get_child_count(), 2)
-	assert_eq(s.get_node("VBox/NeigongRow").get_child_count(), 10, "10 门内功")
+	assert_eq(s.get_node("VBox/NeigongRow").get_child_count(), 3, "内功三选一")
 	assert_eq(s.get_node("VBox/MovesGrid").get_child_count(), 4, "本派4门初级功夫可选")
 
 func test_encounter_renders():
