@@ -11,7 +11,7 @@ func _kick(deck) -> Move:
 	return null
 
 func _setup(w) -> void:
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, [{"name": "？", "start": 0, "dur": 1}])
 
 func test_timeline_node_is_the_drop_target():
 	var w = _load()
@@ -34,7 +34,7 @@ func test_nodes_wired():
 func test_setup_builds_hand_and_intent_is_chinese():
 	var w = _load()
 	await get_tree().process_frame
-	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, ["扫腿", "？"])
+	w.setup(Deck.starter(), ComboLibrary.build(), 10, 10, 12, [{"name": "扫腿", "start": 0, "dur": 2}, {"name": "？", "start": 3, "dur": 1}])
 	assert_eq(w.get_node("DeckRow").get_child_count(), Deck.starter().size())
 	assert_string_contains(w.get_node("EnemyIntent").text, "扫腿")
 
@@ -149,7 +149,7 @@ func _phase_with_hand(hand: Array[Move]):
 	var p = load("res://src/scenes/plan_phase.tscn").instantiate()
 	add_child_autofree(p)
 	await get_tree().process_frame
-	p.setup(hand, ComboLibrary.build(), 99, 99, 15, ["?"])
+	p.setup(hand, ComboLibrary.build(), 99, 99, 15, [{"name": "?", "start": 0, "dur": 1}])
 	return p
 
 func test_attack_card_consumed_on_place_and_returned_on_remove():
