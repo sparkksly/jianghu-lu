@@ -31,6 +31,13 @@ static func roll_basic(rng: RandomNumberGenerator, run = null) -> Array:
 			continue
 		pool.append(p.duplicate())
 	var out: Array = []
+	# 保证至少一个「适配熟练度」的定向选项:领悟(有可悟)优先,否则磨练专精家族招
+	var directed := "learn" if (run != null and not run.self_learnable_arts().is_empty()) else "hone"
+	for i in pool.size():
+		if pool[i]["type"] == directed:
+			out.append(_make_reward(directed, rng, run))
+			pool.remove_at(i)
+			break
 	while out.size() < 3 and not pool.is_empty():
 		var idx := _weighted_pick(pool, rng)
 		var typ: String = pool[idx]["type"]

@@ -80,3 +80,13 @@ func test_qinggong_reward_grants_and_excludes_when_all_known():
 		for rr in RunRewards.roll_basic(_rng(s), r):
 			if rr["type"] == "qinggong": seen_qg = true
 	assert_false(seen_qg, "轻功全习得后不再出身法选项")
+
+func test_roll_always_includes_a_directed_option():
+	# 每次三选一必有一个对口选项(磨练专精/领悟对口),不会全是不痛不痒的属性
+	var r := RunState.new(&"shaolin", &"", [&"jiequan"])
+	for s in range(1, 40):
+		var rw := RunRewards.roll_basic(_rng(s), r)
+		var directed := false
+		for x in rw:
+			if x["type"] == "learn" or x["type"] == "hone": directed = true
+		assert_true(directed, "三选一保证一个对口定向(seed %d)" % s)
