@@ -14,6 +14,7 @@ func test_codex_lists_moves_and_recipes():
 	assert_string_contains(all_text, "扫堂腿")       # 基础招
 	assert_string_contains(all_text, "连环踢")      # 已悟功夫配方
 	assert_string_contains(all_text, "乾坤大挪移")  # 已悟功夫配方
+	assert_string_contains(all_text, "▸")           # 功夫实战效果行(伤害/词缀)
 	assert_false(all_text.contains("low_kick"), "no English ids")
 
 func test_codex_base_section_has_no_combos():

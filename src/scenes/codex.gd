@@ -36,6 +36,25 @@ func build() -> void:
 	for id in _learned:
 		var tn: String = ["", "初级", "高级", "高深", "绝学", "绝世"][clampi(Arts.tier(id), 1, 5)]
 		_add("【%s】%s" % [tn, Arts.recipe_text(id)])
+		var a := Arts.def(id)
+		if a != null and a.result != null:
+			var eff := _move_effect(a.result)
+			if eff != "":
+				_add("        ▸ " + eff)
+
+# 功夫 result 的实战效果:伤害 + 词缀 + 附带 debuff/buff。
+func _move_effect(m: Move) -> String:
+	var parts: Array = []
+	if m.damage > 0:
+		parts.append("伤害%d×%d" % [m.damage, max(1, m.hit_offsets.size())])
+	var aff := Loc.affixes(m)
+	if aff != "":
+		parts.append(aff)
+	for d in m.inflict:
+		parts.append("附「%s」" % Debuffs.display_name(d))
+	for b in m.empower:
+		parts.append("运「%s」" % Buffs.display_name(b))
+	return " | ".join(parts)
 
 func _add(text: String) -> void:
 	var l := Label.new()

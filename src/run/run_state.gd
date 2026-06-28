@@ -57,7 +57,7 @@ func _init(menpai := &"shaolin", neigong := &"", arts := []) -> void:
 	neigong_level = 0
 	mastery = {}; weight = {}; evo = {}; weapon_bonus = 0
 	base_attack = 10; base_dmg_inc = 0; base_extra_dmg = 0; base_armor = 0; base_max_qi = 10
-	equipment = {}; owned_equipment = []; hidden_weapons = {}; inventory = []; money = 0; reputation = 0; conditions = []
+	equipment = {}; owned_equipment = []; hidden_weapons = {}; inventory = []; money = 50; reputation = 0; conditions = []
 
 # --- 分支地图生成 ---
 func _gen_map() -> void:
@@ -65,8 +65,9 @@ func _gen_map() -> void:
 	rng.randomize()
 	layers = []
 	for _ch in CHAPTERS:
-		for _l in (LAYERS_PER_CHAPTER - 1):
-			layers.append(_gen_choices(rng))
+		var shop_layer := rng.randi_range(0, LAYERS_PER_CHAPTER - 2)   # 本章仅此选择层有集市
+		for l in (LAYERS_PER_CHAPTER - 1):
+			layers.append(_gen_choices(rng, l == shop_layer))
 		layers.append([{"type": "boss"}])   # 章末 boss
 	for layer in layers:                     # 初始化空出边
 		for node in layer:
@@ -103,24 +104,18 @@ func _pick_k(n: int, k: int, rng: RandomNumberGenerator) -> Array:
 	out.sort()
 	return out
 
-func _gen_choices(rng: RandomNumberGenerator) -> Array:
-	# 候选类型互异(择路才有意义);精英稀有(30% 顶替一个);保证至少一个战斗。
-	var base := ["grunt", "encounter", "shop"]
-	for i in range(base.size() - 1, 0, -1):   # 洗牌 base
+func _gen_choices(rng: RandomNumberGenerator, with_shop: bool) -> Array:
+	# 保证 ≥1 战斗;集市只在本章指定层出现(with_shop);精英稀有(30%)。
+	var picks: Array = [{"type": "elite" if rng.randf() < 0.3 else "grunt"}]
+	if with_shop:
+		picks.append({"type": "shop"})
+	else:
+		picks.append({"type": "encounter" if rng.randf() < 0.55 else "grunt"})
+	if rng.randf() < 0.5:   # 偶尔第三个候选
+		picks.append({"type": "encounter" if rng.randf() < 0.6 else "grunt"})
+	for i in range(picks.size() - 1, 0, -1):   # 洗牌
 		var j := rng.randi_range(0, i)
-		var tmp = base[i]; base[i] = base[j]; base[j] = tmp
-	var n := rng.randi_range(2, 3)
-	var picks: Array = []
-	for i in n:
-		picks.append({"type": base[i % base.size()]})
-	if rng.randf() < 0.3:   # 精英稀有
-		picks[rng.randi_range(0, picks.size() - 1)] = {"type": "elite"}
-	var has_combat := false
-	for c in picks:
-		if c["type"] in ["grunt", "elite"]:
-			has_combat = true
-	if not has_combat:
-		picks[0] = {"type": "grunt"}
+		var tmp = picks[i]; picks[i] = picks[j]; picks[j] = tmp
 	return picks
 
 # --- 节点 / 章节 ---
