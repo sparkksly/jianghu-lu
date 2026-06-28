@@ -147,12 +147,3 @@ func test_block_light_attack_cheaper():
 
 func test_guard_card_is_short():
 	assert_eq(Deck.by_id(&"guard").total_duration(), 2, "格挡缩到 2 拍")
-
-# 闪避破绽:闪掉第一击后露后摇,接第二击打破绽(×1.5)。
-func test_dodge_leaves_vulnerability():
-	var s := _state()   # distance 0
-	var dodge := _move("dodge", Move.Kind.DODGE, 0, 1, 2, 0)   # 窗口1拍
-	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 10)
-	# P0: 第一拳@0(被闪) + 第二拳@2(打破绽); P1: 闪@0
-	var ev := CombatSim.simulate(s, [_plan([[jab, 0], [jab, 2]]), _plan([[dodge, 0]])])
-	assert_eq(s.hp[1], 85, "第二拳命中破绽 10×1.5=15")

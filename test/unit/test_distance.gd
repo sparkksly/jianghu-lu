@@ -136,3 +136,27 @@ func test_interrupt_with_knockback_creates_distance():
 func test_push_palm_is_a_control_move():
 	var p := Deck.by_id(&"push_palm")
 	assert_true(p.can_interrupt and p.knockback, "推掌=打断+击退的控距招")
+
+# 破闪:扫击/范围招(pierce)能命中正在闪避的目标;普通招仍被闪掉。
+func test_pierce_dodge_hits_through_dodge():
+	var s := CombatState.new()
+	s.hp = [100, 100]; s.max_hp = [100, 100]
+	s.stamina = [50, 50]; s.sta_max = [50, 50]; s.regen = [0, 0]
+	s.n_ticks = 6; s.distance = 0
+	var dodge := Move.new()
+	dodge.id = "dodge"; dodge.kind = Move.Kind.DODGE; dodge.startup = 0; dodge.active = 2; dodge.recovery = 1
+	dodge.stamina_cost = 2; dodge.range_min = 0; dodge.range_max = 2
+	var sweep := _atk(8, 0, 1); sweep.id = &"sweep"; sweep.pierces_dodge = true
+	var normal := _atk(8, 0, 1); normal.id = &"normal"
+	# 破闪招打中闪避者
+	CombatSim.simulate(s, [_mkplan(sweep), _mkplan(dodge)])
+	assert_eq(s.hp[1], 92, "破闪招穿透闪避命中 -8")
+	# 普通招被闪
+	var s2 := CombatState.new()
+	s2.hp = [100, 100]; s2.max_hp = [100, 100]; s2.stamina = [50, 50]; s2.sta_max = [50, 50]; s2.regen = [0, 0]
+	s2.n_ticks = 6; s2.distance = 0
+	CombatSim.simulate(s2, [_mkplan(normal), _mkplan(dodge)])
+	assert_eq(s2.hp[1], 100, "普通招被闪掉")
+
+func _mkplan(m) -> Plan:
+	var p := Plan.new(); p.add(PlacedMove.new(m, 0)); return p
