@@ -100,7 +100,7 @@ func _build_cfg() -> Dictionary:
 		"max_qi": _run.combat_max_qi(),
 		"triggers": _run.combat_triggers(),
 		"evo": _run.evo,
-		"weight": _run.weight,
+		"weight": _run.draw_weights(),   # 家族需求抬基础招 + 化境单卡权重
 		"compiled": _run.compiled_arts(),
 		"attack": _run.combat_attack(),
 		"dmg_inc": _run.combat_dmg_inc(),
