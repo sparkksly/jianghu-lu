@@ -125,3 +125,25 @@ func test_status_tick_drains_hp():
 	s.status[1] = [{"tick": {"hp": -2}, "duration": 3, "modifiers": []}]
 	CombatSim.simulate(s, [_plan([]), _plan([])])
 	assert_eq(s.hp[1], 100 - 6, "中毒3拍掉6血")
+
+# 格挡=用气硬扛:挡重招耗气多(block 事件 amount=耗气),不再回气。
+func test_block_cost_scales_with_attack_power():
+	var s := _state()
+	var guard := _move("guard", Move.Kind.BLOCK, 0, 2, 0, 0)
+	var heavy := _move("heavy", Move.Kind.ATTACK, 0, 1, 1, 12)
+	var ev := CombatSim.simulate(s, [_plan([[guard, 2]]), _plan([[heavy, 2]])])
+	var bc := -1
+	for e in ev:
+		if e.type == &"block": bc = e.amount
+	assert_eq(bc, 3, "挡 damage12 → 耗 ceil(12/4)=3 气")
+
+func test_block_light_attack_cheaper():
+	var s := _state()
+	var guard := _move("guard", Move.Kind.BLOCK, 0, 2, 0, 0)
+	var jab := _move("jab", Move.Kind.ATTACK, 0, 1, 1, 4)
+	var ev := CombatSim.simulate(s, [_plan([[guard, 2]]), _plan([[jab, 2]])])
+	for e in ev:
+		if e.type == &"block": assert_eq(e.amount, 1, "挡 damage4 → 耗 1 气(净消耗,不回气)")
+
+func test_guard_card_is_short():
+	assert_eq(Deck.by_id(&"guard").total_duration(), 2, "格挡缩到 2 拍")
