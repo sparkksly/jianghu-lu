@@ -129,18 +129,26 @@ func fuse_opportunities() -> Array:
 			run.append(j)
 			cursor += footprint(units[j])
 			j += 1
-		# try the longest recipe-matching prefix of this run
-		var moves: Array = []
-		for k in run:
-			moves.append(units[k]["moves"][0])
-		for n in range(run.size(), 1, -1):
-			if rules.recipe_result(moves.slice(0, n)) != null:
-				out.append({
-					"indices": run.slice(0, n),
-					"start": units[run[0]]["start"],
-					"candidates": rules.recipe_candidates(moves.slice(0, n)),
-				})
-				break
+		# 在 run 内从每个起点贪心找配方(最长优先) —— 与实际合成 fuse_detailed 一致,
+		# 这样 [拳,拳,掌] 也能识别出后两张 [拳,掌],不必手动断开。
+		var pos := 0
+		while pos < run.size():
+			var sub: Array = []
+			for k in range(pos, run.size()):
+				sub.append(units[run[k]]["moves"][0])
+			var matched := false
+			for n in range(sub.size(), 1, -1):
+				if rules.recipe_result(sub.slice(0, n)) != null:
+					out.append({
+						"indices": run.slice(pos, pos + n),
+						"start": units[run[pos]]["start"],
+						"candidates": rules.recipe_candidates(sub.slice(0, n)),
+					})
+					pos += n
+					matched = true
+					break
+			if not matched:
+				pos += 1
 		i = run[-1] + 1
 	return out
 

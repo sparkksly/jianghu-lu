@@ -101,3 +101,16 @@ func test_overflow_flagged_and_excluded_from_commit():
 	assert_eq(overflow_count, 1, "the start-11 move overflows the 12-grid")
 	assert_eq(m.to_plan().moves.size(), 1, "overflow move excluded from committed plan")
 	assert_eq(m.effective_cost(), k.stamina_cost, "overflow move not counted toward 气")
+
+func test_fuse_hint_finds_substring_in_run():
+	# [拳,拳,掌] 连续排列 → 应识别出后两张 [拳,掌] 的合成(截拳),不必手动断开
+	var rules := Arts.build_rules([&"jiequan"])   # 截拳 = 拳+掌
+	var m := PlanModel.new(rules, 12)
+	var jab := Deck.by_id(&"jab")          # 拳法
+	var push := Deck.by_id(&"push_palm")   # 掌法
+	m.place(jab, 0)
+	m.place(jab, jab.total_duration())                       # 紧接
+	m.place(push, jab.total_duration() * 2)                  # 紧接
+	var opps := m.fuse_opportunities()
+	assert_eq(opps.size(), 1, "识别出一处合成")
+	assert_eq(opps[0]["indices"], [1, 2], "是后两张拳+掌,不是前缀")
