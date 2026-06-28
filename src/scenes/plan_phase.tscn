@@ -11,23 +11,25 @@ script = ExtResource("1_pphase")
 
 [node name="Bg" type="Panel" parent="."]
 offset_left = 36.0
-offset_top = 356.0
+offset_top = 318.0
 offset_right = 1116.0
 offset_bottom = 642.0
 
 [node name="Title" type="Label" parent="."]
 offset_left = 56.0
-offset_top = 362.0
+offset_top = 324.0
 offset_right = 400.0
-offset_bottom = 384.0
+offset_bottom = 346.0
 text = "排招 — 拖动招式到下方时间轴"
 
-[node name="DeckRow" type="HBoxContainer" parent="."]
+[node name="DeckRow" type="GridContainer" parent="."]
 offset_left = 56.0
-offset_top = 388.0
+offset_top = 350.0
 offset_right = 1096.0
-offset_bottom = 446.0
-theme_override_constants/separation = 6
+offset_bottom = 448.0
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 8
 
 [node name="Timeline" type="Control" parent="."]
 offset_left = 56.0

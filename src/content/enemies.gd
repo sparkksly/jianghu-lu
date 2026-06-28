@@ -49,19 +49,22 @@ const ROSTER := {
 # 返回 {name, hp, regen, pool, is_boss}。
 static func spawn(chapter: int, kind: String, variant: int = 0) -> Dictionary:
 	var ch := clampi(chapter, 0, 2)
-	var base_hp := 28 + ch * 12
+	var base_hp := 30 + ch * 20         # 血量随章更陡(30/50/70)
+	var atk := 10 + ch * 4              # 攻击力随章涨(10/14/18,对抗玩家成长)
+	var dmg_inc := ch * 12              # 增伤%随章涨(0/12/24)
 	var roster: Dictionary = ROSTER[ch]
 	match kind:
 		"boss":
 			var b: Dictionary = roster["boss"]
-			return {"name": b["name"], "hp": base_hp + 30, "regen": 7 + ch, "pool": b["pool"], "is_boss": true}
+			return {"name": b["name"], "hp": base_hp + 40, "regen": 7 + ch, "pool": b["pool"],
+				"attack": atk + 4, "dmg_inc": dmg_inc + 10, "is_boss": true}
 		"elite":
 			var list: Array = roster["elite"]
 			var e: Dictionary = list[variant % list.size()]
-			return {"name": e["name"], "hp": base_hp + 12 + int(e.get("hp", 0)), "regen": 6 + ch,
-				"pool": e["pool"], "is_boss": false}
+			return {"name": e["name"], "hp": base_hp + 16 + int(e.get("hp", 0)), "regen": 6 + ch,
+				"pool": e["pool"], "attack": atk + 2, "dmg_inc": dmg_inc, "is_boss": false}
 		_:
 			var list2: Array = roster["grunt"]
 			var g: Dictionary = list2[variant % list2.size()]
 			return {"name": g["name"], "hp": base_hp + int(g.get("hp", 0)), "regen": 5 + ch,
-				"pool": g["pool"], "is_boss": false}
+				"pool": g["pool"], "attack": atk, "dmg_inc": dmg_inc, "is_boss": false}

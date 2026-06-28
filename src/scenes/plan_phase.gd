@@ -4,7 +4,7 @@ signal plan_committed(plan)
 
 const TICK_W := 40.0
 
-@onready var _deck_row: HBoxContainer = $DeckRow
+@onready var _deck_row: GridContainer = $DeckRow
 @onready var _timeline: Control = $Timeline
 @onready var _stamina: Label = $StaminaLabel
 @onready var _combo: Label = $ComboPreview
@@ -69,7 +69,7 @@ func _add_card(m: Move) -> void:
 		# 紧凑距离带(贴/中/远),让 11 张手牌挤进一行
 		tail = "%s-%s" % [CombatFeed.distance_label(m.range_min).substr(0, 1), CombatFeed.distance_label(m.range_max).substr(0, 1)]
 	b.text = "%s\n%d拍·%d气·%s" % [m.move_name, m.total_duration(), m.stamina_cost, tail]
-	b.custom_minimum_size = Vector2(88, 52)   # 5 工具 + 6 进攻 = 11 张都落在屏内一行
+	b.custom_minimum_size = Vector2(124, 46)   # GridContainer 两排,避免一排太长看不到
 	b.clip_text = true
 	b.add_theme_font_size_override("font_size", 13)
 	b.new_grabbed.connect(_on_new_grabbed)

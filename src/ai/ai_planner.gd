@@ -13,9 +13,18 @@ func plan(deck: Array[Move], stamina_now: int, n_ticks: int, start_distance := 1
 	var t := 0
 	var dist := start_distance
 	var guard := 0
+	# 攻击招子集:AI 大概率选攻击(避免一直走位/防御不打人)
+	var attacks: Array[Move] = []
+	for dm in deck:
+		if dm.kind == Move.Kind.ATTACK or dm.kind == Move.Kind.THROW:
+			attacks.append(dm)
 	while t < n_ticks and guard < 60:
 		guard += 1
-		var m: Move = deck[_rng.randi_range(0, deck.size() - 1)]
+		var m: Move
+		if not attacks.is_empty() and _rng.randf() < 0.85:
+			m = attacks[_rng.randi_range(0, attacks.size() - 1)]   # 85% 攻击
+		else:
+			m = deck[_rng.randi_range(0, deck.size() - 1)]
 		if spent + m.stamina_cost > budget:
 			break
 		if t + m.total_duration() > n_ticks:

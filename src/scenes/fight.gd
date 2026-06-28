@@ -58,7 +58,7 @@ func _ready() -> void:
 	_state.regen = [6, e_reg]
 	_state.n_ticks = 11
 	_state.attack = [attack, int(enemy.get("attack", 10))]
-	_state.dmg_inc = [dmg_inc, 0]
+	_state.dmg_inc = [dmg_inc, int(enemy.get("dmg_inc", 0))]
 	_state.extra_dmg = [extra, 0]
 	_state.armor = [armor, int(enemy.get("armor", 0))]
 	_rules = Arts.build_rules(learned, evo)
