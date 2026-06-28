@@ -24,11 +24,16 @@ func _build_menpai() -> void:
 		$VBox/MenpaiRow.add_child(b)
 
 func _build_neigong() -> void:
+	# 三选一:每局从 10 门内功随机抽 3 门(roguelike 随机性)。
 	var grp := ButtonGroup.new()
-	for id in Neigong.all():
+	var pool: Array = Neigong.all().duplicate()
+	pool.shuffle()
+	var picks: Array = pool.slice(0, 3)
+	_neigong = picks[0]
+	for id in picks:
 		var b := Button.new()
 		b.toggle_mode = true; b.button_group = grp
-		b.custom_minimum_size = Vector2(150, 46)
+		b.custom_minimum_size = Vector2(170, 48)
 		b.text = "%s\n%d血 %d气" % [Neigong.display_name(id), Neigong.hp_per_level(id), Neigong.qi_per_level(id)]
 		b.toggled.connect(func(on): if on: _neigong = id)
 		if id == _neigong: b.button_pressed = true
