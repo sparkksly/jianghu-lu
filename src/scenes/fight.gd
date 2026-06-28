@@ -14,6 +14,8 @@ var _enemy_name := "对手"
 var _round := 0
 var _rng := RandomNumberGenerator.new()
 var _pool: Array[Move] = []
+var _defense_pool: Array[Move] = []   # 防御牌(格挡/闪身):每回合限量抽,不再无限免费
+const DEFENSE_CARDS := 2              # 每回合给的防御牌数 → 防不住所有,逼出取舍
 var _weight: Dictionary = {}
 var _landed: Dictionary = {}   # 本场玩家命中过的招(去重)→ 战后加熟练
 var _stats: Dictionary = {"tag_hits": {}, "tag_two_combo": {}}   # 本场行为→实战顿悟
@@ -69,6 +71,11 @@ func _ready() -> void:
 		var res = Arts.recipe(cid).get("result", null)
 		if res != null:
 			_pool.append(Evolve.apply(res, evo.get(cid, {})))
+	# 防御牌池(格挡/闪身):每回合限量抽,稀缺逼取舍
+	_defense_pool.clear()
+	for m in Hand.utilities(Deck.starter()):
+		if m.kind == Move.Kind.BLOCK or m.kind == Move.Kind.DODGE:
+			_defense_pool.append(m)
 	# 敌人:专属招池 + 通用工具牌(步/挡/闪/拿)
 	_enemy_deck.clear()
 	for id in e_pool:
@@ -121,10 +128,16 @@ func _start_round() -> void:
 	_watch_phase.show_state(_state)
 	_plan_phase.visible = true
 	_pending_ai_plan = _ai.plan(_enemy_deck, _state.stamina[1], _state.n_ticks, _state.distance)
-	# 本回合手牌:固定工具牌 + 有放回抽 6 张进攻牌(可重复、一次性消耗)
-	var hand: Array[Move] = Hand.utilities(Deck.starter())
+	# 本回合手牌:走位/擒拿固定给 + 防御限量抽 + 进攻有放回抽(一次性消耗)
+	var hand: Array[Move] = []
+	for m in Hand.utilities(Deck.starter()):
+		if m.kind == Move.Kind.STEP or m.kind == Move.Kind.THROW:
+			hand.append(m)   # 走位+擒拿:基础操控,固定给
+	if not _defense_pool.is_empty():
+		hand.append_array(Hand.draw(_defense_pool, DEFENSE_CARDS, _rng))   # 防御:限量
 	hand.append_array(Hand.draw(_pool, _cfg.get("hand_size", 6), _rng, _weight))
-	_plan_phase.setup(hand, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
+	# 意图全显示(动作可见、顺序可见;但 plan_phase 不绑拍号 → 时机仍需赌)
+	_plan_phase.setup(hand, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 999))
 
 var _pending_ai_plan: Plan
 
