@@ -164,7 +164,7 @@ func _show_evolution(id: StringName) -> void:
 func _show_basic() -> void:
 	var rs = REWARD.instantiate()
 	add_child(rs)
-	rs.setup(RunRewards.roll_basic(_rng))
+	rs.setup(RunRewards.roll_basic(_rng, _run))
 	rs.chosen.connect(func(r):
 		_apply_basic(r)
 		rs.queue_free()
