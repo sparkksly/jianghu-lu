@@ -182,10 +182,15 @@ static func _apply_damage(state: CombatState, actors: Array, defender: int, raw:
 
 static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: Move, d: Dictionary, t: int, events) -> void:
 	if (atk.kind == Move.Kind.ATTACK or atk.kind == Move.Kind.THROW) and not atk.in_range(state.distance):
-		var pen := PENALTY_WHIFF_HEAVY if atk.is_heavy else PENALTY_WHIFF
-		_add_stamina(state, attacker, -pen, t, events)
-		events.append(CombatEvent.new(t, &"reach", attacker, 1 - attacker, 0, atk.id))
-		return
+		# 追身:仅「太远一格」时自动逼近一步再打(反制无脑撤步;撤够远或太近仍打不到)
+		if state.distance == atk.range_max + 1:
+			state.distance -= 1
+			events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &"pursue"))
+		else:
+			var pen := PENALTY_WHIFF_HEAVY if atk.is_heavy else PENALTY_WHIFF
+			_add_stamina(state, attacker, -pen, t, events)
+			events.append(CombatEvent.new(t, &"reach", attacker, 1 - attacker, 0, atk.id))
+			return
 	var defender := 1 - attacker
 	var def_phase: StringName = d["phase"]
 	var def_move: Move = d["move"]
