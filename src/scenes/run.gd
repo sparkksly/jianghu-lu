@@ -98,6 +98,7 @@ func _build_cfg() -> Dictionary:
 		"menpai": _run.menpai_id,
 		"learned": _run.learned,
 		"max_qi": _run.combat_max_qi(),
+		"hand_size": _run.hand_size(),
 		"triggers": _run.combat_triggers(),
 		"evo": _run.evo,
 		"weight": _run.draw_weights(),   # 家族需求抬基础招 + 化境单卡权重
@@ -116,7 +117,12 @@ func _on_fight_finished(player_won: bool) -> void:
 	_inv_btn.show()
 	_run.player_hp = _fight.get_player_hp()
 	_run.add_money(_bounty(_run.current_node()))   # 战利银两
+	var ups := _run.gain_xp(_xp_reward(_run.current_node()))   # 经验 → 境界
 	_run.gain_mastery(_fight.moves_landed())   # 实战熟练
+	if ups > 0:
+		_show_banner("武学精进！\n境界臻至 " + _run.level_name())
+		await get_tree().create_timer(1.6).timeout
+		_hide_banner()
 	var got := _discover()                     # 实战顿悟(无影脚等)
 	_run.advance_node()
 	if got.size() > 0:
@@ -179,6 +185,13 @@ func _bounty(n: Dictionary) -> int:
 		"boss": return 60 + ch * 15
 		"elite": return 30 + ch * 8
 		_: return 15 + ch * 5
+
+# 战斗经验:boss/精英/小怪 递增(驱动境界提升)。
+func _xp_reward(n: Dictionary) -> int:
+	match n["type"]:
+		"boss": return 55
+		"elite": return 28
+		_: return 12
 
 # --- 商店 ---
 func _show_shop() -> void:
