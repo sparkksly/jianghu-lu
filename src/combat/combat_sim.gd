@@ -229,6 +229,9 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		var dmg := _apply_damage(state, actors, defender, _outgoing(state, attacker, atk.damage, false), t)
 		events.append(CombatEvent.new(t, &"interrupt", attacker, defender, dmg, atk.id))
 		_inflict(state, attacker, defender, atk, t, events)
+		if atk.knockback:   # 打断+击退:敌人攻击作废 + 被推开 → 真正拉开距离(追身也来不及)
+			state.distance = mini(2, state.distance + 1)
+			events.append(CombatEvent.new(t, &"distance", -1, -1, state.distance, &""))
 		_add_stamina(state, attacker, REWARD_INTERRUPT, t, events)
 		_add_stamina(state, defender, -PENALTY_STAGGER, t, events)
 		return
