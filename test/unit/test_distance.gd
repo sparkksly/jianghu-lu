@@ -54,7 +54,7 @@ func _atk(dmg, rmin, rmax) -> Move:
 	return m
 
 func test_attack_out_of_range_whiffs():
-	var s := _state()   # distance = 1 (中)
+	var s := _state(); s.distance = 2   # 撤够远(差两格,追身也补不上)
 	var p0 := Plan.new(); p0.add(PlacedMove.new(_atk(8, 0, 0), 0))  # 贴身-only
 	var ev := CombatSim.simulate(s, [p0, Plan.new()])
 	assert_eq(s.hp[1], 40, "够不着，无伤")
@@ -96,3 +96,20 @@ func test_ai_only_plans_reachable_attacks():
 				assert_true(m.in_range(dist), "AI 排的攻击在其假定距离内可达: %s@%d" % [m.move_name, dist])
 				checked += 1
 	assert_gt(checked, 0, "至少检查了若干攻击(非空测试)")
+
+# 追身:贴身招够不着「一格」→ 自动逼近一步打到(反制撤步)。
+func test_attack_pursues_one_step():
+	var s := CombatState.new()
+	s.hp = [100, 100]; s.max_hp = [100, 100]
+	s.stamina = [50, 50]; s.sta_max = [50, 50]; s.regen = [0, 0]
+	s.n_ticks = 6; s.distance = 1   # 贴身招(range[0,0])差一格
+	var hook := Move.new()
+	hook.id = "hook"; hook.kind = Move.Kind.ATTACK; hook.startup = 0; hook.active = 1; hook.recovery = 1
+	hook.damage = 6; hook.stamina_cost = 2; hook.range_min = 0; hook.range_max = 0
+	var p0 := Plan.new(); p0.add(PlacedMove.new(hook, 0))
+	var ev := CombatSim.simulate(s, [p0, Plan.new()])
+	var hit := false
+	for e in ev:
+		if e.type == &"hit" and e.actor == 0: hit = true
+	assert_true(hit, "差一格追身打到")
+	assert_eq(s.distance, 0, "追身后贴身")
