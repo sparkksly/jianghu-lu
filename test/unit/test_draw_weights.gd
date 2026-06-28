@@ -28,3 +28,16 @@ func test_mastery_raises_compiled_weight():
 	r.mastery[&"jiequan"] = 8   # 高熟练
 	var w1 := int(r.draw_weights().get(&"jiequan", 0))
 	assert_gt(w1, w0, "熟练度涨→化境单卡更常抽到")
+
+func test_compiled_card_shares_mastery_key():
+	# 化境单卡 id == 功夫 id → 手拼/单卡命中累积同一 mastery,熟练度贯通继承
+	var res = Arts.recipe(&"jiequan").get("result", null)
+	assert_not_null(res, "功夫有 result(化境单卡来源)")
+	assert_eq(res.id, &"jiequan", "化境单卡 id = 功夫 id,gain_mastery 记同一本账")
+
+func test_mastery_carries_into_compiled_weight():
+	# 手拼期攒的熟练度,化境后被单卡权重继承
+	var r := RunState.new(&"shaolin", &"", [&"jiequan"])
+	r.gain_mastery([&"jiequan", &"jiequan", &"jiequan", &"jiequan"])  # 手拼期攒 4 熟练
+	r.apply_evolution(&"jiequan", "compiled")
+	assert_gt(int(r.draw_weights().get(&"jiequan", 0)), RunState.COMPILED_DRAW_BASE, "化境单卡继承手拼期熟练度")
