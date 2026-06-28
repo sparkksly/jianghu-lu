@@ -6,7 +6,7 @@ extends RefCounted
 
 const MEDITATE_HEAL := 12
 const EVOLVE_AT := [3, 6]
-const LAYERS_PER_CHAPTER := 4   # 每章 3 选择层 + 1 boss 层
+const LAYERS_PER_CHAPTER := 6   # 每章 5 选择层 + 1 boss 层
 const CHAPTERS := 3
 const CHAPTER_TITLES := ["第一章 · 毒蛛潭", "第二章 · 断魂崖", "第三章 · 华山之巅"]
 
@@ -105,14 +105,17 @@ func _pick_k(n: int, k: int, rng: RandomNumberGenerator) -> Array:
 	return out
 
 func _gen_choices(rng: RandomNumberGenerator, with_shop: bool) -> Array:
-	# 保证 ≥1 战斗;集市只在本章指定层出现(with_shop);精英稀有(30%)。
-	var picks: Array = [{"type": "elite" if rng.randf() < 0.3 else "grunt"}]
+	# 候选偏战斗(避免几步到 boss);集市只在本章指定层(with_shop);精英稀有。
+	# 约 45% 的非集市层是「纯战斗层」:候选全是战斗,避不开,只能选打哪个/精英。
+	var picks: Array = [{"type": "elite" if rng.randf() < 0.25 else "grunt"}]   # ≥1 战斗
 	if with_shop:
 		picks.append({"type": "shop"})
+	elif rng.randf() < 0.45:
+		picks.append({"type": "elite" if rng.randf() < 0.2 else "grunt"})   # 纯战斗:第二候选也战斗
 	else:
-		picks.append({"type": "encounter" if rng.randf() < 0.55 else "grunt"})
-	if rng.randf() < 0.5:   # 偶尔第三个候选
-		picks.append({"type": "encounter" if rng.randf() < 0.6 else "grunt"})
+		picks.append({"type": "encounter"})
+	if rng.randf() < 0.55:   # 第三候选(偏战斗)
+		picks.append({"type": "grunt" if rng.randf() < 0.5 else "encounter"})
 	for i in range(picks.size() - 1, 0, -1):   # 洗牌
 		var j := rng.randi_range(0, i)
 		var tmp = picks[i]; picks[i] = picks[j]; picks[j] = tmp
