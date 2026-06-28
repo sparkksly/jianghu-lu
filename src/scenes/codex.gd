@@ -21,10 +21,8 @@ func toggle() -> void:
 func build() -> void:
 	for c in _list.get_children():
 		c.queue_free()
-	_add("== 招式 ==")
-	var moves: Array[Move] = Deck.starter()
-	moves.append_array([Deck.chain_kick(), Deck.wuying(), Deck.qiankun()])
-	for m in moves:
+	_add("== 基础招式 ==")
+	for m in Deck.starter():   # 仅基础招池(9 攻击 + 工具牌),才是真正的抽牌池
 		var aff := Loc.affixes(m)
 		var line := "%s | %s | 体力%d 伤害%d | 前%d命%d后%d" % [
 			m.move_name, Loc.kind_name(m.kind), m.stamina_cost, m.damage,
@@ -36,8 +34,8 @@ func build() -> void:
 	if _learned.is_empty():
 		_add("(尚未领悟功夫)")
 	for id in _learned:
-		var tier_mark := "【高】" if Arts.tier(id) == 2 else "【初】"
-		_add("%s %s" % [tier_mark, Arts.recipe_text(id)])
+		var tn: String = ["", "初级", "高级", "高深", "绝学", "绝世"][clampi(Arts.tier(id), 1, 5)]
+		_add("【%s】%s" % [tn, Arts.recipe_text(id)])
 
 func _add(text: String) -> void:
 	var l := Label.new()
