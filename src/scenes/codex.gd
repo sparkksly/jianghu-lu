@@ -21,15 +21,7 @@ func toggle() -> void:
 func build() -> void:
 	for c in _list.get_children():
 		c.queue_free()
-	_add("== 基础招式 ==")
-	for m in Deck.starter():   # 仅基础招池(9 攻击 + 工具牌),才是真正的抽牌池
-		var aff := Loc.affixes(m)
-		var line := "%s | %s | 体力%d 伤害%d | 前%d命%d后%d" % [
-			m.move_name, Loc.kind_name(m.kind), m.stamina_cost, m.damage,
-			m.startup, m.active, m.recovery]
-		if aff != "": line += " | " + aff
-		if m.tags.size() > 0: line += " | " + " ".join(m.tags.map(func(t): return str(t)))
-		_add(line)
+	# 已悟功夫放最前(玩家最关心自己领悟了啥)
 	_add("== 已悟功夫 · 配方 ==")
 	if _learned.is_empty():
 		_add("(尚未领悟功夫)")
@@ -41,6 +33,15 @@ func build() -> void:
 			var eff := _move_effect(a.result)
 			if eff != "":
 				_add("        ▸ " + eff)
+	_add("== 基础招式 ==")
+	for m in Deck.starter():   # 仅基础招池(9 攻击 + 工具牌),才是真正的抽牌池
+		var aff := Loc.affixes(m)
+		var line := "%s | %s | 体力%d 伤害%d | 前%d命%d后%d" % [
+			m.move_name, Loc.kind_name(m.kind), m.stamina_cost, m.damage,
+			m.startup, m.active, m.recovery]
+		if aff != "": line += " | " + aff
+		if m.tags.size() > 0: line += " | " + " ".join(m.tags.map(func(t): return str(t)))
+		_add(line)
 
 # 功夫 result 的实战效果:伤害 + 词缀 + 附带 debuff/buff。
 func _move_effect(m: Move) -> String:
