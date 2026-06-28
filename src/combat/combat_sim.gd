@@ -5,6 +5,7 @@ extends RefCounted
 const REWARD_HIT := 1
 const REWARD_INTERRUPT := 2
 const REWARD_BLOCK := 1
+const BLOCK_COST_PER := 4   # 格挡硬扛:每 4 点招式伤害耗 1 气(重招更费气)
 const PENALTY_WHIFF := 2
 const PENALTY_WHIFF_HEAVY := 4
 const PENALTY_STAGGER := 2
@@ -207,8 +208,10 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		return
 
 	if def_active_defense and def_move.kind == Move.Kind.BLOCK:
-		events.append(CombatEvent.new(t, &"block", attacker, defender, 0, atk.id))
-		_add_stamina(state, defender, REWARD_BLOCK, t, events)
+		# 格挡=用气硬扛:消耗气按被挡招强度(重招更费气),不再回气
+		var bc := maxi(1, int(ceil(float(atk.damage) / BLOCK_COST_PER)))
+		_add_stamina(state, defender, -bc, t, events)
+		events.append(CombatEvent.new(t, &"block", attacker, defender, bc, atk.id))
 		actors[defender].leverage_until = t + LEVERAGE_WINDOW   # 格挡成功 → 借力窗口
 		events.append(CombatEvent.new(t, &"leverage", defender, attacker, LEVERAGE_WINDOW, atk.id))
 		for trig in state.triggers[defender]:   # 格挡触发被动(坚壁等)

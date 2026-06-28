@@ -46,7 +46,7 @@ static func starter() -> Array[Move]:
 		_m(&"sweep_kick", "扫堂腿", Move.Kind.ATTACK, 0, 1, 2, 6, 2, {"tags":[&"腿法"], "range":[0,1]}),
 		_m(&"side_kick", "侧踢", Move.Kind.ATTACK, 3, 1, 2, 12, 4, {"tags":[&"腿法"], "range":[0,1], "heavy":true, "armor":true, "knockback":true}),
 		# 防/闪/拿
-		_m(&"guard", "格挡", Move.Kind.BLOCK, 0, 3, 1, 0, 2, {}),
+		_m(&"guard", "格挡", Move.Kind.BLOCK, 0, 2, 0, 0, 1, {}),  # 2拍·1气(硬扛额外耗气见 combat_sim)
 		_m(&"dodge", "闪身", Move.Kind.DODGE, 0, 2, 1, 0, 2, {"tags":[&"轻功"]}),
 		_m(&"grab", "擒拿", Move.Kind.THROW, 0, 1, 1, 5, 3, {"range":[0,0]}),
 		# 步法(进快退慢;走位不耗气,只花拍)
