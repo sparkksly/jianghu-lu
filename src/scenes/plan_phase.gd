@@ -126,6 +126,8 @@ func _redraw_timeline() -> void:
 		elbl.clip_text = true
 		elbl.size = ebg.size
 		_timeline.add_child(elbl)
+		for ht in ei.get("hits", []):   # 敌人实际命中拍
+			_mark_hit_tick(int(ht), 2.0, 24.0, Color(1, 0.45, 0.45, 0.7))
 	# 下行:玩家排招(可拖)
 	for e in _model.entries():
 		var mv: Move = e["move"]
@@ -148,7 +150,25 @@ func _redraw_timeline() -> void:
 		blk.grabbed.connect(_on_block_grabbed)
 		_timeline.add_child(blk)
 		_blocks[e["index"]] = blk
+		if mv.kind == Move.Kind.ATTACK or mv.kind == Move.Kind.THROW:   # 玩家实际命中拍
+			for off in mv.hit_offsets:
+				_mark_hit_tick(start + mv.startup + off, 30.0, 30.0, Color(1, 0.95, 0.35, 0.7))
 	_draw_fuse_hints()
+
+# 在某拍画「命中拍」标记(亮色格 + ⚡):区分前摇/后摇(不打人)与实际命中拍。
+func _mark_hit_tick(tick: int, y: float, h: float, color: Color) -> void:
+	var hl := ColorRect.new()
+	hl.color = color
+	hl.position = Vector2(tick * TICK_W + 1, y)
+	hl.size = Vector2(TICK_W - 2, h)
+	hl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_timeline.add_child(hl)
+	var z := Label.new()
+	z.text = "⚡"
+	z.add_theme_font_size_override("font_size", 13)
+	z.position = Vector2(tick * TICK_W + TICK_W * 0.5 - 7, y + h * 0.5 - 11)
+	z.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_timeline.add_child(z)
 
 # A clickable hint floats above any contiguous run of singles that can fuse.
 func _draw_fuse_hints() -> void:
