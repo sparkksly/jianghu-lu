@@ -113,3 +113,26 @@ func test_attack_pursues_one_step():
 		if e.type == &"hit" and e.actor == 0: hit = true
 	assert_true(hit, "差一格追身打到")
 	assert_eq(s.distance, 0, "追身后贴身")
+
+# 控距:推掌(打断+击退)命中敌人前摇 → 打断其攻击 + 击退拉开,真正创造距离。
+func test_interrupt_with_knockback_creates_distance():
+	var s := CombatState.new()
+	s.hp = [100, 100]; s.max_hp = [100, 100]
+	s.stamina = [50, 50]; s.sta_max = [50, 50]; s.regen = [0, 0]
+	s.n_ticks = 8; s.distance = 0
+	var push := Deck.by_id(&"push_palm")              # 打断+击退,贴身~中
+	var foe := _atk(9, 0, 0); foe.startup = 2; foe.id = &"foe"   # 前摇2拍,可被打断
+	# 敌人攻击@0(前摇 t0-1);玩家推掌@1 命中敌人前摇 → 打断+击退
+	var p0 := Plan.new(); p0.add(PlacedMove.new(push, 1))
+	var p1 := Plan.new(); p1.add(PlacedMove.new(foe, 0))
+	var ev := CombatSim.simulate(s, [p0, p1])
+	var interrupted := false
+	for e in ev:
+		if e.type == &"interrupt": interrupted = true
+	assert_true(interrupted, "推掌打断敌人前摇")
+	assert_eq(s.distance, 1, "打断同时击退,距离被拉开")
+	assert_eq(s.hp[0], 100, "敌人攻击被打断,我方未受伤")
+
+func test_push_palm_is_a_control_move():
+	var p := Deck.by_id(&"push_palm")
+	assert_true(p.can_interrupt and p.knockback, "推掌=打断+击退的控距招")
