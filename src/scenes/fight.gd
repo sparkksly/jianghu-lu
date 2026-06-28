@@ -56,7 +56,7 @@ func _ready() -> void:
 	_state.sta_max = [max_qi, 10]; _state.stamina = [max_qi, 10]
 	_state.triggers = [_cfg.get("triggers", []), []]
 	_state.regen = [6, e_reg]
-	_state.n_ticks = 15
+	_state.n_ticks = 11
 	_state.attack = [attack, int(enemy.get("attack", 10))]
 	_state.dmg_inc = [dmg_inc, 0]
 	_state.extra_dmg = [extra, 0]

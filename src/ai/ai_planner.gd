@@ -51,9 +51,14 @@ func _closer_step(deck: Array[Move], m: Move, dist: int) -> Move:
 			return s
 	return null
 
-func intent(plan: Plan, reveal_count: int) -> Array[String]:
-	var out: Array[String] = []
+# 敌人意图(绑拍号):[{name, start, dur}],让玩家能算时机对位。reveal_count 外显示"？"。
+func intent(plan: Plan, reveal_count: int) -> Array:
+	var out: Array = []
 	var s := plan.sorted()
 	for i in s.size():
-		out.append(s[i].move.move_name if i < reveal_count else "？")
+		out.append({
+			"name": s[i].move.move_name if i < reveal_count else "？",
+			"start": s[i].start,
+			"dur": s[i].move.total_duration(),
+		})
 	return out

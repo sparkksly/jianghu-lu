@@ -13,6 +13,7 @@ const TICK_W := 40.0
 
 var _deck: Array[Move] = []
 var _rules: ComboRules
+var _enemy_intent: Array = []   # [{name,start,dur}] 敌人意图,绑拍号画在时间线上行
 var _stamina_now := 10
 var _sta_max := 10
 var _n_ticks := 12
@@ -35,7 +36,11 @@ var _new_press := false
 func setup(deck: Array[Move], rules: ComboRules, stamina_now: int, sta_max: int, n_ticks: int, enemy_intent: Array) -> void:
 	_deck = deck; _rules = rules; _stamina_now = stamina_now; _sta_max = sta_max; _n_ticks = n_ticks
 	_model = PlanModel.new(rules, n_ticks)
-	_intent.text = "对手意图: " + ", ".join(enemy_intent)
+	_enemy_intent = enemy_intent
+	var names: Array = []
+	for ei in enemy_intent:
+		names.append(ei["name"])
+	_intent.text = "对手意图(上行=敌方时机): " + "  ".join(names)
 	_build_deck()
 	_redraw_timeline()
 	_refresh_labels()
@@ -96,14 +101,32 @@ func _redraw_timeline() -> void:
 	_blocks = {}
 	_hints = []
 	for c in _timeline.get_children(): c.queue_free()
-	_timeline.custom_minimum_size = Vector2(_n_ticks * TICK_W, 44)
+	_timeline.custom_minimum_size = Vector2(_n_ticks * TICK_W, 62)
 	for i in _n_ticks:
 		var cell := ColorRect.new()
 		cell.color = Color(0.15, 0.15, 0.18)
 		cell.position = Vector2(i * TICK_W + 1, 1)
-		cell.size = Vector2(TICK_W - 2, 42)
+		cell.size = Vector2(TICK_W - 2, 60)
 		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_timeline.add_child(cell)
+	# 上行:敌人意图(绑拍号,只读,红) → 玩家据此算时机对位
+	for ei in _enemy_intent:
+		var ebg := ColorRect.new()
+		ebg.color = Color(0.45, 0.16, 0.18, 0.55)
+		ebg.position = Vector2(int(ei["start"]) * TICK_W + 1, 2)
+		ebg.size = Vector2(int(ei["dur"]) * TICK_W - 2, 24)
+		ebg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_timeline.add_child(ebg)
+		var elbl := Label.new()
+		elbl.text = ei["name"]
+		elbl.add_theme_font_size_override("font_size", 12)
+		elbl.add_theme_color_override("font_color", Color(1, 0.7, 0.7))
+		elbl.position = ebg.position + Vector2(2, 2)
+		elbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		elbl.clip_text = true
+		elbl.size = ebg.size
+		_timeline.add_child(elbl)
+	# 下行:玩家排招(可拖)
 	for e in _model.entries():
 		var mv: Move = e["move"]
 		var start: int = e["start"]
@@ -113,8 +136,8 @@ func _redraw_timeline() -> void:
 		blk.is_combo = e["fused"]
 		blk.move = mv
 		blk.text = ("✦" + mv.move_name) if e["fused"] else mv.move_name
-		blk.position = Vector2(start * TICK_W, 2)
-		blk.custom_minimum_size = Vector2(dur * TICK_W - 2, 40)
+		blk.position = Vector2(start * TICK_W, 30)
+		blk.custom_minimum_size = Vector2(dur * TICK_W - 2, 30)
 		blk.size = blk.custom_minimum_size
 		if e["overflow"]:
 			blk.modulate = Color(1, 0.3, 0.3)     # 红：超出上限，不生效
