@@ -397,6 +397,18 @@ func apply_reward(r: Dictionary) -> void:
 			_meditate()
 		"hone":
 			_hone(r["id"])
+		"attack":
+			base_attack += 2
+		"dmg_inc":
+			base_dmg_inc += 8
+		"extra_dmg":
+			base_extra_dmg += 6
+		"armor":
+			base_armor += 12
+		"money":
+			add_money(35)
+		"learn":
+			learn(r["id"])
 
 func _meditate() -> void:
 	neigong_level += 1
