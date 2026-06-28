@@ -65,9 +65,15 @@ func intent(plan: Plan, reveal_count: int) -> Array:
 	var out: Array = []
 	var s := plan.sorted()
 	for i in s.size():
+		var pm: PlacedMove = s[i]
+		var hits: Array = []   # 实际命中拍(绝对):前摇后的命中拍才打人
+		if pm.move.kind == Move.Kind.ATTACK or pm.move.kind == Move.Kind.THROW:
+			for off in pm.move.hit_offsets:
+				hits.append(pm.start + pm.move.startup + off)
 		out.append({
-			"name": s[i].move.move_name if i < reveal_count else "？",
-			"start": s[i].start,
-			"dur": s[i].move.total_duration(),
+			"name": pm.move.move_name if i < reveal_count else "？",
+			"start": pm.start,
+			"dur": pm.move.total_duration(),
+			"hits": hits,
 		})
 	return out
