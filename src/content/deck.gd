@@ -17,6 +17,7 @@ static func _m(id, name, kind, su, act, rec, dmg, cost, opts := {}) -> Move:
 	m.tags = tags
 	m.can_interrupt = opts.get("interrupt", false)
 	m.super_armor = opts.get("armor", false)
+	m.pierces_dodge = opts.get("pierce", false)
 	m.is_heavy = opts.get("heavy", false)
 	m.priority = opts.get("priority", 0)
 	m.range_min = opts.get("range", [0, 2])[0]
@@ -43,11 +44,11 @@ static func starter() -> Array[Move]:
 		_m(&"knee_strike", "膝顶", Move.Kind.ATTACK, 1, 1, 2, 9, 3, {"tags":[&"肘膝"], "range":[0,0], "heavy":true}),
 		# 腿(贴身~中)
 		_m(&"snap_kick", "弹腿", Move.Kind.ATTACK, 0, 1, 1, 5, 2, {"tags":[&"腿法"], "range":[0,1]}),
-		_m(&"sweep_kick", "扫堂腿", Move.Kind.ATTACK, 0, 1, 2, 6, 2, {"tags":[&"腿法"], "range":[0,1]}),
+		_m(&"sweep_kick", "扫堂腿", Move.Kind.ATTACK, 0, 1, 2, 6, 2, {"tags":[&"腿法"], "range":[0,1], "pierce":true}),  # 横扫破闪
 		_m(&"side_kick", "侧踢", Move.Kind.ATTACK, 3, 1, 2, 12, 4, {"tags":[&"腿法"], "range":[0,1], "heavy":true, "armor":true, "knockback":true}),
 		# 防/闪/拿
 		_m(&"guard", "格挡", Move.Kind.BLOCK, 0, 2, 0, 0, 1, {}),  # 2拍·1气(硬扛额外耗气见 combat_sim)
-		_m(&"dodge", "闪身", Move.Kind.DODGE, 0, 1, 2, 0, 2, {"tags":[&"轻功"]}),  # 窗口1拍(要精确)+后摇2拍(破绽)
+		_m(&"dodge", "闪身", Move.Kind.DODGE, 0, 2, 1, 0, 2, {"tags":[&"轻功"]}),
 		_m(&"grab", "擒拿", Move.Kind.THROW, 0, 1, 1, 5, 3, {"range":[0,0]}),
 		# 步法(进快退慢;走位不耗气,只花拍)
 		_m(&"step_in", "上步", Move.Kind.STEP, 0, 1, 0, 0, 0, {"tags":[&"身法"], "delta":-1}),
@@ -75,7 +76,7 @@ static func boss_moves() -> Array[Move]:
 		# 血河老魔(血刀):凶猛重斩
 		_m(&"blood_blade", "血河刀", Move.Kind.ATTACK, 1, 1, 1, 12, 3, {"range":[0,1], "heavy":true, "knockback":true, "inflict":[&"bleed"]}),
 		_m(&"soul_reap", "噬魂斩", Move.Kind.ATTACK, 2, 1, 1, 13, 3, {"range":[0,1], "heavy":true, "interrupt":true, "inflict":[&"weak"]}),
-		_m(&"massacre", "狂屠", Move.Kind.ATTACK, 0, 3, 1, 6, 3, {"range":[0,1], "hits":[0,1,2]}),
+		_m(&"massacre", "狂屠", Move.Kind.ATTACK, 0, 3, 1, 6, 3, {"range":[0,1], "hits":[0,1,2], "pierce":true}),
 		# 无影魔君(东方不败):极快瞬身
 		_m(&"phantom_needle", "千幻针", Move.Kind.ATTACK, 0, 2, 0, 5, 2, {"range":[0,1], "hits":[0,1], "priority":7}),
 		_m(&"ghost_step", "鬼魅步", Move.Kind.STEP, 0, 1, 0, 0, 0, {"tags":[&"身法"], "delta":-1, "priority":9}),
@@ -138,7 +139,7 @@ static func taixu() -> Move:  # 掌+闪+掌 → 太虚剑意(绝世·稀缺)
 
 # --- 通用绝学(铺量) ---
 static func saotang() -> Move:  # 腿×2 → 扫膛腿
-	return _m(&"saotang", "扫膛腿", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1], "knockback":true})
+	return _m(&"saotang", "扫膛腿", Move.Kind.ATTACK, 0, 2, 1, 7, 0, {"tags":[&"腿法"], "hits":[0,1], "range":[0,1], "knockback":true, "pierce":true})
 static func shuangfeng() -> Move:  # 肘×2 → 双风贯耳
 	return _m(&"shuangfeng", "双风贯耳", Move.Kind.ATTACK, 0, 1, 1, 8, 0, {"tags":[&"肘膝"], "hits":[0], "range":[0,0], "stun":1})
 static func jiequan() -> Move:  # 拳+掌 → 截拳
@@ -146,7 +147,7 @@ static func jiequan() -> Move:  # 拳+掌 → 截拳
 static func bajiquan() -> Move:  # 拳+肘+肘 → 八极崩
 	return _m(&"bajiquan", "八极崩", Move.Kind.ATTACK, 1, 1, 1, 13, 0, {"tags":[&"肘膝"], "hits":[0], "range":[0,0], "heavy":true, "knockback":true})
 static func paiyun() -> Move:  # 掌×4 → 排云双掌
-	return _m(&"paiyun", "排云双掌", Move.Kind.ATTACK, 0, 3, 1, 11, 0, {"tags":[&"掌法"], "hits":[0,1,2], "range":[0,1], "armor":true})
+	return _m(&"paiyun", "排云双掌", Move.Kind.ATTACK, 0, 3, 1, 11, 0, {"tags":[&"掌法"], "hits":[0,1,2], "range":[0,1], "armor":true, "pierce":true})
 
 # --- 少林铺量 ---
 static func luohan_da() -> Move:  # 拳×4 → 罗汉伏魔神拳(罗汉拳升级)

@@ -19,6 +19,7 @@ enum Kind { ATTACK, BLOCK, DODGE, THROW, STEP }
 
 @export var can_interrupt: bool = false  # 打断 词缀
 @export var super_armor: bool = false    # 霸体 词缀
+@export var pierces_dodge: bool = false  # 破闪:扫击/范围攻击,能命中正在闪避的目标
 @export var is_heavy: bool = false       # 重击 (extra whiff penalty)
 
 @export var range_min: int = 0     # 适用距离带 [min,max]，默认任意

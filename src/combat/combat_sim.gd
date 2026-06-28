@@ -13,8 +13,6 @@ const THROW_BREAK_BONUS := 4
 const GASP_DAMAGE_BONUS := 3
 # 状态系统(回合内)
 const LEVERAGE_WINDOW := 3      # 借力:成功格挡/闪避后的窗口拍数
-const DODGE_VULN := 3          # 闪避后破绽窗口(后摇露空,接招可惩罚)
-const VULN_MULT := 1.5        # 破绽期受击伤害倍率
 const LEVERAGE_PCT := 60        # 借力:窗口内下一击增伤 %(作临时增伤)
 const GUARD_REDUCTION_PCT := 50 # 护体:受伤减免 %
 const ARMOR_K := 100           # 防御递减:减伤% = armor/(armor+K)
@@ -29,7 +27,6 @@ class _Actor:
 	var gasp_until := -1
 	var guard_until := -1      # 护体生效到(不含)此拍
 	var leverage_until := -1   # 借力窗口到(含)此拍
-	var vuln_until := -1       # 闪避后破绽窗口到(不含)此拍:受击加伤
 
 static func simulate(state: CombatState, plans: Array) -> Array[CombatEvent]:
 	var events: Array[CombatEvent] = []
@@ -177,8 +174,6 @@ static func _apply_damage(state: CombatState, actors: Array, defender: int, raw:
 	dmg *= 1.0 - mit
 	if t < actors[defender].guard_until and dmg > 0:   # 护体:受伤减半
 		dmg *= float(100 - GUARD_REDUCTION_PCT) / 100.0
-	if t < actors[defender].vuln_until and dmg > 0:    # 闪避破绽:接招打加伤(惩罚乱闪)
-		dmg *= VULN_MULT
 	var dealt := 0
 	if raw > 0:
 		dealt = maxi(1, int(round(dmg)))
@@ -203,11 +198,13 @@ static func _resolve_hit(state: CombatState, actors: Array, attacker: int, atk: 
 		and (def_move.kind == Move.Kind.BLOCK or def_move.kind == Move.Kind.DODGE)
 
 	if def_active_defense and def_move.kind == Move.Kind.DODGE:
-		actors[defender].leverage_until = t + LEVERAGE_WINDOW   # 闪避成功 → 借力窗口
-		actors[defender].vuln_until = t + DODGE_VULN            # 但闪避后摇露破绽:接招打加伤
-		events.append(CombatEvent.new(t, &"leverage", defender, attacker, LEVERAGE_WINDOW, def_move.id))
-		_whiff(state, attacker, atk, t, events)
-		return
+		if not atk.pierces_dodge:
+			actors[defender].leverage_until = t + LEVERAGE_WINDOW   # 闪避成功 → 借力窗口
+			events.append(CombatEvent.new(t, &"leverage", defender, attacker, LEVERAGE_WINDOW, def_move.id))
+			_whiff(state, attacker, atk, t, events)
+			return
+		# 破闪招(扫击/范围):穿透闪避照常命中 → 落到下方命中结算
+		events.append(CombatEvent.new(t, &"pierce", attacker, defender, 0, atk.id))
 
 	if atk.kind == Move.Kind.THROW:
 		if def_active_defense and def_move.kind == Move.Kind.BLOCK:

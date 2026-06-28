@@ -47,6 +47,7 @@ static func affixes(move: Move) -> String:
 	if move.can_interrupt: parts.append("打断")
 	if move.super_armor: parts.append("霸体")
 	if move.is_heavy: parts.append("重击")
+	if move.pierces_dodge: parts.append("破闪")
 	return " ".join(parts)
 
 static func floating_text(e) -> String:

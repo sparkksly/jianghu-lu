@@ -12,7 +12,7 @@ const TOLERANCE := 0.45   # 容差(±45%):早期内容宽松,特色武功可偏,
 # 词缀/属性 power 单价(经验值,靠 playtest 调)。
 const AFFIX := {
 	"super_armor": 8, "interrupt": 6, "heavy": 4, "knockback": 5,
-	"stun_per": 6, "guard_per": 2, "delta_per": 6, "priority_per": 0.5,
+	"stun_per": 6, "guard_per": 2, "delta_per": 6, "priority_per": 0.5, "pierce": 4,
 }
 const COST_PER_TICK := 2.0   # 每拍 −power(慢=便宜)
 const REQUIRES_DISCOUNT := 0.85
@@ -50,6 +50,7 @@ static func power(a: ArtDef) -> int:
 static func _affix_power(m: Move) -> float:
 	var p := 0.0
 	if m.super_armor: p += AFFIX["super_armor"]
+	if m.pierces_dodge: p += AFFIX["pierce"]
 	if m.can_interrupt: p += AFFIX["interrupt"]
 	if m.is_heavy: p += AFFIX["heavy"]
 	if m.knockback: p += AFFIX["knockback"]
