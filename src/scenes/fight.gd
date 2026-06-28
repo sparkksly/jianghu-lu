@@ -123,7 +123,7 @@ func _start_round() -> void:
 	_pending_ai_plan = _ai.plan(_enemy_deck, _state.stamina[1], _state.n_ticks, _state.distance)
 	# 本回合手牌:固定工具牌 + 有放回抽 6 张进攻牌(可重复、一次性消耗)
 	var hand: Array[Move] = Hand.utilities(Deck.starter())
-	hand.append_array(Hand.draw(_pool, 6, _rng, _weight))
+	hand.append_array(Hand.draw(_pool, _cfg.get("hand_size", 6), _rng, _weight))
 	_plan_phase.setup(hand, _rules, _state.stamina[0], _state.sta_max[0], _state.n_ticks, _ai.intent(_pending_ai_plan, 1))
 
 var _pending_ai_plan: Plan

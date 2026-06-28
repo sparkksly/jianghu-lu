@@ -35,7 +35,10 @@ func _centers(count: int, y: float) -> Array:
 	return out
 
 func _build() -> void:
-	$Title.text = _run.chapter_title()
+	var lv := "境界·%s" % _run.level_name()
+	if _run.level < RunState.MAX_LEVEL:
+		lv += " (再%d经验晋阶)" % _run.xp_to_next()
+	$Title.text = "%s    %s" % [_run.chapter_title(), lv]
 	for c in get_children():
 		if c is Button:
 			c.queue_free()
