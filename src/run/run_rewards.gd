@@ -10,21 +10,24 @@ extends RefCounted
 # w 越大越常见;额外伤害/顿悟是稀有强力,低权重。数值见 RunState.apply_reward。
 const POOL := [
 	{"type": "hp", "w": 10},        # 强身:气血上限
-	{"type": "meditate", "w": 8},   # 打坐:内功+级
-	{"type": "hone", "w": 9},       # 磨练:某基础招熟练+抽率
-	{"type": "attack", "w": 8},     # 内力:基础攻击
-	{"type": "dmg_inc", "w": 8},    # 刚劲:基础增伤%(加法区)
-	{"type": "money", "w": 7},      # 盘缠:银两
+	{"type": "meditate", "w": 9},   # 打坐:内功+级
+	{"type": "hone", "w": 10},      # 磨练:强化你修炼方向的基础招(定向)
+	{"type": "qinggong", "w": 6},   # 身法:习得一门轻功
+	{"type": "attack", "w": 7},     # 内力:基础攻击
+	{"type": "dmg_inc", "w": 7},    # 刚劲:基础增伤%(加法区)
+	{"type": "money", "w": 6},      # 盘缠:银两
 	{"type": "armor", "w": 5},      # 横练:防御
 	{"type": "extra_dmg", "w": 3},  # 绝劲:额外伤害%(独立乘区,稀有)
-	{"type": "learn", "w": 5},      # 顿悟:领悟一门可自悟功夫
+	{"type": "learn", "w": 7},      # 顿悟:领悟你专精方向的功夫(定向)
 ]
 
-# 基础提升三选一:从加权池抽 3 个不同类型(顿悟仅当有可自悟功夫时入池)。
+# 基础提升三选一:从加权池抽 3 个不同类型(顿悟/身法仅当确有可得时入池)。
 static func roll_basic(rng: RandomNumberGenerator, run = null) -> Array:
 	var pool: Array = []
 	for p in POOL:
 		if p["type"] == "learn" and (run == null or run.self_learnable_arts().is_empty()):
+			continue
+		if p["type"] == "qinggong" and (run == null or _unlearned_qinggong(run).is_empty()):
 			continue
 		pool.append(p.duplicate())
 	var out: Array = []
@@ -33,6 +36,28 @@ static func roll_basic(rng: RandomNumberGenerator, run = null) -> Array:
 		var typ: String = pool[idx]["type"]
 		pool.remove_at(idx)   # 不重复类型
 		out.append(_make_reward(typ, rng, run))
+	return out
+
+# 你的修炼方向:已学功夫所需家族的需求量(招式 tag → 次数),磨练/领悟据此定向。
+static func _family_demand(run) -> Dictionary:
+	var d: Dictionary = {}
+	if run == null:
+		return d
+	for id in run.learned:
+		var a := Arts.def(id)
+		if a == null:
+			continue
+		for s in a.slots:
+			if s.has("tag"):
+				var t := str(s["tag"])
+				d[t] = int(d.get(t, 0)) + 1
+	return d
+
+static func _unlearned_qinggong(run) -> Array:
+	var out: Array = []
+	for id in Passives.by_category(&"轻功"):
+		if not run.qinggong.has(id):
+			out.append(id)
 	return out
 
 static func _weighted_pick(pool: Array, rng: RandomNumberGenerator) -> int:
@@ -50,13 +75,36 @@ static func _weighted_pick(pool: Array, rng: RandomNumberGenerator) -> int:
 static func _make_reward(typ: String, rng: RandomNumberGenerator, run) -> Dictionary:
 	match typ:
 		"hone":
-			var ids: Array = []
+			# 定向:优先磨练你已学功夫所需家族的基础招(强化专精),无方向则随机
+			var demand := _family_demand(run)
+			var cands: Array = []
 			for m in Deck.basic_attacks():
-				ids.append(m.id)
-			return {"type": "hone", "id": ids[rng.randi_range(0, ids.size() - 1)]}
+				for t in m.tags:
+					if int(demand.get(str(t), 0)) > 0:
+						cands.append(m.id)
+						break
+			if cands.is_empty():
+				for m in Deck.basic_attacks():
+					cands.append(m.id)
+			return {"type": "hone", "id": cands[rng.randi_range(0, cands.size() - 1)]}
 		"learn":
+			# 定向:优先领悟与你专精家族契合的功夫(配方家族和已学方向重叠)
 			var arts: Array = run.self_learnable_arts()
-			return {"type": "learn", "id": arts[rng.randi_range(0, arts.size() - 1)]}
+			var demand := _family_demand(run)
+			var preferred: Array = []
+			for id in arts:
+				var a := Arts.def(id)
+				if a == null:
+					continue
+				for s in a.slots:
+					if s.has("tag") and int(demand.get(str(s["tag"]), 0)) > 0:
+						preferred.append(id)
+						break
+			var pool: Array = preferred if not preferred.is_empty() else arts
+			return {"type": "learn", "id": pool[rng.randi_range(0, pool.size() - 1)]}
+		"qinggong":
+			var qg := _unlearned_qinggong(run)
+			return {"type": "qinggong", "id": qg[rng.randi_range(0, qg.size() - 1)]}
 		_:
 			return {"type": typ}
 
@@ -86,6 +134,7 @@ static func label(r: Dictionary) -> String:
 		"armor": return "横练护体   ( 防御 +12 )"
 		"money": return "寻得盘缠   ( +35 银两 )"
 		"learn": return "顿悟 · " + nm.call(r["id"]) + "   ( 领悟此功 )"
+		"qinggong": return "身法 · " + Passives.display_name(r["id"]) + "   ( 习得轻功 )"
 		"evo":
 			var n: String = nm.call(r["id"])
 			match r["choice"]:

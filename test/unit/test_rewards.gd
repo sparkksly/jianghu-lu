@@ -49,3 +49,34 @@ func test_learn_excluded_when_no_self_learnable():
 	var rw := RunRewards.roll_basic(_rng(3), null)
 	for r in rw:
 		assert_ne(r["type"], "learn", "无 run 时不出顿悟")
+
+func test_hone_targets_learned_family():
+	# 磨练定向:学了截拳[拳+掌] → 磨练优先拳/掌基础招(不撒到腿/肘)
+	var r := RunState.new(&"shaolin", &"", [&"jiequan"])
+	for s in range(1, 30):
+		var rw := RunRewards._make_reward("hone", _rng(s), r)
+		var m := Deck.by_id(rw["id"])
+		var fam_ok := false
+		for t in m.tags:
+			if str(t) in ["拳法", "掌法"]: fam_ok = true
+		assert_true(fam_ok, "磨练落在专精家族(拳/掌)")
+
+func test_learn_prefers_specialized_family():
+	var r := RunState.new(&"shaolin", &"", [&"jiequan", &"luohan"])  # 拳掌方向
+	var arts := r.self_learnable_arts()
+	if arts.size() >= 2:
+		var rw := RunRewards._make_reward("learn", _rng(4), r)
+		assert_true(rw["id"] in arts, "领悟从可悟池里选")
+
+func test_qinggong_reward_grants_and_excludes_when_all_known():
+	var r := RunState.new(&"shaolin")
+	var rw := RunRewards._make_reward("qinggong", _rng(2), r)
+	r.apply_reward(rw)
+	assert_eq(r.qinggong.size(), 1, "身法奖励习得轻功")
+	# 全习得后不再入池
+	for id in Passives.by_category(&"轻功"): r.learn_qinggong(id)
+	var seen_qg := false
+	for s in range(1, 20):
+		for rr in RunRewards.roll_basic(_rng(s), r):
+			if rr["type"] == "qinggong": seen_qg = true
+	assert_false(seen_qg, "轻功全习得后不再出身法选项")

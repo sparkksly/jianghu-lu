@@ -409,6 +409,8 @@ func apply_reward(r: Dictionary) -> void:
 			add_money(35)
 		"learn":
 			learn(r["id"])
+		"qinggong":
+			learn_qinggong(r["id"])
 
 func _meditate() -> void:
 	neigong_level += 1
