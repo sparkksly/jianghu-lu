@@ -28,8 +28,9 @@ static func roll(run, chapter: int, rng: RandomNumberGenerator) -> Array:
 	items.append({"kind": "heal", "amount": HEAL_AMOUNT, "price": PRICE["heal"],
 		"label": "疗伤丹  ( 回 %d 气血 )" % HEAL_AMOUNT})
 	var arts: Array = run.acquirable_arts("encounter")
-	if arts.size() > 0:
-		var aid: StringName = arts[rng.randi_range(0, arts.size() - 1)]
+	_shuffle(arts, rng)
+	for i in mini(2, arts.size()):   # 上架 2 门不同秘籍,玩家挑
+		var aid: StringName = arts[i]
 		items.append({"kind": "art", "id": aid, "price": PRICE["art"],
 			"label": "秘籍·%s  ( 领悟 )" % Arts.display_name(aid)})
 	return items

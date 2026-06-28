@@ -211,8 +211,32 @@ func _show_encounter() -> void:
 	add_child(enc)
 	enc.setup(Encounters.for_chapter(_run.current_node()["chapter"], _rng))
 	enc.chosen.connect(func(effect):
-		_run.apply_encounter(effect, _rng)
 		enc.queue_free()
+		# 领悟类奇遇 → 给功夫三选一(自己挑),其余直接应用
+		if effect.has("learn_art") or effect.has("master_move"):
+			_encounter_learn_choice()
+		else:
+			_run.apply_encounter(effect, _rng)
+			_run.advance_node()
+			_next_node())
+
+# 奇遇领悟:从可得功夫里给 3 门候选(优先专精方向),玩家挑一门学。
+func _encounter_learn_choice() -> void:
+	var pool: Array = _run.unlearned_arts()
+	if pool.is_empty():
+		_run.advance_node()
+		_next_node()
+		return
+	pool.shuffle()
+	var rewards: Array = []
+	for i in mini(3, pool.size()):
+		rewards.append({"type": "learn", "id": pool[i]})
+	var rs = REWARD.instantiate()
+	add_child(rs)
+	rs.setup(rewards, "机缘 · 领悟绝学   —   择一而修")
+	rs.chosen.connect(func(r):
+		_run.learn(r["id"])
+		rs.queue_free()
 		_run.advance_node()
 		_next_node())
 

@@ -64,3 +64,15 @@ func test_shop_scene_lists_items():
 	await get_tree().process_frame
 	assert_gt(s.get_node("Panel/Margin/VBox/ItemsBox").get_child_count(), 0, "货架有商品")
 	assert_string_contains(s.get_node("Panel/Margin/VBox/MoneyLabel").text, "200")
+
+func test_shop_offers_up_to_two_secrets():
+	# 商店上架最多2门不同秘籍(玩家挑)
+	var run := RunState.new(&"shaolin")
+	var arts := run.acquirable_arts("encounter")
+	if arts.size() >= 2:
+		var items := Shop.roll(run, 0, _rng())
+		var secrets := []
+		for it in items:
+			if it["kind"] == "art": secrets.append(it["id"])
+		assert_eq(secrets.size(), 2, "两门秘籍")
+		assert_ne(secrets[0], secrets[1], "不同秘籍")
