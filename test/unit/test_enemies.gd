@@ -35,3 +35,8 @@ func test_all_enemy_moves_resolve():
 			for v in variants:
 				for mid in Enemies.spawn(ch, kind, v)["pool"]:
 					assert_not_null(Deck.by_id(mid), "招式 %s 应存在" % mid)
+
+func test_enemy_power_scales_by_chapter():
+	assert_gt(Enemies.spawn(2, "grunt")["attack"], Enemies.spawn(0, "grunt")["attack"], "攻击力随章涨")
+	assert_gt(Enemies.spawn(2, "boss")["dmg_inc"], Enemies.spawn(0, "boss")["dmg_inc"], "增伤随章涨")
+	assert_gte(Enemies.spawn(2, "grunt")["hp"], Enemies.spawn(0, "boss")["hp"], "三章小怪≥一章boss那么硬")

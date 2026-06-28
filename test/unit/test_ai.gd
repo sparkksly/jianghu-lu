@@ -18,3 +18,14 @@ func test_intent_partial_reveal():
 	assert_true(shown[0].has("start"), "意图绑拍号")
 	if shown.size() > 1:
 		assert_eq(shown[1]["name"], "？", "later moves hidden with fullwidth question mark")
+
+func test_ai_plans_mostly_attacks():
+	# 修复 boss 一直走位不打人:AI 以攻击为主
+	var a := AiPlanner.new(3)
+	var p := a.plan(Deck.starter(), 30, 12, 0)   # deck 含攻击+工具牌
+	var atks := 0; var total := 0
+	for pm in p.sorted():
+		total += 1
+		if pm.move.kind == Move.Kind.ATTACK or pm.move.kind == Move.Kind.THROW: atks += 1
+	assert_gt(total, 0, "排了招")
+	assert_gt(float(atks) / float(total), 0.5, "攻击为主(不再一直走位)")
