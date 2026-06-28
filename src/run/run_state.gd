@@ -283,6 +283,39 @@ func _qinggong_stat(stat: String) -> int:
 			sum += int(m.get("value", 0))
 	return sum
 
+# --- 抽牌权重(传给 Hand.draw,实际权重=1+该值) ---
+const COMPILED_DRAW_BASE := 2   # 化境单卡基础抽取权重
+const FAMILY_DRAW_K := 1        # 每点家族需求 → 该家族基础招 +权重
+const MASTERY_PER_DRAW := 4     # 化境单卡每 4 点熟练 +1 抽取权重
+
+# 抽牌权重:未化境功夫抬高其组件基础招概率(易手拼);化境功夫转为单卡自身权重(易直抽)。
+func draw_weights() -> Dictionary:
+	var w := {}
+	var compiled := compiled_arts()
+	# 家族需求:扫描「未化境」已学功夫的配方 tag(化境的投资已转移,不计)。
+	var demand := {}
+	for id in learned:
+		if id in compiled:
+			continue
+		var a := Arts.def(id)
+		if a == null:
+			continue
+		for s in a.slots:
+			if s.has("tag"):
+				var t := str(s["tag"])
+				demand[t] = int(demand.get(t, 0)) + 1
+	# 基础进攻招:磨练权重(hone) + 家族需求加成
+	for m in Deck.basic_attacks():
+		var extra := int(weight.get(m.id, 0))
+		for t in m.tags:
+			extra += int(demand.get(str(t), 0)) * FAMILY_DRAW_K
+		if extra > 0:
+			w[m.id] = extra
+	# 化境单卡:固定基础权重 + 熟练度小涨 + 磨练权重
+	for id in compiled:
+		w[id] = COMPILED_DRAW_BASE + int(mastery.get(id, 0)) / MASTERY_PER_DRAW + int(weight.get(id, 0))
+	return w
+
 # 触发型被动:习得天赋的 trigger effects [{when, do}],战斗时传入 combat_state.triggers[0]。
 func learn_talent(id: StringName) -> void:
 	if not talents.has(id):
