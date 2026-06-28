@@ -26,9 +26,13 @@ func test_buy_equip_spends_and_grants():
 	assert_false(Shop.buy(run, equip_item), "售出不能再买")
 
 func test_buy_too_poor_fails():
-	var run := RunState.new(&"shaolin")  # money 0
+	var run := RunState.new(&"shaolin")
+	run.money = 0   # 清空银两
 	var items := Shop.roll(run, 0, _rng())
 	assert_false(Shop.buy(run, items[0]), "没钱买不了")
+
+func test_starting_money():
+	assert_eq(RunState.new(&"shaolin").money, 50, "开局 50 银两")
 
 func test_buy_heal_restores_hp():
 	var run := RunState.new(&"shaolin")
@@ -41,6 +45,7 @@ func test_buy_heal_restores_hp():
 
 func test_money_and_risk_encounter():
 	var run := RunState.new(&"shaolin")
+	run.money = 0
 	run.apply_encounter({"money": 40}, _rng())
 	assert_eq(run.money, 40)
 	run.apply_encounter({"reputation": 2}, _rng())
@@ -51,7 +56,7 @@ func test_money_and_risk_encounter():
 	assert_eq(run.player_hp, 1, "受创留 1 血")
 
 func test_shop_scene_lists_items():
-	var run := RunState.new(&"shaolin"); run.add_money(200)
+	var run := RunState.new(&"shaolin"); run.money = 200
 	var s = load("res://src/scenes/shop.tscn").instantiate()
 	add_child_autofree(s)
 	await get_tree().process_frame

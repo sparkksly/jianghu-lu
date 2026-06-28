@@ -34,6 +34,17 @@ func test_choice_layers_have_2to3_with_combat():
 				has_combat = true
 		assert_true(has_combat, "每选择层至少一个战斗")
 
+func test_at_most_one_shop_per_chapter():
+	# 每章(3 选择层)集市候选最多一个,不会一章刷三次商店
+	var r := RunState.new(&"shaolin")
+	for ch in RunState.CHAPTERS:
+		var shops := 0
+		for l in (RunState.LAYERS_PER_CHAPTER - 1):
+			for c in r.layers[ch * RunState.LAYERS_PER_CHAPTER + l]:
+				if c["type"] == "shop":
+					shops += 1
+		assert_lte(shops, 1, "第%d章集市候选 ≤1" % ch)
+
 func test_select_sets_current_type():
 	var r := RunState.new(&"shaolin")
 	r.select(0)
